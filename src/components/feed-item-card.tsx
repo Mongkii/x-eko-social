@@ -10,6 +10,7 @@ import { Badge } from '@/components/ui/badge';
 import { Heart, ThumbsDown, Plus, Check, ThumbsUp, MessageCircle, Share2, PlayCircle, Facebook, Twitter, Instagram } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import React, { useState, useRef, useEffect } from 'react';
+import { useTranslations } from 'next-intl';
 
 interface FeedItemCardProps {
   item: FeedItemData;
@@ -28,6 +29,7 @@ export function FeedItemCard({
   onToggleDislike,
   onToggleFollowCategory,
 }: FeedItemCardProps) {
+  const t = useTranslations('FeedItemCard');
   const [swipeState, setSwipeState] = useState<'left' | 'right' | null>(null);
   const [translateX, setTranslateX] = useState(0);
   const touchStartX = useRef(0);
@@ -113,7 +115,7 @@ export function FeedItemCard({
         style={{ transform: `translateX(${translateX}px) rotate(${translateX / 20}deg)` }}
       >
         <CardHeader className="relative p-0">
-          <div className="aspect-[9/16] w-full relative bg-secondary overflow-hidden rounded-t-lg">
+          <div className="aspect-square w-full relative bg-secondary overflow-hidden rounded-t-lg">
             <Image
               src={item.sourceUrl}
               alt={item.title}
@@ -124,10 +126,10 @@ export function FeedItemCard({
             />
             <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent"></div>
             <div className="absolute top-4 left-4">
-              {item.type === 'ad' && <Badge variant="destructive">AD</Badge>}
+              {item.type === 'ad' && <Badge variant="destructive">{t('adBadge')}</Badge>}
             </div>
              <div className="absolute inset-0 flex items-center justify-center">
-              <PlayCircle className="w-16 h-16 text-white/70" />
+              <PlayCircle className="w-12 h-12 text-white/70" /> {/* Slightly reduced play icon size */}
             </div>
             {/* Swipe indicators */}
             {swipeState === 'right' && (
@@ -145,11 +147,11 @@ export function FeedItemCard({
         
         <CardContent className="flex-grow p-4 space-y-3 overflow-y-auto">
           <CardTitle className="text-lg">{item.title}</CardTitle>
-          {item.advertiser && <p className="text-xs text-muted-foreground">Sponsored by {item.advertiser}</p>}
+          {item.advertiser && <p className="text-xs text-muted-foreground">{t('sponsoredBy', { advertiser: item.advertiser })}</p>}
           <CardDescription className="text-sm">{item.description}</CardDescription>
           
           <div className="space-y-2">
-            <p className="text-xs font-medium text-muted-foreground">Categories:</p>
+            <p className="text-xs font-medium text-muted-foreground">{t('categoriesLabel')}:</p>
             <div className="flex flex-wrap gap-2">
               {item.categories.map((category) => (
                 <Button
@@ -169,27 +171,27 @@ export function FeedItemCard({
 
         <CardFooter className="flex flex-col items-start gap-3 p-4 border-t">
           <div className="w-full">
-            <p className="text-xs font-medium text-muted-foreground mb-1">Rate this {item.type === 'ad' ? 'ad' : 'content'}:</p>
+            <p className="text-xs font-medium text-muted-foreground mb-1">{t('rateThis', { type: item.type === 'ad' ? t('ad') : t('content') })}:</p>
             <StarRating currentRating={item.userRating} onRatingChange={(rating) => onRate(item.id, rating)} size={20} />
           </div>
           <div className="flex w-full justify-around items-center">
             <Button variant="ghost" size="icon" onClick={() => onToggleDislike(item.id)} className={cn(item.isDisliked && "text-destructive")}>
               <ThumbsDown className={cn(item.isDisliked && "fill-destructive")} />
-              <span className="sr-only">Dislike</span>
+              <span className="sr-only">{t('dislikeAction')}</span>
             </Button>
             <Button variant="ghost" size="icon" onClick={() => onToggleLike(item.id)} className={cn(item.isLiked && "text-primary")}>
               <Heart className={cn(item.isLiked && "fill-primary")}/>
-              <span className="sr-only">Like</span>
+              <span className="sr-only">{t('likeAction')}</span>
             </Button>
              <Button variant="ghost" size="icon">
               <MessageCircle />
-              <span className="sr-only">Comment</span>
+              <span className="sr-only">{t('commentAction')}</span>
             </Button>
             {/* Conditionally show generic Share2 button for non-ads */}
             {item.type !== 'ad' && (
               <Button variant="ghost" size="icon">
                 <Share2 />
-                <span className="sr-only">Share</span>
+                <span className="sr-only">{t('shareAction')}</span>
               </Button>
             )}
           </div>
@@ -198,13 +200,13 @@ export function FeedItemCard({
           {item.type === 'ad' && (
             <div className="w-full">
               <div className="flex w-full justify-center items-center gap-4">
-                <Button variant="outline" size="icon" aria-label="Share on Facebook" className="rounded-full">
+                <Button variant="outline" size="icon" aria-label={t('shareOnFacebook')} className="rounded-full">
                   <Facebook className="h-5 w-5" />
                 </Button>
-                <Button variant="outline" size="icon" aria-label="Share on Twitter" className="rounded-full">
+                <Button variant="outline" size="icon" aria-label={t('shareOnTwitter')} className="rounded-full">
                   <Twitter className="h-5 w-5" />
                 </Button>
-                <Button variant="outline" size="icon" aria-label="Share on Instagram" className="rounded-full">
+                <Button variant="outline" size="icon" aria-label={t('shareOnInstagram')} className="rounded-full">
                   <Instagram className="h-5 w-5" />
                 </Button>
               </div>
@@ -215,3 +217,4 @@ export function FeedItemCard({
     </div>
   );
 }
+
