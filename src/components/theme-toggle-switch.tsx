@@ -1,4 +1,4 @@
-// src/components/theme-toggle-switch.tsx
+
 "use client";
 
 import { useEffect, useState } from "react";

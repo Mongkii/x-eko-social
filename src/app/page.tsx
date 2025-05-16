@@ -6,9 +6,11 @@ import { AppHeader } from '@/components/app-header';
 import { FeedItemCard } from '@/components/feed-item-card';
 import type { FeedItemData, UserInteraction } from '@/lib/types';
 import { Skeleton } from '@/components/ui/skeleton';
-import { personalizeAdFeed } from '@/ai/flows/personalize-ad-feed'; // GenAI flow
+import { personalizeAdFeed } from '@/ai/flows/personalize-ad-feed';
 import { useToast } from '@/hooks/use-toast';
 import { initialFeedItems, allAvailableAds } from '@/lib/ads-data';
+import { AdMobBanner } from '@/components/admob-banner';
+
 
 const LOCAL_STORAGE_LIKED_ADS_KEY = 'shopyme_liked_ad_ids';
 
@@ -109,7 +111,6 @@ export default function HomePage() {
           itemWasDisliked = item.isDisliked;
           itemTitle = item.title;
           itemType = item.type;
-          // If it was liked, unliking it as per original logic
           const newIsLiked = item.isLiked ? false : item.isLiked;
           return { ...item, isDisliked: !item.isDisliked, isLiked: newIsLiked };
         }
@@ -119,13 +120,12 @@ export default function HomePage() {
     
     if (itemTitle !== undefined && itemWasDisliked !== undefined) {
       const itemIsNowDisliked = !itemWasDisliked;
-      recordInteraction(itemId, 'dislike'); // Assuming 'dislike' covers toggling dislike
+      recordInteraction(itemId, 'dislike');
       toast({ title: itemIsNowDisliked ? "Disliked!" : "Dislike removed!", description: `You ${itemIsNowDisliked ? "disliked" : "removed dislike for"} "${itemTitle}".`});
     
-      // If disliking an ad that was previously liked, remove it from liked ads in localStorage
       if (itemIsNowDisliked && itemType === 'ad') {
-        const item = feedItems.find(i => i.id === itemId); // Get current state
-         if (item && !item.isLiked) { // if it became unliked due to dislike
+        const item = feedItems.find(i => i.id === itemId);
+         if (item && !item.isLiked) { 
             try {
                 const storedLikedIds: string[] = JSON.parse(localStorage.getItem(LOCAL_STORAGE_LIKED_ADS_KEY) || '[]');
                 const likedIdsSet = new Set<string>(storedLikedIds);
@@ -214,7 +214,6 @@ export default function HomePage() {
     }
   };
 
-
   return (
     <div className="flex flex-col h-full">
       <AppHeader onPersonalize={handlePersonalizeFeed} />
@@ -222,7 +221,7 @@ export default function HomePage() {
         {isLoading ? (
           <div className="h-full w-full flex-shrink-0 snap-start relative overflow-hidden flex items-center justify-center p-4">
              <div className="w-full max-w-md mx-auto h-[calc(100%-80px)] md:h-[calc(100%-100px)] flex flex-col">
-              <Skeleton className="aspect-[9/16] w-full rounded-t-lg" />
+              <Skeleton className="aspect-square w-full rounded-t-lg" />
               <div className="p-4 space-y-3">
                 <Skeleton className="h-6 w-3/4" />
                 <Skeleton className="h-4 w-full" />
@@ -245,15 +244,21 @@ export default function HomePage() {
           </div>
         ) : (
           feedItems.map((item, index) => (
-            <FeedItemCard
-              key={`${item.id}-${index}`}
-              item={item}
-              followedCategories={followedCategories}
-              onRate={handleRate}
-              onToggleLike={handleToggleLike}
-              onToggleDislike={handleToggleDislike}
-              onToggleFollowCategory={handleToggleFollowCategory}
-            />
+            <div key={`${item.id}-${index}`}>
+              <FeedItemCard
+                item={item}
+                followedCategories={followedCategories}
+                onRate={handleRate}
+                onToggleLike={handleToggleLike}
+                onToggleDislike={handleToggleDislike}
+                onToggleFollowCategory={handleToggleFollowCategory}
+              />
+              {(index + 1) % 3 === 0 && process.env.NEXT_PUBLIC_ADMOB_BANNER_AD_UNIT_ID && (
+                <div className="h-full w-full flex-shrink-0 snap-start relative overflow-hidden flex items-center justify-center p-4">
+                  <AdMobBanner />
+                </div>
+              )}
+            </div>
           ))
         )}
          {feedItems.length === 0 && !isLoading && (

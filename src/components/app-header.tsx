@@ -1,21 +1,24 @@
 
-import Link from 'next/link';
+"use client";
+
 import { AppLogoIcon } from '@/components/icons/app-logo-icon';
 import { Button } from '@/components/ui/button';
-import { useToast } from '@/hooks/use-toast';
 import { ThemeToggleSwitch } from '@/components/theme-toggle-switch';
-import { Bookmark } from 'lucide-react';
+import { Bookmark, Wand2 } from 'lucide-react';
+import Link from 'next/link'; // Changed from @/navigation
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 interface AppHeaderProps {
-  onPersonalize: () => Promise<void> | void; // Allow void if personalization is not applicable
+  onPersonalize: () => Promise<void> | void;
 }
 
 export function AppHeader({ onPersonalize }: AppHeaderProps) {
-  const { toast } = useToast();
-
   const handlePersonalizeClick = async () => {
-    // The toast specific to starting personalization is now in page.tsx
-    // to allow dummyPersonalize to have its own toast.
     await onPersonalize();
   };
 
@@ -28,17 +31,36 @@ export function AppHeader({ onPersonalize }: AppHeaderProps) {
             Shopyme
           </span>
         </Link>
-        <nav className="flex items-center space-x-2 sm:space-x-4">
+        <nav className="flex items-center space-x-1 sm:space-x-2">
           <ThemeToggleSwitch />
-          <Button variant="outline" size="sm" asChild>
-            <Link href="/saved-ads">
-              <Bookmark className="mr-0 sm:mr-2 h-4 w-4" />
-              <span className="hidden sm:inline">Saved Ads</span>
-            </Link>
-          </Button>
-          <Button onClick={handlePersonalizeClick} variant="outline" size="sm">
-            Personalize My Feed (AI)
-          </Button>
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button variant="ghost" size="icon" asChild className="h-9 w-9">
+                  <Link href="/saved-ads">
+                    <Bookmark className="h-5 w-5" />
+                    <span className="sr-only">Saved Ads</span>
+                  </Link>
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>
+                <p>Saved Ads</p>
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button onClick={handlePersonalizeClick} variant="ghost" size="icon" className="h-9 w-9">
+                  <Wand2 className="h-5 w-5" />
+                  <span className="sr-only">Personalize My Feed (AI)</span>
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>
+                <p>Personalize My Feed (AI)</p>
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
         </nav>
       </div>
     </header>

@@ -2,14 +2,14 @@
 "use client";
 
 import { useState, useEffect, useCallback } from 'react';
-import Link from 'next/link';
+import Link from 'next/link'; 
 import { AppHeader } from '@/components/app-header';
 import { FeedItemCard } from '@/components/feed-item-card';
 import type { FeedItemData, UserInteraction } from '@/lib/types';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useToast } from '@/hooks/use-toast';
-import { allAvailableAds } from '@/lib/ads-data'; // Using the shared ads data
+import { allAvailableAds } from '@/lib/ads-data';
 import { ArrowLeft } from 'lucide-react';
 
 const LOCAL_STORAGE_LIKED_ADS_KEY = 'shopyme_liked_ad_ids';
@@ -17,7 +17,7 @@ const LOCAL_STORAGE_LIKED_ADS_KEY = 'shopyme_liked_ad_ids';
 export default function SavedAdsPage() {
   const [savedItems, setSavedItems] = useState<FeedItemData[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [followedCategories, setFollowedCategories] = useState<Set<string>>(new Set()); // Independent for this page or could be synced
+  const [followedCategories, setFollowedCategories] = useState<Set<string>>(new Set());
   const { toast } = useToast();
 
   const loadSavedAds = useCallback(() => {
@@ -30,8 +30,7 @@ export default function SavedAdsPage() {
         .filter(ad => likedIdsSet.has(ad.id))
         .map(ad => ({
           ...ad,
-          isLiked: true, // They are here because they are liked
-          // Reset other interaction states or load them if also persisted
+          isLiked: true, 
           isDisliked: false, 
           userRating: ad.userRating || 0, 
         }));
@@ -49,7 +48,6 @@ export default function SavedAdsPage() {
     loadSavedAds();
   }, [loadSavedAds]);
 
-  // Listener for storage changes to update if another tab changes liked ads
   useEffect(() => {
     const handleStorageChange = (event: StorageEvent) => {
       if (event.key === LOCAL_STORAGE_LIKED_ADS_KEY) {
@@ -63,8 +61,7 @@ export default function SavedAdsPage() {
   }, [loadSavedAds]);
 
   const recordInteraction = useCallback((itemId: string, interaction: UserInteraction['interaction'], value?: string | number) => {
-    // For this page, we might not need to store full interactions,
-    // but this function is here if detailed logging per page is desired.
+    // Placeholder for potential future interaction recording on this page
     console.log("Interaction on Saved Ads page:", { itemId, interaction, value, timestamp: new Date() });
   }, []);
 
@@ -82,30 +79,24 @@ export default function SavedAdsPage() {
     if (itemTitle){
       recordInteraction(itemId, 'rate', rating);
       toast({ title: "Rating submitted!", description: `You rated "${itemTitle}" ${rating} stars.` });
-      // Note: This rating won't persist back to allAvailableAds or home page unless explicitly saved to a shared source.
     }
   };
 
   const handleToggleLike = (itemId: string) => {
     let itemTitle: string | undefined;
-    let itemIsNowLiked = false;
 
     setSavedItems(prevItems =>
       prevItems.filter(item => {
         if (item.id === itemId) {
           itemTitle = item.title;
-          itemIsNowLiked = !item.isLiked; // Should always be true -> false here
-          if (itemIsNowLiked) { // If it somehow becomes liked again on this page (e.g. error)
-            return true; 
-          }
-          return false; // Remove from saved items if unliked
+          return false; 
         }
         return true;
       })
     );
 
     if (itemTitle) {
-      recordInteraction(itemId, 'unlike'); // Explicitly 'unlike'
+      recordInteraction(itemId, 'unlike');
       toast({ title: "Unliked!", description: `You unliked "${itemTitle}". It has been removed from your saved ads.`});
 
       try {
@@ -120,14 +111,12 @@ export default function SavedAdsPage() {
   };
   
   const handleToggleDislike = (itemId: string) => {
-    // Disliking on this page will also effectively "unlike" and remove it.
-    handleToggleLike(itemId); // Reuse unlike logic, toast message might need adjustment if specific dislike feedback is needed
     const item = savedItems.find(i => i.id === itemId);
+    handleToggleLike(itemId); 
     if(item){
          toast({ title: "Disliked & Removed!", description: `You disliked "${item.title}". It has been removed from your saved ads.`});
     }
   };
-
 
   const handleToggleFollowCategory = (category: string) => {
     let isNowFollowing: boolean | undefined;
@@ -148,8 +137,6 @@ export default function SavedAdsPage() {
     }
   };
 
-  // The "Personalize My Feed" button in AppHeader is not directly relevant here.
-  // We pass a dummy function or could modify AppHeader to hide it based on route.
   const dummyPersonalize = async () => {
     toast({title: "Info", description: "Feed personalization is available on the main feed page."});
   };
@@ -170,11 +157,10 @@ export default function SavedAdsPage() {
         </div>
 
         {isLoading ? (
-          // Multiple skeletons for loading state
           Array.from({ length: 3 }).map((_, index) => (
             <div key={index} className="h-full w-full flex-shrink-0 snap-start relative overflow-hidden flex items-center justify-center p-4 mb-4">
               <div className="w-full max-w-md mx-auto h-[calc(100%-80px)] md:h-[calc(100%-100px)] flex flex-col">
-                <Skeleton className="aspect-[9/16] w-full rounded-t-lg" />
+                <Skeleton className="aspect-square w-full rounded-t-lg" />
                 <div className="p-4 space-y-3">
                   <Skeleton className="h-6 w-3/4" />
                   <Skeleton className="h-4 w-full" />
@@ -185,7 +171,7 @@ export default function SavedAdsPage() {
           ))
         ) : savedItems.length > 0 ? (
           savedItems.map((item, index) => (
-            <div key={`${item.id}-${index}-saved`} className="mb-8 last:mb-0"> {/* Added margin between cards */}
+            <div key={`${item.id}-${index}-saved`} className="mb-8 last:mb-0">
                  <FeedItemCard
                     item={item}
                     followedCategories={followedCategories}
