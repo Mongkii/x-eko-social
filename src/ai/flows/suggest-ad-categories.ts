@@ -37,7 +37,9 @@ export async function suggestAdCategories(
 
 const DEEPSEEK_API_KEY = process.env.DEEPSEEK_API_KEY;
 const DEEPSEEK_BASE_URL = 'https://api.deepseek.com/v1'; // Standard v1 endpoint for OpenAI compatibility
-const DEEPSEEK_MODEL = 'deepseek-chat'; // Or your preferred DeepSeek model
+// IMPORTANT: Replace 'deepseek-chat-v3' with your specific DeepSeek V3 model name if different.
+// This is a placeholder based on the request to "test deepseek v3".
+const DEEPSEEK_MODEL = 'deepseek-chat-v3'; 
 
 const suggestAdCategoriesFlow = ai.defineFlow(
   {
@@ -48,6 +50,7 @@ const suggestAdCategoriesFlow = ai.defineFlow(
   async (input: SuggestAdCategoriesInput) => {
     if (!DEEPSEEK_API_KEY || DEEPSEEK_API_KEY === 'your_deepseek_api_key_here') {
       console.error('DeepSeek API key is not configured. Please set DEEPSEEK_API_KEY in your .env file.');
+      // Return an empty array or a specific error indicator that fits your UI needs
       return { suggestedCategories: ['Configuration needed: DeepSeek API Key'] };
     }
 
