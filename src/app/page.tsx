@@ -1,29 +1,16 @@
+
 "use client";
 
 import { useState, useEffect, useCallback } from 'react';
 import { AppHeader } from '@/components/app-header';
 import { FeedItemCard } from '@/components/feed-item-card';
-import { FeedItemData, UserInteraction } from '@/lib/types';
+import type { FeedItemData, UserInteraction } from '@/lib/types';
 import { Skeleton } from '@/components/ui/skeleton';
 import { personalizeAdFeed } from '@/ai/flows/personalize-ad-feed'; // GenAI flow
 import { useToast } from '@/hooks/use-toast';
+import { initialFeedItems, allAvailableAds } from '@/lib/ads-data';
 
-const initialFeedItems: FeedItemData[] = [
-  { id: '1', type: 'content', sourceUrl: 'https://placehold.co/360x640.png', dataAiHint: 'travel landscape', title: 'Amazing Mountain View', description: 'Exploring the serene beauty of the mountains.', categories: ['Travel', 'Nature'], userRating: 0, isLiked: false, isDisliked: false },
-  { id: '2', type: 'ad', sourceUrl: 'https://placehold.co/360x640.png', dataAiHint: 'fashion clothing', title: 'New Summer Collection!', advertiser: 'FashionBrandX', description: 'Get ready for summer with our new arrivals. Up to 50% off!', categories: ['Fashion', 'Shopping'], userRating: 0, isLiked: false, isDisliked: false },
-  { id: '3', type: 'content', sourceUrl: 'https://placehold.co/360x640.png', dataAiHint: 'food recipe', title: 'Delicious Pasta Recipe', description: 'Learn how to make this simple and tasty pasta dish.', categories: ['Food', 'Cooking'], userRating: 0, isLiked: false, isDisliked: false },
-  { id: '4', type: 'ad', sourceUrl: 'https://placehold.co/360x640.png', dataAiHint: 'electronics gadget', title: 'Latest Smartphone Pro', advertiser: 'TechGiant', description: 'Experience the future with the new Smartphone Pro. Pre-order now!', categories: ['Electronics', 'Tech'], userRating: 0, isLiked: false, isDisliked: false },
-  { id: '5', type: 'content', sourceUrl: 'https://placehold.co/360x640.png', dataAiHint: 'sports game', title: 'Epic Soccer Match Highlights', description: 'Relive the best moments from yesterday\'s game.', categories: ['Sports', 'Soccer'], userRating: 0, isLiked: false, isDisliked: false },
-];
-
-// Mock list of all available ads for personalization
-const allAvailableAds: FeedItemData[] = [
-  ...initialFeedItems.filter(item => item.type === 'ad'),
-  { id: 'ad101', type: 'ad', sourceUrl: 'https://placehold.co/360x640.png', dataAiHint: 'gaming console', title: 'Next-Gen Gaming Console', advertiser: 'GameWorld', description: 'Immerse yourself in ultra-realistic gaming.', categories: ['Gaming', 'Electronics'], userRating: 0, isLiked: false, isDisliked: false },
-  { id: 'ad102', type: 'ad', sourceUrl: 'https://placehold.co/360x640.png', dataAiHint: 'travel destination', title: 'Dream Vacation Package', advertiser: 'TravelDreams', description: 'Book your dream vacation today at an unbeatable price.', categories: ['Travel', 'Deals'], userRating: 0, isLiked: false, isDisliked: false },
-  { id: 'ad103', type: 'ad', sourceUrl: 'https://placehold.co/360x640.png', dataAiHint: 'food delivery', title: 'Quick Food Delivery', advertiser: 'SpeedyEats', description: 'Hungry? Get your favorite meals delivered in minutes.', categories: ['Food', 'Services'], userRating: 0, isLiked: false, isDisliked: false },
-];
-
+const LOCAL_STORAGE_LIKED_ADS_KEY = 'shopyme_liked_ad_ids';
 
 export default function HomePage() {
   const [feedItems, setFeedItems] = useState<FeedItemData[]>([]);
@@ -33,11 +20,22 @@ export default function HomePage() {
   const { toast } = useToast();
 
   useEffect(() => {
-    // Simulate fetching data
-    setTimeout(() => {
-      setFeedItems(initialFeedItems);
-      setIsLoading(false);
-    }, 1000);
+    setIsLoading(true);
+    let likedIdsSet = new Set<string>();
+    try {
+      const storedLikedIds = JSON.parse(localStorage.getItem(LOCAL_STORAGE_LIKED_ADS_KEY) || '[]');
+      likedIdsSet = new Set<string>(storedLikedIds);
+    } catch (error) {
+      console.error("Error reading liked ads from localStorage:", error);
+    }
+
+    const updatedInitialFeed = initialFeedItems.map(item => ({
+      ...item,
+      isLiked: item.type === 'ad' ? likedIdsSet.has(item.id) : item.isLiked,
+    }));
+
+    setFeedItems(updatedInitialFeed);
+    setIsLoading(false);
   }, []);
 
   const recordInteraction = useCallback((itemId: string, interaction: UserInteraction['interaction'], value?: string | number) => {
@@ -45,59 +43,132 @@ export default function HomePage() {
   }, []);
 
   const handleRate = (itemId: string, rating: number) => {
+    let itemTitle: string | undefined;
     setFeedItems(prevItems =>
-      prevItems.map(item => (item.id === itemId ? { ...item, userRating: rating } : item))
+      prevItems.map(item => {
+        if (item.id === itemId) {
+          itemTitle = item.title;
+          return { ...item, userRating: rating };
+        }
+        return item;
+      })
     );
-    recordInteraction(itemId, 'rate', rating);
-    toast({ title: "Rating submitted!", description: `You rated "${feedItems.find(i=>i.id===itemId)?.title}" ${rating} stars.` });
+    if (itemTitle) {
+      recordInteraction(itemId, 'rate', rating);
+      toast({ title: "Rating submitted!", description: `You rated "${itemTitle}" ${rating} stars.` });
+    }
   };
 
   const handleToggleLike = (itemId: string) => {
+    let itemWasLiked: boolean | undefined;
+    let itemTitle: string | undefined;
+    let itemType: 'ad' | 'content' | undefined;
+
     setFeedItems(prevItems =>
-      prevItems.map(item => (item.id === itemId ? { ...item, isLiked: !item.isLiked, isDisliked: false } : item))
+      prevItems.map(item => {
+        if (item.id === itemId) {
+          itemWasLiked = item.isLiked;
+          itemTitle = item.title;
+          itemType = item.type;
+          return { ...item, isLiked: !item.isLiked, isDisliked: false };
+        }
+        return item;
+      })
     );
-    const item = feedItems.find(i=>i.id===itemId);
-    if (item) {
-      recordInteraction(itemId, 'like');
-      toast({ title: item.isLiked ? "Unliked!" : "Liked!", description: `You ${item.isLiked ? "unliked" : "liked"} "${item.title}".`});
+
+    if (itemTitle !== undefined && itemWasLiked !== undefined) {
+      const itemIsNowLiked = !itemWasLiked;
+      recordInteraction(itemId, itemIsNowLiked ? 'like' : 'unlike');
+      toast({ title: itemIsNowLiked ? "Liked!" : "Unliked!", description: `You ${itemIsNowLiked ? "liked" : "unliked"} "${itemTitle}".`});
+
+      if (itemType === 'ad') {
+        try {
+          const storedLikedIds: string[] = JSON.parse(localStorage.getItem(LOCAL_STORAGE_LIKED_ADS_KEY) || '[]');
+          const likedIdsSet = new Set<string>(storedLikedIds);
+          if (itemIsNowLiked) {
+            likedIdsSet.add(itemId);
+          } else {
+            likedIdsSet.delete(itemId);
+          }
+          localStorage.setItem(LOCAL_STORAGE_LIKED_ADS_KEY, JSON.stringify(Array.from(likedIdsSet)));
+        } catch (error) {
+          console.error("Error updating liked ads in localStorage:", error);
+        }
+      }
     }
   };
 
   const handleToggleDislike = (itemId: string) => {
+    let itemWasDisliked: boolean | undefined;
+    let itemTitle: string | undefined;
+     let itemType: 'ad' | 'content' | undefined;
+
     setFeedItems(prevItems =>
-      prevItems.map(item => (item.id === itemId ? { ...item, isDisliked: !item.isDisliked, isLiked: false } : item))
+      prevItems.map(item => {
+        if (item.id === itemId) {
+          itemWasDisliked = item.isDisliked;
+          itemTitle = item.title;
+          itemType = item.type;
+          // If it was liked, unliking it as per original logic
+          const newIsLiked = item.isLiked ? false : item.isLiked;
+          return { ...item, isDisliked: !item.isDisliked, isLiked: newIsLiked };
+        }
+        return item;
+      })
     );
-    const item = feedItems.find(i=>i.id===itemId);
-    if (item) {
-      recordInteraction(itemId, 'dislike');
-      toast({ title: item.isDisliked ? "Dislike removed!" : "Disliked!", description: `You ${item.isDisliked ? "removed dislike for" : "disliked"} "${item.title}".`});
+    
+    if (itemTitle !== undefined && itemWasDisliked !== undefined) {
+      const itemIsNowDisliked = !itemWasDisliked;
+      recordInteraction(itemId, 'dislike'); // Assuming 'dislike' covers toggling dislike
+      toast({ title: itemIsNowDisliked ? "Disliked!" : "Dislike removed!", description: `You ${itemIsNowDisliked ? "disliked" : "removed dislike for"} "${itemTitle}".`});
+    
+      // If disliking an ad that was previously liked, remove it from liked ads in localStorage
+      if (itemIsNowDisliked && itemType === 'ad') {
+        const item = feedItems.find(i => i.id === itemId); // Get current state
+         if (item && !item.isLiked) { // if it became unliked due to dislike
+            try {
+                const storedLikedIds: string[] = JSON.parse(localStorage.getItem(LOCAL_STORAGE_LIKED_ADS_KEY) || '[]');
+                const likedIdsSet = new Set<string>(storedLikedIds);
+                if (likedIdsSet.has(itemId)) {
+                    likedIdsSet.delete(itemId);
+                    localStorage.setItem(LOCAL_STORAGE_LIKED_ADS_KEY, JSON.stringify(Array.from(likedIdsSet)));
+                }
+            } catch (error) {
+                console.error("Error updating liked ads in localStorage after dislike:", error);
+            }
+         }
+      }
     }
   };
 
   const handleToggleFollowCategory = (category: string) => {
+    let isNowFollowing: boolean | undefined;
     setFollowedCategories(prev => {
       const newSet = new Set(prev);
       if (newSet.has(category)) {
         newSet.delete(category);
-        recordInteraction(category, 'unfollowCategory');
-        toast({ title: "Unfollowed Category!", description: `You unfollowed "${category}".`});
+        isNowFollowing = false;
       } else {
         newSet.add(category);
-        recordInteraction(category, 'followCategory');
-        toast({ title: "Followed Category!", description: `You are now following "${category}".`});
+        isNowFollowing = true;
       }
       return newSet;
     });
+
+    if (isNowFollowing !== undefined) {
+      recordInteraction(category, isNowFollowing ? 'followCategory' : 'unfollowCategory');
+      toast({ title: isNowFollowing ? "Followed Category!" : "Unfollowed Category!", description: `You ${isNowFollowing ? "are now following" : "unfollowed"} "${category}".`});
+    }
   };
 
   const handlePersonalizeFeed = async () => {
-    // 1. Construct userPastInteractions string
     let interactionsString = "User Interactions:\n";
     userInteractions.forEach(interaction => {
       const item = feedItems.find(i => i.id === interaction.itemId) || allAvailableAds.find(i => i.id === interaction.itemId);
       const itemName = item ? item.title : interaction.itemId;
       switch (interaction.interaction) {
         case 'like': interactionsString += `- Liked: ${itemName}\n`; break;
+        case 'unlike': interactionsString += `- Unliked: ${itemName}\n`; break;
         case 'dislike': interactionsString += `- Disliked: ${itemName}\n`; break;
         case 'rate': interactionsString += `- Rated ${itemName} ${interaction.value} stars\n`; break;
         case 'followCategory': interactionsString += `- Followed Category: ${interaction.itemId}\n`; break;
@@ -108,35 +179,29 @@ export default function HomePage() {
         interactionsString += `Currently Following: ${Array.from(followedCategories).join(', ')}\n`;
     }
 
-
-    // 2. Construct availableAds string
     const availableAdsString = "Available Ads:\n" + allAvailableAds.map(ad => `- ${ad.title} (Categories: ${ad.categories.join(', ')})`).join('\n');
 
+    toast({ title: "AI Magic ✨", description: "Personalizing your ad feed..."});
     try {
       const result = await personalizeAdFeed({
         userPastInteractions: interactionsString || "No specific interactions yet.",
         availableAds: availableAdsString,
       });
       
-      // Simulate updating feed based on AI response
-      // In a real app, you'd parse result.personalizedAdFeed and fetch/reorder ads.
-      // For this demo, we'll shuffle existing ads and maybe add one new one if mentioned.
       const newFeed = [...feedItems];
-      // Simple shuffle for demo
       for (let i = newFeed.length - 1; i > 0; i--) {
           const j = Math.floor(Math.random() * (i + 1));
           [newFeed[i], newFeed[j]] = [newFeed[j], newFeed[i]];
       }
-      // Try to find an ad from AI output to highlight (very basic)
       const aiMentionedAd = allAvailableAds.find(ad => result.personalizedAdFeed.toLowerCase().includes(ad.title.toLowerCase()));
       if (aiMentionedAd && !newFeed.find(item => item.id === aiMentionedAd.id)) {
-        newFeed.unshift(aiMentionedAd); // Add to top
+        newFeed.unshift({...aiMentionedAd, isLiked: false, isDisliked: false, userRating: 0}); 
       }
       
-      setFeedItems(newFeed.slice(0, initialFeedItems.length)); // Keep feed length consistent for demo
+      setFeedItems(newFeed.slice(0, initialFeedItems.length));
       toast({
         title: "AI Feed Personalization (Simulated)",
-        description: "Feed updated based on AI suggestions. AI Output: " + result.personalizedAdFeed.substring(0, 100) + "...",
+        description: "Feed updated. AI Output: " + result.personalizedAdFeed.substring(0, 100) + "...",
       });
 
     } catch (error) {
@@ -181,7 +246,7 @@ export default function HomePage() {
         ) : (
           feedItems.map((item, index) => (
             <FeedItemCard
-              key={`${item.id}-${index}`} // Add index to key if IDs might not be unique after shuffle
+              key={`${item.id}-${index}`}
               item={item}
               followedCategories={followedCategories}
               onRate={handleRate}
@@ -190,6 +255,11 @@ export default function HomePage() {
               onToggleFollowCategory={handleToggleFollowCategory}
             />
           ))
+        )}
+         {feedItems.length === 0 && !isLoading && (
+          <div className="h-full w-full flex-shrink-0 snap-start relative overflow-hidden flex items-center justify-center p-4">
+            <p className="text-muted-foreground">No items in your feed yet.</p>
+          </div>
         )}
       </main>
     </div>

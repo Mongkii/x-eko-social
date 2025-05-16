@@ -14,7 +14,7 @@ export interface FeedItemData {
   isDisliked: boolean;
 }
 
-export type InteractionType = 'like' | 'dislike' | 'rate' | 'followCategory' | 'unfollowCategory';
+export type InteractionType = 'like' | 'unlike' | 'dislike' | 'rate' | 'followCategory' | 'unfollowCategory';
 
 export interface UserInteraction {
   itemId: string;
