@@ -1,2 +1,69 @@
 
-{}
+{
+  "Global": {
+    "appName": "Shopyme"
+  },
+  "HomePage": {
+    "greeting": "Welcome to Shopyme",
+    "aiMagicToastTitle": "AI Magic ✨",
+    "aiMagicToastDescription": "Personalizing your ad feed...",
+    "aiPersonalizationErrorToastTitle": "AI Personalization Error",
+    "aiPersonalizationErrorToastDescription": "Could not personalize feed.",
+    "aiFeedPersonalizedToastTitle": "AI Feed Personalization (Simulated)",
+    "aiFeedPersonalizedToastDescription": "Feed updated. AI Output:",
+    "ratingSubmittedToastTitle": "Rating submitted!",
+    "ratingSubmittedToastDescription": "You rated \"{title}\" {rating} stars.",
+    "likedToastTitle": "Liked!",
+    "likedToastDescription": "You liked \"{title}\".",
+    "unlikedToastTitle": "Unliked!",
+    "unlikedToastDescription": "You unliked \"{title}\".",
+    "dislikedToastTitle": "Disliked!",
+    "dislikedToastDescription": "You disliked \"{title}\".",
+    "dislikeRemovedToastTitle": "Dislike removed!",
+    "dislikeRemovedToastDescription": "You removed dislike for \"{title}\".",
+    "followedCategoryToastTitle": "Followed Category!",
+    "followedCategoryToastDescription": "You are now following \"{category}\".",
+    "unfollowedCategoryToastTitle": "Unfollowed Category!",
+    "unfollowedCategoryToastDescription": "You unfollowed \"{category}\".",
+    "noFeedItems": "No items in your feed yet."
+  },
+  "AppHeader": {
+    "shopyme": "Shopyme",
+    "savedAdsTooltip": "Saved Ads",
+    "personalizeFeedTooltip": "Personalize My Feed (AI)"
+  },
+  "FeedItemCard": {
+    "adBadge": "Ad",
+    "sponsoredBy": "Sponsored by",
+    "categoriesLabel": "Categories",
+    "rateThisAdLabel": "Rate this ad",
+    "rateThisContentLabel": "Rate this content",
+    "dislikeAction": "Dislike",
+    "likeAction": "Like",
+    "commentAction": "Comment",
+    "shareAction": "Share",
+    "shareOnFacebook": "Share on Facebook",
+    "shareOnTwitter": "Share on Twitter",
+    "shareOnInstagram": "Share on Instagram"
+  },
+  "ThemeToggleSwitch": {
+    "switchToLightTheme": "Switch to light theme",
+    "switchToDarkTheme": "Switch to dark theme"
+  },
+  "SavedAdsPage": {
+    "backToFeed": "Back to Feed",
+    "mySavedAds": "My Saved Ads",
+    "errorLoadingSavedAds": "Could not load saved ads.",
+    "infoToastTitle": "Info",
+    "personalizeInfoDescription": "Feed personalization is available on the main feed page.",
+    "unlikedAndRemovedToastDescription": "You unliked \"{title}\". It has been removed from your saved ads.",
+    "dislikedAndRemovedToastDescription": "You disliked \"{title}\". It has been removed from your saved ads.",
+    "noSavedAdsYet": "You haven't saved any ads yet.",
+    "likeAdToSave": "Like an ad in the main feed to save it here!"
+  },
+  "AdMobBanner": {
+    "demoBannerTitle": "AdMob Demo Banner",
+    "demoAdUnitId": "Demo Ad Unit ID:",
+    "placeholderText": "(This is a placeholder, not a live ad)"
+  }
+}

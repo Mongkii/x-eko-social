@@ -1,2 +1,69 @@
 
-{}
+{
+  "Global": {
+    "appName": "शॉपीमी"
+  },
+  "HomePage": {
+    "greeting": "शॉपीमी में आपका स्वागत है",
+    "aiMagicToastTitle": "एआई जादू ✨",
+    "aiMagicToastDescription": "आपके विज्ञापन फ़ीड को वैयक्तिकृत किया जा रहा है...",
+    "aiPersonalizationErrorToastTitle": "एआई वैयक्तिकरण त्रुटि",
+    "aiPersonalizationErrorToastDescription": "फ़ीड को वैयक्तिकृत नहीं किया जा सका।",
+    "aiFeedPersonalizedToastTitle": "एआई फ़ीड वैयक्तिकरण (नकली)",
+    "aiFeedPersonalizedToastDescription": "फ़ीड अपडेट किया गया। एआई आउटपुट:",
+    "ratingSubmittedToastTitle": "रेटिंग सबमिट की गई!",
+    "ratingSubmittedToastDescription": "आपने \"{title}\" को {rating} स्टार रेट किया।",
+    "likedToastTitle": "पसंद आया!",
+    "likedToastDescription": "आपको \"{title}\" पसंद आया।",
+    "unlikedToastTitle": "नापसंद किया!",
+    "unlikedToastDescription": "आपने \"{title}\" को नापसंद किया।",
+    "dislikedToastTitle": "नापसंद किया!",
+    "dislikedToastDescription": "आपको \"{title}\" नापसंद आया।",
+    "dislikeRemovedToastTitle": "नापसंदगी हटाई गई!",
+    "dislikeRemovedToastDescription": "आपने \"{title}\" के लिए नापसंदगी हटा दी।",
+    "followedCategoryToastTitle": "श्रेणी फ़ॉलो की गई!",
+    "followedCategoryToastDescription": "अब आप \"{category}\" को फ़ॉलो कर रहे हैं।",
+    "unfollowedCategoryToastTitle": "श्रेणी अनफ़ॉलो की गई!",
+    "unfollowedCategoryToastDescription": " आपने \"{category}\" को अनफ़ॉलो कर दिया।",
+    "noFeedItems": "आपके फ़ीड में अभी कोई आइटम नहीं है।"
+  },
+  "AppHeader": {
+    "shopyme": "शॉपीमी",
+    "savedAdsTooltip": "सहेजे गए विज्ञापन",
+    "personalizeFeedTooltip": "मेरा फ़ीड वैयक्तिकृत करें (AI)"
+  },
+  "FeedItemCard": {
+    "adBadge": "विज्ञापन",
+    "sponsoredBy": "द्वारा प्रायोजित",
+    "categoriesLabel": "श्रेणियाँ",
+    "rateThisAdLabel": "इस विज्ञापन को रेट करें",
+    "rateThisContentLabel": "इस सामग्री को रेट करें",
+    "dislikeAction": "नापसंद करें",
+    "likeAction": "पसंद करें",
+    "commentAction": "टिप्पणी करें",
+    "shareAction": "साझा करें",
+    "shareOnFacebook": "फेसबुक पर साझा करें",
+    "shareOnTwitter": "ट्विटर पर साझा करें",
+    "shareOnInstagram": "इंस्टाग्राम पर साझा करें"
+  },
+  "ThemeToggleSwitch": {
+    "switchToLightTheme": "लाइट थीम पर स्विच करें",
+    "switchToDarkTheme": "डार्क थीम पर स्विच करें"
+  },
+  "SavedAdsPage": {
+    "backToFeed": "फ़ीड पर वापस जाएं",
+    "mySavedAds": "मेरे सहेजे गए विज्ञापन",
+    "errorLoadingSavedAds": "सहेजे गए विज्ञापन लोड नहीं हो सके।",
+    "infoToastTitle": "जानकारी",
+    "personalizeInfoDescription": "फ़ीड वैयक्तिकरण मुख्य फ़ीड पृष्ठ पर उपलब्ध है।",
+    "unlikedAndRemovedToastDescription": "आपने \"{title}\" को नापसंद किया। इसे आपके सहेजे गए विज्ञापनों से हटा दिया गया है।",
+    "dislikedAndRemovedToastDescription": "आपको \"{title}\" नापसंद आया। इसे आपके सहेजे गए विज्ञापनों से हटा दिया गया है।",
+    "noSavedAdsYet": "आपने अभी तक कोई विज्ञापन नहीं सहेजा है।",
+    "likeAdToSave": "इसे यहाँ सहेजने के लिए मुख्य फ़ीड में एक विज्ञापन पसंद करें!"
+  },
+  "AdMobBanner": {
+    "demoBannerTitle": "AdMob डेमो बैनर",
+    "demoAdUnitId": "डेमो विज्ञापन इकाई आईडी:",
+    "placeholderText": "(यह एक प्लेसहोल्डर है, लाइव विज्ञापन नहीं)"
+  }
+}

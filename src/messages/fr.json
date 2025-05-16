@@ -1,2 +1,69 @@
 
-{}
+{
+  "Global": {
+    "appName": "Shopyme"
+  },
+  "HomePage": {
+    "greeting": "Bienvenue chez Shopyme",
+    "aiMagicToastTitle": "Magie de l'IA ✨",
+    "aiMagicToastDescription": "Personnalisation de votre flux publicitaire...",
+    "aiPersonalizationErrorToastTitle": "Erreur de personnalisation IA",
+    "aiPersonalizationErrorToastDescription": "Impossible de personnaliser le flux.",
+    "aiFeedPersonalizedToastTitle": "Personnalisation du flux IA (simulée)",
+    "aiFeedPersonalizedToastDescription": "Flux mis à jour. Sortie IA :",
+    "ratingSubmittedToastTitle": "Évaluation soumise !",
+    "ratingSubmittedToastDescription": "Vous avez évalué \"{title}\" {rating} étoiles.",
+    "likedToastTitle": "Aimé !",
+    "likedToastDescription": "Vous avez aimé \"{title}\".",
+    "unlikedToastTitle": "Plus aimé !",
+    "unlikedToastDescription": "Vous n'aimez plus \"{title}\".",
+    "dislikedToastTitle": "Pas aimé !",
+    "dislikedToastDescription": "Vous n'avez pas aimé \"{title}\".",
+    "dislikeRemovedToastTitle": "Mention 'Pas aimé' retirée !",
+    "dislikeRemovedToastDescription": "Vous avez retiré la mention 'Pas aimé' pour \"{title}\".",
+    "followedCategoryToastTitle": "Catégorie suivie !",
+    "followedCategoryToastDescription": "Vous suivez maintenant \"{category}\".",
+    "unfollowedCategoryToastTitle": "Catégorie plus suivie !",
+    "unfollowedCategoryToastDescription": "Vous ne suivez plus \"{category}\".",
+    "noFeedItems": "Aucun élément dans votre flux pour le moment."
+  },
+  "AppHeader": {
+    "shopyme": "Shopyme",
+    "savedAdsTooltip": "Annonces sauvegardées",
+    "personalizeFeedTooltip": "Personnaliser mon flux (IA)"
+  },
+  "FeedItemCard": {
+    "adBadge": "Pub",
+    "sponsoredBy": "Sponsorisé par",
+    "categoriesLabel": "Catégories",
+    "rateThisAdLabel": "Évaluer cette publicité",
+    "rateThisContentLabel": "Évaluer ce contenu",
+    "dislikeAction": "Je n'aime pas",
+    "likeAction": "J'aime",
+    "commentAction": "Commenter",
+    "shareAction": "Partager",
+    "shareOnFacebook": "Partager sur Facebook",
+    "shareOnTwitter": "Partager sur Twitter",
+    "shareOnInstagram": "Partager sur Instagram"
+  },
+  "ThemeToggleSwitch": {
+    "switchToLightTheme": "Passer au thème clair",
+    "switchToDarkTheme": "Passer au thème sombre"
+  },
+  "SavedAdsPage": {
+    "backToFeed": "Retour au flux",
+    "mySavedAds": "Mes publicités enregistrées",
+    "errorLoadingSavedAds": "Impossible de charger les publicités enregistrées.",
+    "infoToastTitle": "Infos",
+    "personalizeInfoDescription": "La personnalisation du flux est disponible sur la page principale du flux.",
+    "unlikedAndRemovedToastDescription": "Vous n'aimez plus \"{title}\". Il a été retiré de vos publicités enregistrées.",
+    "dislikedAndRemovedToastDescription": "Vous n'avez pas aimé \"{title}\". Il a été retiré de vos publicités enregistrées.",
+    "noSavedAdsYet": "Vous n'avez encore enregistré aucune publicité.",
+    "likeAdToSave": "Aimez une publicité dans le flux principal pour l'enregistrer ici !"
+  },
+  "AdMobBanner": {
+    "demoBannerTitle": "Bannière de démonstration AdMob",
+    "demoAdUnitId": "ID de l'unité publicitaire de démonstration :",
+    "placeholderText": "(Ceci est un espace réservé, pas une publicité réelle)"
+  }
+}

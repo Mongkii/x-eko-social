@@ -1,2 +1,69 @@
 
-{}
+{
+  "Global": {
+    "appName": "شوبيمي"
+  },
+  "HomePage": {
+    "greeting": "مرحباً بك في شوبيمي",
+    "aiMagicToastTitle": "سحر الذكاء الاصطناعي ✨",
+    "aiMagicToastDescription": "يتم تخصيص موجز الإعلانات الخاص بك...",
+    "aiPersonalizationErrorToastTitle": "خطأ في تخصيص الذكاء الاصطناعي",
+    "aiPersonalizationErrorToastDescription": "تعذر تخصيص الموجز.",
+    "aiFeedPersonalizedToastTitle": "تخصيص موجز الذكاء الاصطناعي (محاكاة)",
+    "aiFeedPersonalizedToastDescription": "تم تحديث الموجز. إخراج الذكاء الاصطناعي:",
+    "ratingSubmittedToastTitle": "تم إرسال التقييم!",
+    "ratingSubmittedToastDescription": "لقد قيمت \"{title}\" {rating} نجوم.",
+    "likedToastTitle": "أعجبني!",
+    "likedToastDescription": "لقد أعجبك \"{title}\".",
+    "unlikedToastTitle": "لم يعد معجباً!",
+    "unlikedToastDescription": "لقد ألغيت الإعجاب بـ \"{title}\".",
+    "dislikedToastTitle": "لم يعجبنى!",
+    "dislikedToastDescription": "لم يعجبك \"{title}\".",
+    "dislikeRemovedToastTitle": "تمت إزالة عدم الإعجاب!",
+    "dislikeRemovedToastDescription": "لقد أزلت عدم الإعجاب بـ \"{title}\".",
+    "followedCategoryToastTitle": "تمت متابعة الفئة!",
+    "followedCategoryToastDescription": "أنت الآن تتابع \"{category}\".",
+    "unfollowedCategoryToastTitle": "تم إلغاء متابعة الفئة!",
+    "unfollowedCategoryToastDescription": "لقد ألغيت متابعة \"{category}\".",
+    "noFeedItems": "لا توجد عناصر في خلاصتك حتى الآن."
+  },
+  "AppHeader": {
+    "shopyme": "شوبيمي",
+    "savedAdsTooltip": "الإعلانات المحفوظة",
+    "personalizeFeedTooltip": "تخصيص خلاصتي (AI)"
+  },
+  "FeedItemCard": {
+    "adBadge": "إعلان",
+    "sponsoredBy": "برعاية",
+    "categoriesLabel": "الفئات",
+    "rateThisAdLabel": "قيم هذا الإعلان",
+    "rateThisContentLabel": "قيم هذا المحتوى",
+    "dislikeAction": "لم يعجبنى",
+    "likeAction": "أعجبني",
+    "commentAction": "تعليق",
+    "shareAction": "مشاركة",
+    "shareOnFacebook": "مشاركة على Facebook",
+    "shareOnTwitter": "مشاركة على Twitter",
+    "shareOnInstagram": "مشاركة على Instagram"
+  },
+  "ThemeToggleSwitch": {
+    "switchToLightTheme": "التبديل إلى المظهر الفاتح",
+    "switchToDarkTheme": "التبديل إلى المظهر الداكن"
+  },
+  "SavedAdsPage": {
+    "backToFeed": "العودة إلى الموجز",
+    "mySavedAds": "إعلاناتي المحفوظة",
+    "errorLoadingSavedAds": "تعذر تحميل الإعلانات المحفوظة.",
+    "infoToastTitle": "معلومات",
+    "personalizeInfoDescription": "تخصيص الموجز متاح في صفحة الموجز الرئيسية.",
+    "unlikedAndRemovedToastDescription": "لقد ألغيت الإعجاب بـ \"{title}\". تمت إزالته من إعلاناتك المحفوظة.",
+    "dislikedAndRemovedToastDescription": "لم يعجبك \"{title}\". تمت إزالته من إعلاناتك المحفوظة.",
+    "noSavedAdsYet": "لم تقم بحفظ أي إعلانات بعد.",
+    "likeAdToSave": "قم بالإعجاب بإعلان في الموجز الرئيسي لحفظه هنا!"
+  },
+  "AdMobBanner": {
+    "demoBannerTitle": "بانر تجريبي لـ AdMob",
+    "demoAdUnitId": "معرف الوحدة الإعلانية التجريبية:",
+    "placeholderText": "(هذا عنصر نائب ، وليس إعلانًا مباشرًا)"
+  }
+}

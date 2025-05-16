@@ -1,2 +1,69 @@
 
-{}
+{
+  "Global": {
+    "appName": "Шопими"
+  },
+  "HomePage": {
+    "greeting": "Добро пожаловать в Шопими",
+    "aiMagicToastTitle": "Магия ИИ ✨",
+    "aiMagicToastDescription": "Персонализация вашей рекламной ленты...",
+    "aiPersonalizationErrorToastTitle": "Ошибка персонализации ИИ",
+    "aiPersonalizationErrorToastDescription": "Не удалось персонализировать ленту.",
+    "aiFeedPersonalizedToastTitle": "Персонализация ленты ИИ (симуляция)",
+    "aiFeedPersonalizedToastDescription": "Лента обновлена. Вывод ИИ:",
+    "ratingSubmittedToastTitle": "Рейтинг отправлен!",
+    "ratingSubmittedToastDescription": "Вы оценили \"{title}\" на {rating} звезд(ы).",
+    "likedToastTitle": "Понравилось!",
+    "likedToastDescription": "Вам понравилось \"{title}\".",
+    "unlikedToastTitle": "Больше не нравится!",
+    "unlikedToastDescription": "Вам больше не нравится \"{title}\".",
+    "dislikedToastTitle": "Не понравилось!",
+    "dislikedToastDescription": "Вам не понравилось \"{title}\".",
+    "dislikeRemovedToastTitle": "Отметка 'Не нравится' удалена!",
+    "dislikeRemovedToastDescription": "Вы удалили отметку 'Не нравится' для \"{title}\".",
+    "followedCategoryToastTitle": "Категория отслеживается!",
+    "followedCategoryToastDescription": "Вы теперь отслеживаете \"{category}\".",
+    "unfollowedCategoryToastTitle": "Категория больше не отслеживается!",
+    "unfollowedCategoryToastDescription": "Вы перестали отслеживать \"{category}\".",
+    "noFeedItems": "В вашей ленте пока нет элементов."
+  },
+  "AppHeader": {
+    "shopyme": "Шопими",
+    "savedAdsTooltip": "Сохраненные объявления",
+    "personalizeFeedTooltip": "Персонализировать мою ленту (ИИ)"
+  },
+  "FeedItemCard": {
+    "adBadge": "Реклама",
+    "sponsoredBy": "Спонсор",
+    "categoriesLabel": "Категории",
+    "rateThisAdLabel": "Оценить это объявление",
+    "rateThisContentLabel": "Оценить этот контент",
+    "dislikeAction": "Не нравится",
+    "likeAction": "Нравится",
+    "commentAction": "Комментарий",
+    "shareAction": "Поделиться",
+    "shareOnFacebook": "Поделиться в Facebook",
+    "shareOnTwitter": "Поделиться в Twitter",
+    "shareOnInstagram": "Поделиться в Instagram"
+  },
+  "ThemeToggleSwitch": {
+    "switchToLightTheme": "Переключиться на светлую тему",
+    "switchToDarkTheme": "Переключиться на темную тему"
+  },
+  "SavedAdsPage": {
+    "backToFeed": "Вернуться к ленте",
+    "mySavedAds": "Мои сохраненные объявления",
+    "errorLoadingSavedAds": "Не удалось загрузить сохраненные объявления.",
+    "infoToastTitle": "Информация",
+    "personalizeInfoDescription": "Персонализация ленты доступна на главной странице ленты.",
+    "unlikedAndRemovedToastDescription": "Вам больше не нравится \"{title}\". Оно удалено из ваших сохраненных объявлений.",
+    "dislikedAndRemovedToastDescription": "Вам не понравилось \"{title}\". Оно удалено из ваших сохраненных объявлений.",
+    "noSavedAdsYet": "Вы еще не сохранили ни одного объявления.",
+    "likeAdToSave": "Лайкните объявление в основной ленте, чтобы сохранить его здесь!"
+  },
+  "AdMobBanner": {
+    "demoBannerTitle": "Демо-баннер AdMob",
+    "demoAdUnitId": "ID демо-рекламного блока:",
+    "placeholderText": "(Это заполнитель, а не действующая реклама)"
+  }
+}

@@ -2,8 +2,8 @@
 export interface FeedItemData {
   id: string;
   type: 'ad' | 'content';
-  sourceUrl: string; // Image URL for placeholder
-  videoUrl?: string; // Optional: actual video URL
+  sourceUrl: string; // Image URL for placeholder, or video poster
+  videoUrl?: string; // Optional: actual video URL for ads
   dataAiHint: string;
   title: string;
   advertiser?: string; // For ads
