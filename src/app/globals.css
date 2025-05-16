@@ -55,32 +55,32 @@ html, body, #__next {
     --card-foreground: 45 70% 88%; /* Warm, light yellow/off-white */
     --popover: 28 18% 12%; /* Slightly lighter dark brown */
     --popover-foreground: 45 70% 88%; /* Warm, light yellow/off-white */
-    --primary: 25 85% 50%; /* Rich, dark orange */
-    --primary-foreground: 30 50% 95%; /* Very light color, almost white */
+    --primary: 12 95% 52%; /* Firered (Vibrant Reddish-Orange) */
+    --primary-foreground: 20 0% 100%; /* White */
     --secondary: 28 40% 30%; /* Muted, browner orange */
     --secondary-foreground: 40 70% 75%; /* Lighter yellow/orange for text on secondary */
     --muted: 28 15% 20%; /* Darker, desaturated brown */
     --muted-foreground: 40 50% 60%; /* Lighter, muted yellow/orange */
     --accent: 50 100% 55%; /* Vibrant yellow */
     --accent-foreground: 28 50% 10%; /* Dark color (dark brown/black) for high contrast on yellow */
-    --destructive: 0 65% 45%; /* Standard dark theme red */
-    --destructive-foreground: 0 0% 95%; /* Light contrast for destructive */
+    --destructive: 0 70% 50%; /* A clearer, more standard red for destructive actions */
+    --destructive-foreground: 0 0% 100%; /* White */
     --border: 28 10% 25%; /* Dark, warm gray or very desaturated brown */
     --input: 28 10% 28%; /* Slightly lighter than border */
-    --ring: 25 85% 50%; /* Primary color (dark orange) for rings */
-    --chart-1: 30 100% 50%; /* Bright Orange */
-    --chart-2: 45 100% 58%; /* Vibrant Yellow */
-    --chart-3: 25 70% 40%; /* Darker/Muted Orange */
-    --chart-4: 20 50% 30%; /* Brownish */
-    --chart-5: 50 90% 65%; /* Lighter Yellow */
+    --ring: 12 95% 52%; /* Firered (Matches primary) */
+    --chart-1: 12 95% 52%; /* Firered */
+    --chart-2: 50 100% 55%; /* Vibrant Yellow */
+    --chart-3: 30 100% 50%; /* Bright Orange */
+    --chart-4: 28 40% 30%; /* Muted, browner orange */
+    --chart-5: 45 70% 88%; /* Warm, light yellow/off-white */
     --sidebar-background: 28 12% 7%; /* Even darker, almost pure black with a brown hint */
     --sidebar-foreground: 45 65% 85%; /* Light yellow as main foreground */
-    --sidebar-primary: 25 80% 48%; /* Slightly deeper primary orange for sidebar */
-    --sidebar-primary-foreground: 30 50% 95%; /* Same as main */
+    --sidebar-primary: 12 95% 48%; /* Slightly deeper firered for sidebar primary */
+    --sidebar-primary-foreground: 20 0% 100%; /* White */
     --sidebar-accent: 28 15% 15%; /* Darker brown for hover/active states */
-    --sidebar-accent-foreground: 45 70% 88%; /* Same as main */
+    --sidebar-accent-foreground: 45 70% 88%;
     --sidebar-border: 28 10% 20%;
-    --sidebar-ring: 25 85% 50%; /* Primary orange for ring */
+    --sidebar-ring: 12 95% 52%; /* Firered for sidebar ring */
   }
 }
 
@@ -92,4 +92,3 @@ html, body, #__next {
     @apply bg-background text-foreground;
   }
 }
-
