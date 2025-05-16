@@ -1,21 +1,19 @@
-import createMiddleware from 'next-intl/middleware';
-import { locales, defaultLocale } from './i18n';
+import { NextResponse } from 'next/server';
+import type { NextRequest } from 'next/server';
 
-export default createMiddleware({
-  // A list of all locales that are supported
-  locales: locales,
+// This function can be marked `async` if using `await` inside
+export function middleware(request: NextRequest) {
+  // This is a minimal, no-op middleware.
+  // It performs no next-intl logic.
+  return NextResponse.next();
+}
 
-  // Used when no locale matches
-  defaultLocale: defaultLocale,
-
-  // Make sure this is consistent with the localePrefix in your i18n.ts if you use it
-  // For a simple setup without locale prefixes in URLs for the default locale:
-  localePrefix: 'as-needed', // or 'always' or 'never'
-});
-
+// See "Matching Paths" below to learn more
 export const config = {
-  // Match only internationalized pathnames
-  // Skip all paths that should not be internationalized. This example skips the
-  // folders "api", "_next" and all files with an extension (e.g. favicon.ico)
-  matcher: ['/((?!api|_next/static|_next/image|favicon.ico).*)']
+  matcher: [
+    // Skip all internal paths (_next)
+    '/((?!_next).*)',
+    // Optional: only run on root (/) URL
+    // '/'
+  ],
 };
