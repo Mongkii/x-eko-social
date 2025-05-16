@@ -2,7 +2,7 @@
 'use server';
 
 /**
- * @fileOverview AI agent that suggests ad categories for new users, using DeepSeek API.
+ * @fileOverview AI agent that suggests ad categories for new users, using DeepSeek API via OpenAI SDK.
  *
  * - suggestAdCategories - A function that suggests ad categories based on user profile data.
  * - SuggestAdCategoriesInput - The input type for the suggestAdCategories function.
@@ -11,6 +11,7 @@
 
 import {ai} from '@/ai/genkit';
 import {z} from 'genkit';
+import OpenAI from 'openai';
 
 const SuggestAdCategoriesInputSchema = z.object({
   userProfile: z
@@ -34,10 +35,9 @@ export async function suggestAdCategories(
   return suggestAdCategoriesFlow(input);
 }
 
-// Placeholder for DeepSeek API details - User needs to configure these
 const DEEPSEEK_API_KEY = process.env.DEEPSEEK_API_KEY;
+const DEEPSEEK_BASE_URL = 'https://api.deepseek.com/v1'; // Standard v1 endpoint for OpenAI compatibility
 const DEEPSEEK_MODEL = 'deepseek-chat'; // Or your preferred DeepSeek model
-const DEEPSEEK_API_ENDPOINT = 'https://api.deepseek.com/v1/chat/completions'; // Replace with actual endpoint if different
 
 const suggestAdCategoriesFlow = ai.defineFlow(
   {
@@ -48,12 +48,13 @@ const suggestAdCategoriesFlow = ai.defineFlow(
   async (input: SuggestAdCategoriesInput) => {
     if (!DEEPSEEK_API_KEY || DEEPSEEK_API_KEY === 'your_deepseek_api_key_here') {
       console.error('DeepSeek API key is not configured. Please set DEEPSEEK_API_KEY in your .env file.');
-      // Fallback or error handling:
-      // Option 1: Throw an error
-      // throw new Error('DeepSeek API key not configured.');
-      // Option 2: Return a default/empty response (example)
       return { suggestedCategories: ['Configuration needed: DeepSeek API Key'] };
     }
+
+    const openai = new OpenAI({
+        baseURL: DEEPSEEK_BASE_URL,
+        apiKey: DEEPSEEK_API_KEY,
+    });
 
     // Construct the prompt for DeepSeek
     // This prompt instructs the model to return JSON in the desired format.
@@ -70,45 +71,33 @@ For example:
 `;
 
     try {
-      const response = await fetch(DEEPSEEK_API_ENDPOINT, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${DEEPSEEK_API_KEY}`,
-        },
-        body: JSON.stringify({
-          model: DEEPSEEK_MODEL,
-          messages: [{ role: 'user', content: promptText }],
-          // Some APIs support a response_format option to enforce JSON output.
-          // Check DeepSeek documentation if such an option exists, e.g.:
-          // response_format: { type: "json_object" } // This is hypothetical
-        }),
+      const completion = await openai.chat.completions.create({
+        messages: [{ role: 'user', content: promptText }],
+        model: DEEPSEEK_MODEL,
+        // Some APIs (like OpenAI's) support a response_format option to enforce JSON output.
+        // Check DeepSeek documentation if such an option exists and how to use it with their OpenAI-compatible endpoint.
+        // e.g., response_format: { type: "json_object" } // This is hypothetical for DeepSeek
       });
 
-      if (!response.ok) {
-        const errorBody = await response.text();
-        console.error(`DeepSeek API request failed with status ${response.status}: ${errorBody}`);
-        throw new Error(`DeepSeek API request failed: ${response.statusText} - ${errorBody}`);
-      }
+      const messageContent = completion.choices[0]?.message?.content;
 
-      const result = await response.json();
-
-      // Assuming the DeepSeek API returns a structure like OpenAI's,
-      // where the main content is in result.choices[0].message.content.
-      // Adjust this based on the actual DeepSeek API response structure.
-      let messageContent = '';
-      if (result.choices && result.choices[0] && result.choices[0].message && result.choices[0].message.content) {
-        messageContent = result.choices[0].message.content;
-      } else {
-        // Log the unexpected structure for debugging
-        console.warn('Unexpected DeepSeek API response structure:', JSON.stringify(result, null, 2));
-        throw new Error('Unexpected response structure from DeepSeek API.');
+      if (!messageContent) {
+        console.warn('Unexpected DeepSeek API response structure or empty content:', JSON.stringify(completion, null, 2));
+        throw new Error('Unexpected response structure or empty content from DeepSeek API.');
       }
       
       // The content might be a stringified JSON, so parse it.
       let parsedOutput;
       try {
-        parsedOutput = JSON.parse(messageContent);
+        // Attempt to clean the content if it's wrapped in ```json ... ```
+        let cleanJsonString = messageContent.trim();
+        if (cleanJsonString.startsWith("```json")) {
+            cleanJsonString = cleanJsonString.substring(7); // Remove ```json
+            if (cleanJsonString.endsWith("```")) {
+                cleanJsonString = cleanJsonString.substring(0, cleanJsonString.length - 3); // Remove ```
+            }
+        }
+        parsedOutput = JSON.parse(cleanJsonString);
       } catch (e) {
         console.error('Failed to parse JSON from DeepSeek response content:', messageContent, e);
         throw new Error('DeepSeek response content was not valid JSON.');
@@ -118,17 +107,22 @@ For example:
       const validatedOutput = SuggestAdCategoriesOutputSchema.safeParse(parsedOutput);
       if (!validatedOutput.success) {
         console.error('DeepSeek output validation failed:', validatedOutput.error.flatten());
+        // Log the problematic parsed output for better debugging
+        console.error('Problematic parsed output from DeepSeek:', JSON.stringify(parsedOutput, null, 2));
         throw new Error('DeepSeek output did not match the expected schema.');
       }
 
       return validatedOutput.data;
 
     } catch (error) {
-      console.error('Error calling DeepSeek API or processing response:', error);
-      // You might want to re-throw the error or return a fallback
-      // For example, re-throwing:
-      // throw error;
-      // Or returning a fallback:
+      console.error('Error calling DeepSeek API via OpenAI SDK or processing response:', error);
+      // For more detailed error, check if it's an APIError from OpenAI SDK
+      if (error instanceof OpenAI.APIError) {
+        console.error('DeepSeek API Error Status:', error.status);
+        console.error('DeepSeek API Error Message:', error.message);
+        console.error('DeepSeek API Error Code:', error.code);
+        console.error('DeepSeek API Error Type:', error.type);
+      }
       return { suggestedCategories: ['Error processing request'] };
     }
   }
