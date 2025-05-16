@@ -9,8 +9,7 @@
  * - SuggestAdCategoriesOutput - The return type for the suggestAdCategories function.
  */
 
-import {ai} from '@/ai/genkit';
-import {z} from 'genkit';
+import {z} from 'zod';
 import OpenAI from 'openai';
 
 const SuggestAdCategoriesInputSchema = z.object({
@@ -29,11 +28,6 @@ const SuggestAdCategoriesOutputSchema = z.object({
 });
 export type SuggestAdCategoriesOutput = z.infer<typeof SuggestAdCategoriesOutputSchema>;
 
-export async function suggestAdCategories(
-  input: SuggestAdCategoriesInput
-): Promise<SuggestAdCategoriesOutput> {
-  return suggestAdCategoriesFlow(input);
-}
 
 const DEEPSEEK_API_KEY = process.env.DEEPSEEK_API_KEY;
 const DEEPSEEK_BASE_URL = 'https://api.deepseek.com/v1'; // Standard v1 endpoint for OpenAI compatibility
@@ -41,27 +35,20 @@ const DEEPSEEK_BASE_URL = 'https://api.deepseek.com/v1'; // Standard v1 endpoint
 // This is a placeholder based on the request to "test deepseek v3".
 const DEEPSEEK_MODEL = 'deepseek-chat-v3'; 
 
-const suggestAdCategoriesFlow = ai.defineFlow(
-  {
-    name: 'suggestAdCategoriesFlow',
-    inputSchema: SuggestAdCategoriesInputSchema,
-    outputSchema: SuggestAdCategoriesOutputSchema,
-  },
-  async (input: SuggestAdCategoriesInput) => {
-    if (!DEEPSEEK_API_KEY || DEEPSEEK_API_KEY === 'your_deepseek_api_key_here') {
-      console.error('DeepSeek API key is not configured. Please set DEEPSEEK_API_KEY in your .env file.');
-      // Return an empty array or a specific error indicator that fits your UI needs
-      return { suggestedCategories: ['Configuration needed: DeepSeek API Key'] };
-    }
+export async function suggestAdCategories(
+  input: SuggestAdCategoriesInput
+): Promise<SuggestAdCategoriesOutput> {
+  if (!DEEPSEEK_API_KEY || DEEPSEEK_API_KEY === 'your_deepseek_api_key_here') {
+    console.error('DeepSeek API key is not configured. Please set DEEPSEEK_API_KEY in your .env file.');
+    return { suggestedCategories: ['Configuration needed: DeepSeek API Key'] };
+  }
 
-    const openai = new OpenAI({
-        baseURL: DEEPSEEK_BASE_URL,
-        apiKey: DEEPSEEK_API_KEY,
-    });
+  const openai = new OpenAI({
+      baseURL: DEEPSEEK_BASE_URL,
+      apiKey: DEEPSEEK_API_KEY,
+  });
 
-    // Construct the prompt for DeepSeek
-    // This prompt instructs the model to return JSON in the desired format.
-    const promptText = `You are an expert in understanding user interests and matching them to relevant ad categories.
+  const promptText = `You are an expert in understanding user interests and matching them to relevant ad categories.
 Given the following user profile:
 "${input.userProfile}"
 
@@ -73,60 +60,51 @@ For example:
 }
 `;
 
-    try {
-      const completion = await openai.chat.completions.create({
-        messages: [{ role: 'user', content: promptText }],
-        model: DEEPSEEK_MODEL,
-        // Some APIs (like OpenAI's) support a response_format option to enforce JSON output.
-        // Check DeepSeek documentation if such an option exists and how to use it with their OpenAI-compatible endpoint.
-        // e.g., response_format: { type: "json_object" } // This is hypothetical for DeepSeek
-      });
+  try {
+    const completion = await openai.chat.completions.create({
+      messages: [{ role: 'user', content: promptText }],
+      model: DEEPSEEK_MODEL,
+    });
 
-      const messageContent = completion.choices[0]?.message?.content;
+    const messageContent = completion.choices[0]?.message?.content;
 
-      if (!messageContent) {
-        console.warn('Unexpected DeepSeek API response structure or empty content:', JSON.stringify(completion, null, 2));
-        throw new Error('Unexpected response structure or empty content from DeepSeek API.');
-      }
-      
-      // The content might be a stringified JSON, so parse it.
-      let parsedOutput;
-      try {
-        // Attempt to clean the content if it's wrapped in ```json ... ```
-        let cleanJsonString = messageContent.trim();
-        if (cleanJsonString.startsWith("```json")) {
-            cleanJsonString = cleanJsonString.substring(7); // Remove ```json
-            if (cleanJsonString.endsWith("```")) {
-                cleanJsonString = cleanJsonString.substring(0, cleanJsonString.length - 3); // Remove ```
-            }
-        }
-        parsedOutput = JSON.parse(cleanJsonString);
-      } catch (e) {
-        console.error('Failed to parse JSON from DeepSeek response content:', messageContent, e);
-        throw new Error('DeepSeek response content was not valid JSON.');
-      }
-
-      // Validate the parsed output against our Zod schema
-      const validatedOutput = SuggestAdCategoriesOutputSchema.safeParse(parsedOutput);
-      if (!validatedOutput.success) {
-        console.error('DeepSeek output validation failed:', validatedOutput.error.flatten());
-        // Log the problematic parsed output for better debugging
-        console.error('Problematic parsed output from DeepSeek:', JSON.stringify(parsedOutput, null, 2));
-        throw new Error('DeepSeek output did not match the expected schema.');
-      }
-
-      return validatedOutput.data;
-
-    } catch (error) {
-      console.error('Error calling DeepSeek API via OpenAI SDK or processing response:', error);
-      // For more detailed error, check if it's an APIError from OpenAI SDK
-      if (error instanceof OpenAI.APIError) {
-        console.error('DeepSeek API Error Status:', error.status);
-        console.error('DeepSeek API Error Message:', error.message);
-        console.error('DeepSeek API Error Code:', error.code);
-        console.error('DeepSeek API Error Type:', error.type);
-      }
-      return { suggestedCategories: ['Error processing request'] };
+    if (!messageContent) {
+      console.warn('Unexpected DeepSeek API response structure or empty content:', JSON.stringify(completion, null, 2));
+      throw new Error('Unexpected response structure or empty content from DeepSeek API.');
     }
+    
+    let cleanJsonString = messageContent.trim();
+    if (cleanJsonString.startsWith("```json")) {
+        cleanJsonString = cleanJsonString.substring(7); 
+        if (cleanJsonString.endsWith("```")) {
+            cleanJsonString = cleanJsonString.substring(0, cleanJsonString.length - 3); 
+        }
+    }
+    let parsedOutput;
+    try {
+      parsedOutput = JSON.parse(cleanJsonString);
+    } catch (e) {
+      console.error('Failed to parse JSON from DeepSeek response content:', cleanJsonString, e);
+      throw new Error('DeepSeek response content was not valid JSON.');
+    }
+
+    const validatedOutput = SuggestAdCategoriesOutputSchema.safeParse(parsedOutput);
+    if (!validatedOutput.success) {
+      console.error('DeepSeek output validation failed:', validatedOutput.error.flatten());
+      console.error('Problematic parsed output from DeepSeek:', JSON.stringify(parsedOutput, null, 2));
+      throw new Error('DeepSeek output did not match the expected schema.');
+    }
+
+    return validatedOutput.data;
+
+  } catch (error) {
+    console.error('Error calling DeepSeek API via OpenAI SDK or processing response:', error);
+    if (error instanceof OpenAI.APIError) {
+      console.error('DeepSeek API Error Status:', error.status);
+      console.error('DeepSeek API Error Message:', error.message);
+      console.error('DeepSeek API Error Code:', error.code);
+      console.error('DeepSeek API Error Type:', error.type);
+    }
+    return { suggestedCategories: ['Error processing request'] };
   }
-);
+}

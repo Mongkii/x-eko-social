@@ -1,5 +1,2 @@
-import { config } from 'dotenv';
-config();
-
-import '@/ai/flows/suggest-ad-categories.ts';
-import '@/ai/flows/personalize-ad-feed.ts';
+// This file will be deleted.
+// Placeholder to satisfy the XML change format if the file is to be deleted.
