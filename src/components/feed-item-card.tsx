@@ -1,3 +1,4 @@
+
 "use client";
 
 import Image from 'next/image';
@@ -6,7 +7,8 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { StarRating } from '@/components/ui/star-rating';
 import { Badge } from '@/components/ui/badge';
-import { Heart, ThumbsDown, Plus, Check, ThumbsUp, MessageCircle, Share2, PlayCircle } from 'lucide-react';
+import { Separator } from '@/components/ui/separator';
+import { Heart, ThumbsDown, Plus, Check, ThumbsUp, MessageCircle, Share2, PlayCircle, Facebook, Twitter, Instagram } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import React, { useState, useRef, useEffect } from 'react';
 
@@ -189,8 +191,32 @@ export function FeedItemCard({
               <span className="sr-only">Share</span>
             </Button>
           </div>
+
+          {/* Conditional Social Media Share for Ads */}
+          {item.type === 'ad' && (
+            <>
+              <Separator className="my-2 mx-auto w-11/12" />
+              <div className="w-full">
+                <p className="text-xs font-medium text-muted-foreground mb-2 text-center">
+                  Share this ad:
+                </p>
+                <div className="flex w-full justify-center items-center gap-4">
+                  <Button variant="outline" size="icon" aria-label="Share on Facebook" className="rounded-full">
+                    <Facebook className="h-5 w-5" />
+                  </Button>
+                  <Button variant="outline" size="icon" aria-label="Share on Twitter" className="rounded-full">
+                    <Twitter className="h-5 w-5" />
+                  </Button>
+                  <Button variant="outline" size="icon" aria-label="Share on Instagram" className="rounded-full">
+                    <Instagram className="h-5 w-5" />
+                  </Button>
+                </div>
+              </div>
+            </>
+          )}
         </CardFooter>
       </Card>
     </div>
   );
 }
+
