@@ -18,7 +18,6 @@ import { useTranslations } from 'next-intl';
 
 const LOCAL_STORAGE_LIKED_ADS_KEY = 'shopyme_liked_ad_ids';
 
-// Define the structure of the Android bridge for TypeScript
 interface AndroidAppBridge {
   subscribe: (sku: string) => Promise<{ success: boolean; message?: string }>;
   purchase: (sku: string) => Promise<{ success: boolean; message?: string }>;
@@ -26,20 +25,17 @@ interface AndroidAppBridge {
   getAvailableIaps: () => Promise<InAppPurchaseItem[]>;
 }
 
-// Define the structure of the iOS bridge for TypeScript (simulated)
 interface IOSAppBridge {
   subscribe: (sku: string) => Promise<{ success: boolean; message?: string }>;
   purchase: (sku: string) => Promise<{ success: boolean; message?: string }>;
   getSubscriptionStatus: () => Promise<boolean>;
   getAvailableIaps: () => Promise<InAppPurchaseItem[]>;
-  // In a real iOS app, this might be `window.webkit.messageHandlers.iosAppBridge.postMessage(...)`
 }
 
 declare global {
   interface Window {
     androidAppBridge?: AndroidAppBridge;
-    iosAppBridge?: IOSAppBridge; // For iOS
-    // For native to update webview (can be generic or platform-specific)
+    iosAppBridge?: IOSAppBridge;
     updateSubscriptionStatus?: (isSubscribed: boolean) => void;
   }
 }
@@ -56,14 +52,14 @@ export default function HomePage() {
 
 
   const [isAndroidApp, setIsAndroidApp] = useState(false);
-  const [isIOSApp, setIsIOSApp] = useState(false); // New state for iOS
+  const [isIOSApp, setIsIOSApp] = useState(false);
   const [isUserSubscribed, setIsUserSubscribed] = useState(false);
   const [availableIAPs, setAvailableIAPs] = useState<InAppPurchaseItem[]>(mockInAppPurchaseItems);
 
 
   useEffect(() => {
     const androidBridge = window.androidAppBridge;
-    const iosBridge = window.iosAppBridge; // Or window.webkit.messageHandlers.iosAppBridge for a common pattern
+    const iosBridge = window.iosAppBridge; 
 
     let mobileAppDetected = false;
 
@@ -74,7 +70,6 @@ export default function HomePage() {
         .then(status => setIsUserSubscribed(status))
         .catch(err => console.error("Error getting subscription status from Android bridge:", err));
       
-      // For this simulation, we'll stick to mockIAPItems
       setAvailableIAPs(mockInAppPurchaseItems);
 
     } else if (iosBridge && typeof iosBridge.getSubscriptionStatus === 'function') {
@@ -88,7 +83,6 @@ export default function HomePage() {
     }
 
     if (mobileAppDetected) {
-      // Allow native code to update subscription status
       window.updateSubscriptionStatus = (newStatus: boolean) => {
         setIsUserSubscribed(newStatus);
         toast({
@@ -104,7 +98,6 @@ export default function HomePage() {
       console.warn("No mobile app bridge (Android or iOS) found. Play/App Store Billing UI will be conditional or use defaults.");
     }
 
-    // Cleanup
     return () => {
       if (window.updateSubscriptionStatus) {
         delete window.updateSubscriptionStatus;
@@ -321,17 +314,12 @@ export default function HomePage() {
       let result = { success: false, message: "Bridge not found" };
       if (isAndroidApp && window.androidAppBridge && typeof window.androidAppBridge.subscribe === 'function') {
         console.log(`Attempting to subscribe via Android bridge with SKU: ${sku}`);
-        // result = await window.androidAppBridge.subscribe(sku); // Real call
         result = await new Promise<{success: boolean}>(resolve => setTimeout(() => resolve({success: true}), 1000)); // Simulated
       } else if (isIOSApp && window.iosAppBridge && typeof window.iosAppBridge.subscribe === 'function') {
         console.log(`Attempting to subscribe via iOS bridge with SKU: ${sku}`);
-        // result = await window.iosAppBridge.subscribe(sku); // Real call
         result = await new Promise<{success: boolean}>(resolve => setTimeout(() => resolve({success: true}), 1000)); // Simulated
       } else {
         toast({ variant: "destructive", title: t('mobileBridgeNotFound'), description: t('featureOnlyInMobileApp') });
-        // Simulate for browser testing
-        // setIsUserSubscribed(true);
-        // toast({ title: "Subscription Successful! (Simulated)", description: "You are now subscribed to Premium." });
         return;
       }
 
@@ -353,23 +341,17 @@ export default function HomePage() {
       let result = { success: false, message: "Bridge not found" };
       if (isAndroidApp && window.androidAppBridge && typeof window.androidAppBridge.purchase === 'function') {
         console.log(`Attempting to purchase via Android bridge with SKU: ${sku}`);
-        // result = await window.androidAppBridge.purchase(sku); // Real call
         result = await new Promise<{success: boolean}>(resolve => setTimeout(() => resolve({success: true}), 1000)); // Simulated
       } else if (isIOSApp && window.iosAppBridge && typeof window.iosAppBridge.purchase === 'function') {
          console.log(`Attempting to purchase via iOS bridge with SKU: ${sku}`);
-        // result = await window.iosAppBridge.purchase(sku); // Real call
         result = await new Promise<{success: boolean}>(resolve => setTimeout(() => resolve({success: true}), 1000)); // Simulated
       } else {
         toast({ variant: "destructive", title: t('mobileBridgeNotFound'), description: t('featureOnlyInMobileApp') });
-        // Simulate for browser testing
-        // toast({ title: `Purchase Successful! (Simulated)`, description: `You have purchased ${title}.` });
         return;
       }
       
       if (result.success) {
         toast({ title: t('purchaseSuccessful'), description: t('youHavePurchasedItem', {title}) });
-        // If this purchase grants subscription, update state:
-        // if (sku === premiumSubscriptionSku) setIsUserSubscribed(true);
       } else {
         toast({ variant: "destructive", title: t('purchaseFailed'), description: result.message || t('couldNotPurchaseItem', {title}) });
       }

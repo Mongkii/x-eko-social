@@ -6,39 +6,35 @@ import enMessages from './messages/en.json'; // Static import for default locale
 export const defaultLocale = 'en';
 export const locales = [defaultLocale]; // Only English for now
 
-// Minimal configuration for English-only setup
+// Minimal fallback messages for i18n.ts itself
+// These keys should match what your components are trying to access.
+const ultimateFallbackMessages = {
+  Global: { appName: "Shopyme (i18n Fallback)" },
+  HomePage: { greeting: "Welcome (i18n Fallback)" },
+  AppHeader: { shopyme: "Shopyme (i18n Fallback)" },
+  FeedItemCard: { adBadge: "Ad (i18n Fallback)"},
+  ThemeToggleSwitch: {switchToLightTheme: "Light Mode (i18n Fallback)"},
+  // Add other essential namespaces/keys if needed
+};
+
 export default getRequestConfig(async ({locale}) => {
   // Validate that the incoming `locale` parameter is valid
   if (!locales.includes(locale as any)) {
-    console.warn(`i18n.ts: Invalid locale "${locale}" requested. Falling back to notFound().`);
+    console.warn(`i18n.ts: Invalid locale "${locale}" requested. Calling notFound().`);
     notFound();
   }
 
-  // For English, we use the statically imported messages.
-  // For a multi-language setup, you'd use dynamic imports here for other locales.
   if (locale === 'en') {
-    if (typeof enMessages === 'object' && enMessages !== null) {
+    if (typeof enMessages === 'object' && enMessages !== null && Object.keys(enMessages).length > 0) {
       return {messages: enMessages};
     } else {
-      console.error(`i18n.ts: Failed to load static en.json or it's not an object. Content:`, enMessages);
-      // Fallback to minimal messages if static import failed or was not an object
-      return {
-        messages: {
-          Global: { appName: "Shopyme (Minimal Fallback)" },
-          HomePage: { greeting: "Welcome (Minimal Fallback)" },
-        }
-      };
+      console.error(`i18n.ts: Failed to load static en.json or it's empty/invalid. Using ultimate fallback. Content:`, enMessages);
+      return {messages: ultimateFallbackMessages };
     }
   }
   
-  // Should not be reached if locales only contains 'en'
-  // and the above check handles 'en'.
-  // But as a safeguard for future expansion:
-  console.warn(`i18n.ts: Locale "${locale}" not explicitly handled, returning minimal fallback.`);
-  return {
-    messages: {
-      Global: { appName: "Shopyme (Minimal Fallback)" },
-      HomePage: { greeting: "Welcome (Minimal Fallback)" },
-    }
-  };
+  // Fallback for any other case (though should not be reached with current locales setup)
+  console.warn(`i18n.ts: Locale "${locale}" not explicitly handled or en.json failed, returning ultimate fallback.`);
+  return {messages: ultimateFallbackMessages };
 });
+
