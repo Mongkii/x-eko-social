@@ -5,8 +5,7 @@ import './globals.css';
 import { Toaster } from "@/components/ui/toaster";
 import { ThemeProvider } from "@/components/theme-provider";
 import { NextIntlClientProvider, AbstractIntlMessages } from 'next-intl';
-import { getMessages } from 'next-intl/server'; // For server components
-import { defaultLocale } from '@/i18n'; 
+import { defaultLocale } from '@/i18n'; // Assuming defaultLocale is 'en'
 
 const geistSans = Geist({
   variable: '--font-geist-sans',
@@ -24,6 +23,7 @@ export const metadata: Metadata = {
 };
 
 // Minimal fallback messages for RootLayout
+// THIS IS THE PRIMARY SOURCE OF MESSAGES FOR THIS LAYOUT NOW
 const minimalFallbackMessages: AbstractIntlMessages = {
   Global: { appName: "Shopyme (Root FB)" },
   HomePage: { 
@@ -121,26 +121,15 @@ const minimalFallbackMessages: AbstractIntlMessages = {
   }
 };
 
-export default async function RootLayout({
+export default function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  let messages: AbstractIntlMessages;
-  try {
-    // For a single-language app (English only) directly using getMessages() is fine
-    // If you were to use [locale] segments, you'd pass {locale} to getMessages.
-    messages = await getMessages({ locale: defaultLocale });
-  } catch (error) {
-    console.error("RootLayout: Failed to load messages, using MINIMAL hardcoded fallback. Error:", error);
-    messages = minimalFallbackMessages; 
-  }
-
-  // Fallback if messages are still undefined or empty after the try-catch
-  if (!messages || Object.keys(messages).length === 0) {
-    console.warn("RootLayout: Messages object is empty or invalid after attempting to load/fallback. Using MINIMAL hardcoded fallback again.");
-    messages = minimalFallbackMessages;
-  }
+  // Directly use fallback messages for RootLayout to ensure stability
+  // The getMessages() call was consistently failing here with "config not found".
+  const messages = minimalFallbackMessages;
+  console.log("RootLayout: Using MINIMAL hardcoded fallback messages for NextIntlClientProvider.");
 
   return (
     <html lang={defaultLocale} className="h-full" suppressHydrationWarning>
