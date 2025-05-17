@@ -4,6 +4,9 @@ import { Geist, Geist_Mono } from 'next/font/google';
 import './globals.css';
 import { Toaster } from "@/components/ui/toaster";
 import { ThemeProvider } from "@/components/theme-provider";
+import { NextIntlClientProvider, AbstractIntlMessages } from 'next-intl';
+import { getMessages } from 'next-intl/server';
+import { defaultLocale } from '@/i18n'; 
 
 const geistSans = Geist({
   variable: '--font-geist-sans',
@@ -20,25 +23,48 @@ export const metadata: Metadata = {
   description: 'Personalized Ad Feed Experience',
 };
 
-export default function RootLayout({
+// Minimal fallback messages for RootLayout if getMessages fails
+// This is a last resort and should contain keys for essential UI elements
+// that might be rendered even if full message loading fails.
+const minimalFallbackMessages: AbstractIntlMessages = {
+  Global: { appName: "Shopyme (Root FB)" },
+  AppHeader: { shopyme: "Shopyme (Root FB)" },
+  // Add other essential namespaces/keys if RootLayout or its direct children use them
+};
+
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  // console.log("RootLayout: next-intl completely removed."); // Optional: for debugging if needed
+  let messages: AbstractIntlMessages | undefined;
+  try {
+    messages = await getMessages({ locale: defaultLocale });
+  } catch (error) {
+    console.error("RootLayout: Failed to load messages, using minimal fallback. Error:", error);
+    messages = minimalFallbackMessages; 
+  }
+
+  if (!messages || Object.keys(messages).length === 0) {
+    console.warn("RootLayout: Messages object is empty or invalid after attempting to load/fallback. Using MINIMAL hardcoded fallback.");
+    messages = minimalFallbackMessages;
+  }
+
 
   return (
-    <html lang="en" className="h-full" suppressHydrationWarning>
+    <html lang={defaultLocale} className="h-full" suppressHydrationWarning>
       <body className={`${geistSans.variable} ${geistMono.variable} antialiased h-full flex flex-col`}>
-        <ThemeProvider
-          attribute="class"
-          defaultTheme="system"
-          enableSystem
-          disableTransitionOnChange
-        >
-          {children}
-          <Toaster />
-        </ThemeProvider>
+        <NextIntlClientProvider locale={defaultLocale} messages={messages}>
+          <ThemeProvider
+            attribute="class"
+            defaultTheme="system"
+            enableSystem
+            disableTransitionOnChange
+          >
+            {children}
+            <Toaster />
+          </ThemeProvider>
+        </NextIntlClientProvider>
       </body>
     </html>
   );

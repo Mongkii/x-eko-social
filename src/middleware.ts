@@ -1,19 +1,20 @@
-import { NextResponse } from 'next/server';
-import type { NextRequest } from 'next/server';
 
-// This function can be marked `async` if using `await` inside
-export function middleware(request: NextRequest) {
-  // This is a minimal, no-op middleware.
-  // It performs no next-intl logic.
-  return NextResponse.next();
-}
+import createMiddleware from 'next-intl/middleware';
+import {defaultLocale, locales} from './i18n';
 
-// See "Matching Paths" below to learn more
+export default createMiddleware({
+  // A list of all locales that are supported
+  locales: locales,
+
+  // Used when no locale matches
+  defaultLocale: defaultLocale,
+  
+  // Make sure this matches your pathnames config
+  localePrefix: 'as-needed' 
+});
+
 export const config = {
-  matcher: [
-    // Skip all internal paths (_next)
-    '/((?!_next).*)',
-    // Optional: only run on root (/) URL
-    // '/'
-  ],
+  // Match only internationalized pathnames
+  // Skip all internal paths (_next) and static files
+  matcher: ['/', '/(en)/:path*']
 };

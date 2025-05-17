@@ -38,8 +38,8 @@
     "subscriptionFailed": "Subscription Failed",
     "couldNotCompleteSubscription": "Could not complete subscription.",
     "subscriptionError": "Subscription Error",
-    "androidBridgeNotFound": "Android Bridge Not Found",
-    "featureOnlyInAndroidApp": "This feature is only available in the Android app.",
+    "mobileBridgeNotFound": "Mobile App Bridge Not Found",
+    "featureOnlyInMobileApp": "This feature is only available in the mobile app.",
     "purchasingItem": "Purchasing {title}...",
     "purchaseSuccessful": "Purchase Successful!",
     "youHavePurchasedItem": "You have purchased {title}.",
@@ -51,7 +51,7 @@
     "statusActive": "Active",
     "statusInactive": "Inactive",
     "billingSectionTitle": "App Subscriptions & Purchases",
-    "billingSectionDescription": "Manage your subscriptions and in-app items (Simulated for Android App)."
+    "billingSectionDescription": "Manage your subscriptions and in-app items (Simulated for Mobile App)."
   },
   "AppHeader": {
     "shopyme": "Shopyme",
@@ -60,8 +60,8 @@
   },
   "FeedItemCard": {
     "adBadge": "Ad",
-    "sponsoredBy": "Sponsored by",
-    "categoriesLabel": "Categories",
+    "sponsoredBy": "Sponsored by {advertiser}",
+    "categoriesLabel": "Categories:",
     "rateThisAdLabel": "Rate this ad",
     "rateThisContentLabel": "Rate this content",
     "dislikeAction": "Dislike",
@@ -70,7 +70,11 @@
     "shareAction": "Share",
     "shareOnFacebook": "Share on Facebook",
     "shareOnTwitter": "Share on Twitter",
-    "shareOnInstagram": "Share on Instagram"
+    "shareOnInstagram": "Share on Instagram",
+    "rewardedAdTitle": "Watch a Rewarded Ad!",
+    "rewardedAdDescription": "Watch this short video to earn a reward.",
+    "watchAdButton": "Watch Ad",
+    "rewardedAdBadge": "Rewarded Ad"
   },
   "ThemeToggleSwitch": {
     "switchToLightTheme": "Switch to light theme",

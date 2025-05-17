@@ -14,6 +14,7 @@ import { initialFeedItems, allAvailableAds } from '@/lib/ads-data';
 import { AdMobBanner } from '@/components/admob-banner';
 import { mockInAppPurchaseItems, premiumSubscriptionSku } from '@/lib/billing-data';
 import { CheckCircle, ShoppingCart, Star } from 'lucide-react';
+import { useTranslations } from 'next-intl';
 
 const LOCAL_STORAGE_LIKED_ADS_KEY = 'shopyme_liked_ad_ids';
 
@@ -21,15 +22,24 @@ const LOCAL_STORAGE_LIKED_ADS_KEY = 'shopyme_liked_ad_ids';
 interface AndroidAppBridge {
   subscribe: (sku: string) => Promise<{ success: boolean; message?: string }>;
   purchase: (sku: string) => Promise<{ success: boolean; message?: string }>;
-  // In a real app, these would likely be async or take callbacks
   getSubscriptionStatus: () => Promise<boolean>;
   getAvailableIaps: () => Promise<InAppPurchaseItem[]>;
+}
+
+// Define the structure of the iOS bridge for TypeScript (simulated)
+interface IOSAppBridge {
+  subscribe: (sku: string) => Promise<{ success: boolean; message?: string }>;
+  purchase: (sku: string) => Promise<{ success: boolean; message?: string }>;
+  getSubscriptionStatus: () => Promise<boolean>;
+  getAvailableIaps: () => Promise<InAppPurchaseItem[]>;
+  // In a real iOS app, this might be `window.webkit.messageHandlers.iosAppBridge.postMessage(...)`
 }
 
 declare global {
   interface Window {
     androidAppBridge?: AndroidAppBridge;
-    // For native to update webview
+    iosAppBridge?: IOSAppBridge; // For iOS
+    // For native to update webview (can be generic or platform-specific)
     updateSubscriptionStatus?: (isSubscribed: boolean) => void;
   }
 }
@@ -41,55 +51,66 @@ export default function HomePage() {
   const [followedCategories, setFollowedCategories] = useState<Set<string>>(new Set(['Travel']));
   const [userInteractions, setUserInteractions] = useState<UserInteraction[]>([]);
   const { toast } = useToast();
+  const t = useTranslations('HomePage');
+  const tGlobal = useTranslations('Global');
+
 
   const [isAndroidApp, setIsAndroidApp] = useState(false);
+  const [isIOSApp, setIsIOSApp] = useState(false); // New state for iOS
   const [isUserSubscribed, setIsUserSubscribed] = useState(false);
-  const [availableIAPs, setAvailableIAPs] = useState<InAppPurchaseItem[]>(mockInAppPurchaseItems); // Default to mock
+  const [availableIAPs, setAvailableIAPs] = useState<InAppPurchaseItem[]>(mockInAppPurchaseItems);
 
 
   useEffect(() => {
-    // Simulate checking for Android bridge and initial state loading
-    const bridge = window.androidAppBridge;
-    if (bridge && typeof bridge.getSubscriptionStatus === 'function' && typeof bridge.getAvailableIaps === 'function') {
-      setIsAndroidApp(true);
-      bridge.getSubscriptionStatus()
-        .then(status => setIsUserSubscribed(status))
-        .catch(err => console.error("Error getting subscription status from bridge:", err));
-      
-      // In a real app, you might fetch IAPs from the bridge
-      // For this simulation, we'll stick to mockIAPItems, or you could fetch them:
-      // bridge.getAvailableIaps()
-      //   .then(iaps => setAvailableIAPs(iaps))
-      //   .catch(err => {
-      //     console.error("Error getting IAPs from bridge, using mock data:", err);
-      //     setAvailableIAPs(mockInAppPurchaseItems);
-      //   });
-      setAvailableIAPs(mockInAppPurchaseItems); // Keep using mock for this demo
+    const androidBridge = window.androidAppBridge;
+    const iosBridge = window.iosAppBridge; // Or window.webkit.messageHandlers.iosAppBridge for a common pattern
 
+    let mobileAppDetected = false;
+
+    if (androidBridge && typeof androidBridge.getSubscriptionStatus === 'function') {
+      setIsAndroidApp(true);
+      mobileAppDetected = true;
+      androidBridge.getSubscriptionStatus()
+        .then(status => setIsUserSubscribed(status))
+        .catch(err => console.error("Error getting subscription status from Android bridge:", err));
+      
+      // For this simulation, we'll stick to mockIAPItems
+      setAvailableIAPs(mockInAppPurchaseItems);
+
+    } else if (iosBridge && typeof iosBridge.getSubscriptionStatus === 'function') {
+      setIsIOSApp(true);
+      mobileAppDetected = true;
+      iosBridge.getSubscriptionStatus()
+        .then(status => setIsUserSubscribed(status))
+        .catch(err => console.error("Error getting subscription status from iOS bridge:", err));
+      
+      setAvailableIAPs(mockInAppPurchaseItems);
+    }
+
+    if (mobileAppDetected) {
       // Allow native code to update subscription status
       window.updateSubscriptionStatus = (newStatus: boolean) => {
         setIsUserSubscribed(newStatus);
         toast({
-          title: "Subscription Updated",
-          description: `Your subscription status is now: ${newStatus ? 'Active' : 'Inactive'}.`,
+          title: t('subscriptionUpdated'),
+          description: t('subscriptionStatusNow', { status: newStatus ? t('statusActive') : t('statusInactive') }),
         });
       };
-
     } else {
-      setIsAndroidApp(false); // Default to false if bridge is not found
       // To test UI in browser:
-      // setIsAndroidApp(true); 
+      // setIsAndroidApp(true); // or setIsIOSApp(true);
       // setIsUserSubscribed(false);
       // setAvailableIAPs(mockInAppPurchaseItems);
-      console.warn("Android bridge 'androidAppBridge' not found. Play Billing UI will be conditional or use defaults.");
+      console.warn("No mobile app bridge (Android or iOS) found. Play/App Store Billing UI will be conditional or use defaults.");
     }
+
     // Cleanup
     return () => {
-      if (window.androidAppBridge) {
+      if (window.updateSubscriptionStatus) {
         delete window.updateSubscriptionStatus;
       }
     }
-  }, [toast]);
+  }, [toast, t]);
 
 
   useEffect(() => {
@@ -128,7 +149,7 @@ export default function HomePage() {
     );
     if (itemTitle) {
       recordInteraction(itemId, 'rate', rating);
-      toast({ title: "Rating submitted!", description: `You rated "${itemTitle}" ${rating} stars.` });
+      toast({ title: t('ratingSubmittedToastTitle'), description: t('ratingSubmittedToastDescription', { title: itemTitle, rating }) });
     }
   };
 
@@ -152,7 +173,10 @@ export default function HomePage() {
     if (itemTitle !== undefined && itemWasLiked !== undefined) {
       const itemIsNowLiked = !itemWasLiked;
       recordInteraction(itemId, itemIsNowLiked ? 'like' : 'unlike');
-      toast({ title: itemIsNowLiked ? "Liked!" : "Unliked!", description: `You ${itemIsNowLiked ? "liked" : "unliked"} "${itemTitle}".`});
+      toast({ 
+        title: itemIsNowLiked ? t('likedToastTitle') : t('unlikedToastTitle'), 
+        description: itemIsNowLiked ? t('likedToastDescription', {title: itemTitle}) : t('unlikedToastDescription', {title: itemTitle})
+      });
 
       if (itemType === 'ad') {
         try {
@@ -192,7 +216,10 @@ export default function HomePage() {
     if (itemTitle !== undefined && itemWasDisliked !== undefined) {
       const itemIsNowDisliked = !itemWasDisliked;
       recordInteraction(itemId, 'dislike');
-      toast({ title: itemIsNowDisliked ? "Disliked!" : "Dislike removed!", description: `You ${itemIsNowDisliked ? "disliked" : "removed dislike for"} "${itemTitle}".`});
+      toast({ 
+        title: itemIsNowDisliked ? t('dislikedToastTitle') : t('dislikeRemovedToastTitle'), 
+        description: itemIsNowDisliked ? t('dislikedToastDescription', {title: itemTitle}) : t('dislikeRemovedToastDescription', {title: itemTitle})
+      });
     
       if (itemIsNowDisliked && itemType === 'ad') {
         const item = feedItems.find(i => i.id === itemId);
@@ -228,7 +255,10 @@ export default function HomePage() {
 
     if (isNowFollowing !== undefined) {
       recordInteraction(category, isNowFollowing ? 'followCategory' : 'unfollowCategory');
-      toast({ title: isNowFollowing ? "Followed Category!" : "Unfollowed Category!", description: `You ${isNowFollowing ? "are now following" : "unfollowed"} "${category}".`});
+      toast({ 
+        title: isNowFollowing ? t('followedCategoryToastTitle') : t('unfollowedCategoryToastTitle'), 
+        description: isNowFollowing ? t('followedCategoryToastDescription', {category}) : t('unfollowedCategoryToastDescription', {category})
+      });
     }
   };
 
@@ -252,7 +282,7 @@ export default function HomePage() {
 
     const availableAdsString = "Available Ads:\n" + allAvailableAds.map(ad => `- ${ad.title} (Categories: ${ad.categories.join(', ')})`).join('\n');
 
-    toast({ title: "AI Magic ✨", description: "Personalizing your ad feed..."});
+    toast({ title: t('aiMagicToastTitle'), description: t('aiMagicToastDescription')});
     try {
       const result = await personalizeAdFeed({
         userPastInteractions: interactionsString || "No specific interactions yet.",
@@ -271,71 +301,81 @@ export default function HomePage() {
       
       setFeedItems(newFeed.slice(0, initialFeedItems.length));
       toast({
-        title: "AI Feed Personalization (Simulated)",
-        description: "Feed updated. AI Output: " + result.personalizedAdFeed.substring(0, 100) + "...",
+        title: t('aiFeedPersonalizedToastTitle'),
+        description: t('aiFeedPersonalizedToastDescription') + " " + result.personalizedAdFeed.substring(0, 100) + "...",
       });
 
     } catch (error) {
       console.error("Error personalizing feed:", error);
       toast({
         variant: "destructive",
-        title: "AI Personalization Error",
-        description: "Could not personalize feed. " + (error instanceof Error ? error.message : String(error)),
+        title: t('aiPersonalizationErrorToastTitle'),
+        description: t('aiPersonalizationErrorToastDescription') + " " + (error instanceof Error ? error.message : String(error)),
       });
     }
   };
 
   const handleSubscribe = async (sku: string) => {
-    if (window.androidAppBridge && typeof window.androidAppBridge.subscribe === 'function') {
-      console.log(`Attempting to subscribe via Android bridge with SKU: ${sku}`);
-      toast({ title: "Processing Subscription...", description: "Please wait." });
-      try {
-        // const result = await window.androidAppBridge.subscribe(sku); // Real call
-        // For simulation:
-        const result = await new Promise<{success: boolean}>(resolve => setTimeout(() => resolve({success: true}), 1000));
-
-        if (result.success) {
-          setIsUserSubscribed(true);
-          toast({ title: "Subscription Successful!", description: "You are now subscribed to Premium." });
-        } else {
-          toast({ variant: "destructive", title: "Subscription Failed", description: "Could not complete subscription." });
-        }
-      } catch (error) {
-        console.error("Error during subscription process via bridge:", error);
-        toast({ variant: "destructive", title: "Subscription Error", description: "An error occurred." });
+    toast({ title: t('processingSubscription'), description: t('pleaseWait') });
+    try {
+      let result = { success: false, message: "Bridge not found" };
+      if (isAndroidApp && window.androidAppBridge && typeof window.androidAppBridge.subscribe === 'function') {
+        console.log(`Attempting to subscribe via Android bridge with SKU: ${sku}`);
+        // result = await window.androidAppBridge.subscribe(sku); // Real call
+        result = await new Promise<{success: boolean}>(resolve => setTimeout(() => resolve({success: true}), 1000)); // Simulated
+      } else if (isIOSApp && window.iosAppBridge && typeof window.iosAppBridge.subscribe === 'function') {
+        console.log(`Attempting to subscribe via iOS bridge with SKU: ${sku}`);
+        // result = await window.iosAppBridge.subscribe(sku); // Real call
+        result = await new Promise<{success: boolean}>(resolve => setTimeout(() => resolve({success: true}), 1000)); // Simulated
+      } else {
+        toast({ variant: "destructive", title: t('mobileBridgeNotFound'), description: t('featureOnlyInMobileApp') });
+        // Simulate for browser testing
+        // setIsUserSubscribed(true);
+        // toast({ title: "Subscription Successful! (Simulated)", description: "You are now subscribed to Premium." });
+        return;
       }
-    } else {
-      toast({ variant: "destructive", title: "Android Bridge Not Found", description: "Subscription feature only available in the Android app." });
-      // Simulate for browser testing
-      // setIsUserSubscribed(true);
-      // toast({ title: "Subscription Successful! (Simulated)", description: "You are now subscribed to Premium." });
+
+      if (result.success) {
+        setIsUserSubscribed(true);
+        toast({ title: t('subscriptionSuccessful'), description: t('youAreNowSubscribed') });
+      } else {
+        toast({ variant: "destructive", title: t('subscriptionFailed'), description: result.message || t('couldNotCompleteSubscription') });
+      }
+    } catch (error) {
+      console.error("Error during subscription process via bridge:", error);
+      toast({ variant: "destructive", title: t('subscriptionError'), description: "An error occurred." });
     }
   };
 
   const handlePurchaseProduct = async (sku: string, title: string) => {
-     if (window.androidAppBridge && typeof window.androidAppBridge.purchase === 'function') {
-      console.log(`Attempting to purchase via Android bridge with SKU: ${sku}`);
-      toast({ title: `Purchasing ${title}...`, description: "Please wait." });
-      try {
-        // const result = await window.androidAppBridge.purchase(sku); // Real call
-        // For simulation:
-        const result = await new Promise<{success: boolean}>(resolve => setTimeout(() => resolve({success: true}), 1000));
-
-        if (result.success) {
-          toast({ title: "Purchase Successful!", description: `You have purchased ${title}.` });
-          // If this purchase grants subscription, update state:
-          // if (sku === premiumSubscriptionSku) setIsUserSubscribed(true);
-        } else {
-          toast({ variant: "destructive", title: "Purchase Failed", description: `Could not purchase ${title}.` });
-        }
-      } catch (error) {
-        console.error(`Error during purchase process for SKU ${sku} via bridge:`, error);
-        toast({ variant: "destructive", title: "Purchase Error", description: "An error occurred." });
+     toast({ title: t('purchasingItem', {title}), description: t('pleaseWait') });
+     try {
+      let result = { success: false, message: "Bridge not found" };
+      if (isAndroidApp && window.androidAppBridge && typeof window.androidAppBridge.purchase === 'function') {
+        console.log(`Attempting to purchase via Android bridge with SKU: ${sku}`);
+        // result = await window.androidAppBridge.purchase(sku); // Real call
+        result = await new Promise<{success: boolean}>(resolve => setTimeout(() => resolve({success: true}), 1000)); // Simulated
+      } else if (isIOSApp && window.iosAppBridge && typeof window.iosAppBridge.purchase === 'function') {
+         console.log(`Attempting to purchase via iOS bridge with SKU: ${sku}`);
+        // result = await window.iosAppBridge.purchase(sku); // Real call
+        result = await new Promise<{success: boolean}>(resolve => setTimeout(() => resolve({success: true}), 1000)); // Simulated
+      } else {
+        toast({ variant: "destructive", title: t('mobileBridgeNotFound'), description: t('featureOnlyInMobileApp') });
+        // Simulate for browser testing
+        // toast({ title: `Purchase Successful! (Simulated)`, description: `You have purchased ${title}.` });
+        return;
       }
-    } else {
-      toast({ variant: "destructive", title: "Android Bridge Not Found", description: "Purchase feature only available in the Android app." });
-      // Simulate for browser testing
-      // toast({ title: `Purchase Successful! (Simulated)`, description: `You have purchased ${title}.` });
+      
+      if (result.success) {
+        toast({ title: t('purchaseSuccessful'), description: t('youHavePurchasedItem', {title}) });
+        // If this purchase grants subscription, update state:
+        // if (sku === premiumSubscriptionSku) setIsUserSubscribed(true);
+      } else {
+        toast({ variant: "destructive", title: t('purchaseFailed'), description: result.message || t('couldNotPurchaseItem', {title}) });
+      }
+    } catch (error) {
+      console.error(`Error during purchase process for SKU ${sku} via bridge:`, error);
+      toast({ variant: "destructive", title: t('purchaseError'), description: "An error occurred." });
     }
   };
 
@@ -344,32 +384,32 @@ export default function HomePage() {
     <div className="flex flex-col h-full">
       <AppHeader onPersonalize={handlePersonalizeFeed} />
       <main className="flex-grow overflow-y-auto snap-y snap-mandatory">
-        {isAndroidApp && (
+        {(isAndroidApp || isIOSApp) && (
           <div className="p-4 border-b bg-card">
             <Card className="shadow-md">
               <CardHeader>
                 <CardTitle className="text-lg flex items-center">
                   <Star className="w-5 h-5 mr-2 text-yellow-500 fill-yellow-500" />
-                  App Subscriptions & Purchases
+                  {t('billingSectionTitle')}
                 </CardTitle>
-                <CardDescription>Manage your subscriptions and in-app items (Simulated for Android App).</CardDescription>
+                <CardDescription>{t('billingSectionDescription')}</CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div>
-                  <h3 className="text-md font-semibold mb-1">Subscription Status:</h3>
+                  <h3 className="text-md font-semibold mb-1">{t('subscriptionStatus')}:</h3>
                   <p className={isUserSubscribed ? "text-green-600" : "text-red-600"}>
-                    {isUserSubscribed ? "Premium Active" : "Not Subscribed"}
+                    {isUserSubscribed ? t('premiumActive') : t('notSubscribed')}
                   </p>
                 </div>
 
                 {!isUserSubscribed && (
                   <Button onClick={() => handleSubscribe(premiumSubscriptionSku)} className="w-full">
-                    <CheckCircle className="mr-2 h-4 w-4" /> Subscribe to Premium
+                    <CheckCircle className="mr-2 h-4 w-4" /> {t('subscribeToPremium')}
                   </Button>
                 )}
 
                 <div>
-                  <h3 className="text-md font-semibold mt-4 mb-2">Available In-App Items:</h3>
+                  <h3 className="text-md font-semibold mt-4 mb-2">{t('availableInAppItems')}:</h3>
                   <div className="space-y-3">
                     {availableIAPs.map((item) => (
                       <div key={item.id} className="p-3 border rounded-lg flex justify-between items-center bg-background">
@@ -439,7 +479,7 @@ export default function HomePage() {
         )}
          {feedItems.length === 0 && !isLoading && (
           <div className="h-full w-full flex-shrink-0 snap-start relative overflow-hidden flex items-center justify-center p-4">
-            <p className="text-muted-foreground">No items in your feed yet.</p>
+            <p className="text-muted-foreground">{t('noFeedItems')}</p>
           </div>
         )}
       </main>
