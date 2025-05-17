@@ -22,3 +22,11 @@ export interface UserInteraction {
   value?: string | number; // category name or rating value
   timestamp: Date;
 }
+
+export interface InAppPurchaseItem {
+  id: string; // SKU
+  title: string;
+  description: string;
+  price: string; // e.g., "$0.99"
+  type: 'subscription' | 'one-time';
+}

@@ -4,15 +4,36 @@
 import { useState, useEffect, useCallback } from 'react';
 import { AppHeader } from '@/components/app-header';
 import { FeedItemCard } from '@/components/feed-item-card';
-import type { FeedItemData, UserInteraction } from '@/lib/types';
+import type { FeedItemData, UserInteraction, InAppPurchaseItem } from '@/lib/types';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { personalizeAdFeed } from '@/ai/flows/personalize-ad-feed';
 import { useToast } from '@/hooks/use-toast';
 import { initialFeedItems, allAvailableAds } from '@/lib/ads-data';
 import { AdMobBanner } from '@/components/admob-banner';
-
+import { mockInAppPurchaseItems, premiumSubscriptionSku } from '@/lib/billing-data';
+import { CheckCircle, ShoppingCart, Star } from 'lucide-react';
 
 const LOCAL_STORAGE_LIKED_ADS_KEY = 'shopyme_liked_ad_ids';
+
+// Define the structure of the Android bridge for TypeScript
+interface AndroidAppBridge {
+  subscribe: (sku: string) => Promise<{ success: boolean; message?: string }>;
+  purchase: (sku: string) => Promise<{ success: boolean; message?: string }>;
+  // In a real app, these would likely be async or take callbacks
+  getSubscriptionStatus: () => Promise<boolean>;
+  getAvailableIaps: () => Promise<InAppPurchaseItem[]>;
+}
+
+declare global {
+  interface Window {
+    androidAppBridge?: AndroidAppBridge;
+    // For native to update webview
+    updateSubscriptionStatus?: (isSubscribed: boolean) => void;
+  }
+}
+
 
 export default function HomePage() {
   const [feedItems, setFeedItems] = useState<FeedItemData[]>([]);
@@ -20,6 +41,56 @@ export default function HomePage() {
   const [followedCategories, setFollowedCategories] = useState<Set<string>>(new Set(['Travel']));
   const [userInteractions, setUserInteractions] = useState<UserInteraction[]>([]);
   const { toast } = useToast();
+
+  const [isAndroidApp, setIsAndroidApp] = useState(false);
+  const [isUserSubscribed, setIsUserSubscribed] = useState(false);
+  const [availableIAPs, setAvailableIAPs] = useState<InAppPurchaseItem[]>(mockInAppPurchaseItems); // Default to mock
+
+
+  useEffect(() => {
+    // Simulate checking for Android bridge and initial state loading
+    const bridge = window.androidAppBridge;
+    if (bridge && typeof bridge.getSubscriptionStatus === 'function' && typeof bridge.getAvailableIaps === 'function') {
+      setIsAndroidApp(true);
+      bridge.getSubscriptionStatus()
+        .then(status => setIsUserSubscribed(status))
+        .catch(err => console.error("Error getting subscription status from bridge:", err));
+      
+      // In a real app, you might fetch IAPs from the bridge
+      // For this simulation, we'll stick to mockIAPItems, or you could fetch them:
+      // bridge.getAvailableIaps()
+      //   .then(iaps => setAvailableIAPs(iaps))
+      //   .catch(err => {
+      //     console.error("Error getting IAPs from bridge, using mock data:", err);
+      //     setAvailableIAPs(mockInAppPurchaseItems);
+      //   });
+      setAvailableIAPs(mockInAppPurchaseItems); // Keep using mock for this demo
+
+      // Allow native code to update subscription status
+      window.updateSubscriptionStatus = (newStatus: boolean) => {
+        setIsUserSubscribed(newStatus);
+        toast({
+          title: "Subscription Updated",
+          description: `Your subscription status is now: ${newStatus ? 'Active' : 'Inactive'}.`,
+        });
+      };
+
+    } else {
+      setIsAndroidApp(false); // Default to false if bridge is not found
+      // To test UI in browser:
+      // setIsAndroidApp(true); 
+      // setIsUserSubscribed(false);
+      // setAvailableIAPs(mockInAppPurchaseItems);
+      console.warn("Android bridge 'androidAppBridge' not found. Play Billing UI will be conditional or use defaults.");
+    }
+    // Cleanup
+    return () => {
+      if (window.androidAppBridge) {
+        delete window.updateSubscriptionStatus;
+      }
+    }
+  }, [toast]);
+
 
   useEffect(() => {
     setIsLoading(true);
@@ -214,10 +285,115 @@ export default function HomePage() {
     }
   };
 
+  const handleSubscribe = async (sku: string) => {
+    if (window.androidAppBridge && typeof window.androidAppBridge.subscribe === 'function') {
+      console.log(`Attempting to subscribe via Android bridge with SKU: ${sku}`);
+      toast({ title: "Processing Subscription...", description: "Please wait." });
+      try {
+        // const result = await window.androidAppBridge.subscribe(sku); // Real call
+        // For simulation:
+        const result = await new Promise<{success: boolean}>(resolve => setTimeout(() => resolve({success: true}), 1000));
+
+        if (result.success) {
+          setIsUserSubscribed(true);
+          toast({ title: "Subscription Successful!", description: "You are now subscribed to Premium." });
+        } else {
+          toast({ variant: "destructive", title: "Subscription Failed", description: "Could not complete subscription." });
+        }
+      } catch (error) {
+        console.error("Error during subscription process via bridge:", error);
+        toast({ variant: "destructive", title: "Subscription Error", description: "An error occurred." });
+      }
+    } else {
+      toast({ variant: "destructive", title: "Android Bridge Not Found", description: "Subscription feature only available in the Android app." });
+      // Simulate for browser testing
+      // setIsUserSubscribed(true);
+      // toast({ title: "Subscription Successful! (Simulated)", description: "You are now subscribed to Premium." });
+    }
+  };
+
+  const handlePurchaseProduct = async (sku: string, title: string) => {
+     if (window.androidAppBridge && typeof window.androidAppBridge.purchase === 'function') {
+      console.log(`Attempting to purchase via Android bridge with SKU: ${sku}`);
+      toast({ title: `Purchasing ${title}...`, description: "Please wait." });
+      try {
+        // const result = await window.androidAppBridge.purchase(sku); // Real call
+        // For simulation:
+        const result = await new Promise<{success: boolean}>(resolve => setTimeout(() => resolve({success: true}), 1000));
+
+        if (result.success) {
+          toast({ title: "Purchase Successful!", description: `You have purchased ${title}.` });
+          // If this purchase grants subscription, update state:
+          // if (sku === premiumSubscriptionSku) setIsUserSubscribed(true);
+        } else {
+          toast({ variant: "destructive", title: "Purchase Failed", description: `Could not purchase ${title}.` });
+        }
+      } catch (error) {
+        console.error(`Error during purchase process for SKU ${sku} via bridge:`, error);
+        toast({ variant: "destructive", title: "Purchase Error", description: "An error occurred." });
+      }
+    } else {
+      toast({ variant: "destructive", title: "Android Bridge Not Found", description: "Purchase feature only available in the Android app." });
+      // Simulate for browser testing
+      // toast({ title: `Purchase Successful! (Simulated)`, description: `You have purchased ${title}.` });
+    }
+  };
+
+
   return (
     <div className="flex flex-col h-full">
       <AppHeader onPersonalize={handlePersonalizeFeed} />
       <main className="flex-grow overflow-y-auto snap-y snap-mandatory">
+        {isAndroidApp && (
+          <div className="p-4 border-b bg-card">
+            <Card className="shadow-md">
+              <CardHeader>
+                <CardTitle className="text-lg flex items-center">
+                  <Star className="w-5 h-5 mr-2 text-yellow-500 fill-yellow-500" />
+                  App Subscriptions & Purchases
+                </CardTitle>
+                <CardDescription>Manage your subscriptions and in-app items (Simulated for Android App).</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div>
+                  <h3 className="text-md font-semibold mb-1">Subscription Status:</h3>
+                  <p className={isUserSubscribed ? "text-green-600" : "text-red-600"}>
+                    {isUserSubscribed ? "Premium Active" : "Not Subscribed"}
+                  </p>
+                </div>
+
+                {!isUserSubscribed && (
+                  <Button onClick={() => handleSubscribe(premiumSubscriptionSku)} className="w-full">
+                    <CheckCircle className="mr-2 h-4 w-4" /> Subscribe to Premium
+                  </Button>
+                )}
+
+                <div>
+                  <h3 className="text-md font-semibold mt-4 mb-2">Available In-App Items:</h3>
+                  <div className="space-y-3">
+                    {availableIAPs.map((item) => (
+                      <div key={item.id} className="p-3 border rounded-lg flex justify-between items-center bg-background">
+                        <div>
+                          <p className="font-medium">{item.title}</p>
+                          <p className="text-xs text-muted-foreground">{item.description}</p>
+                        </div>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => handlePurchaseProduct(item.id, item.title)}
+                          disabled={item.type === 'subscription' && isUserSubscribed && item.id === premiumSubscriptionSku}
+                        >
+                          <ShoppingCart className="mr-2 h-4 w-4" /> {item.price}
+                        </Button>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        )}
+
         {isLoading ? (
           <div className="h-full w-full flex-shrink-0 snap-start relative overflow-hidden flex items-center justify-center p-4">
              <div className="w-full max-w-md mx-auto h-[calc(100%-80px)] md:h-[calc(100%-100px)] flex flex-col">
