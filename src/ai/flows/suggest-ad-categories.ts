@@ -30,10 +30,9 @@ export type SuggestAdCategoriesOutput = z.infer<typeof SuggestAdCategoriesOutput
 
 
 const DEEPSEEK_API_KEY = process.env.DEEPSEEK_API_KEY;
-const DEEPSEEK_BASE_URL = 'https://api.deepseek.com/v1'; // Standard v1 endpoint for OpenAI compatibility
-// IMPORTANT: Replace 'deepseek-chat-v3' with your specific DeepSeek V3 model name if different.
-// This is a placeholder based on the request to "test deepseek v3".
-const DEEPSEEK_MODEL = 'deepseek-chat-v3'; 
+const DEEPSEEK_BASE_URL = process.env.NEXT_PUBLIC_DEEPSEEK_BASE_URL || 'https://api.deepseek.com/v1';
+// IMPORTANT: Replace 'deepseek-chat-v3' or the default with your specific DeepSeek model name if different.
+const DEEPSEEK_MODEL = process.env.NEXT_PUBLIC_DEEPSEEK_MODEL || 'deepseek-chat'; 
 
 export async function suggestAdCategories(
   input: SuggestAdCategoriesInput
@@ -41,6 +40,12 @@ export async function suggestAdCategories(
   if (!DEEPSEEK_API_KEY || DEEPSEEK_API_KEY === 'your_deepseek_api_key_here') {
     console.error('DeepSeek API key is not configured. Please set DEEPSEEK_API_KEY in your .env file.');
     return { suggestedCategories: ['Configuration needed: DeepSeek API Key'] };
+  }
+  if (!process.env.NEXT_PUBLIC_DEEPSEEK_BASE_URL) {
+    console.warn('DeepSeek Base URL is not configured in .env. Using default. Please set NEXT_PUBLIC_DEEPSEEK_BASE_URL.');
+  }
+  if (!process.env.NEXT_PUBLIC_DEEPSEEK_MODEL) {
+    console.warn('DeepSeek Model is not configured in .env. Using default. Please set NEXT_PUBLIC_DEEPSEEK_MODEL.');
   }
 
   const openai = new OpenAI({

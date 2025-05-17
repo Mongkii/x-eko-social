@@ -32,14 +32,21 @@ const PersonalizeAdFeedOutputSchema = z.object({
 export type PersonalizeAdFeedOutput = z.infer<typeof PersonalizeAdFeedOutputSchema>;
 
 const DEEPSEEK_API_KEY = process.env.DEEPSEEK_API_KEY;
-const DEEPSEEK_BASE_URL = 'https://api.deepseek.com/v1'; // Standard v1 endpoint for OpenAI compatibility
-const DEEPSEEK_MODEL = 'deepseek-chat-v3'; // Placeholder - verify correct V3 model name
+const DEEPSEEK_BASE_URL = process.env.NEXT_PUBLIC_DEEPSEEK_BASE_URL || 'https://api.deepseek.com/v1';
+const DEEPSEEK_MODEL = process.env.NEXT_PUBLIC_DEEPSEEK_MODEL || 'deepseek-chat'; // Default if not set
 
 export async function personalizeAdFeed(input: PersonalizeAdFeedInput): Promise<PersonalizeAdFeedOutput> {
   if (!DEEPSEEK_API_KEY || DEEPSEEK_API_KEY === 'your_deepseek_api_key_here') {
     console.error('DeepSeek API key is not configured. Please set DEEPSEEK_API_KEY in your .env file.');
     return { personalizedAdFeed: 'Configuration needed: DeepSeek API Key. Could not personalize feed.' };
   }
+  if (!process.env.NEXT_PUBLIC_DEEPSEEK_BASE_URL) {
+    console.warn('DeepSeek Base URL is not configured in .env. Using default. Please set NEXT_PUBLIC_DEEPSEEK_BASE_URL.');
+  }
+  if (!process.env.NEXT_PUBLIC_DEEPSEEK_MODEL) {
+    console.warn('DeepSeek Model is not configured in .env. Using default. Please set NEXT_PUBLIC_DEEPSEEK_MODEL.');
+  }
+
 
   const openai = new OpenAI({
       baseURL: DEEPSEEK_BASE_URL,
