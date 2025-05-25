@@ -1,7 +1,7 @@
 
 import type { ReactNode } from 'react';
 import { NextIntlClientProvider, AbstractIntlMessages } from 'next-intl';
-import { getMessages, टाइमस्टamped } from '@/i18n'; // Assuming getMessages is async
+import { getMessages } from 'next-intl/server'; // Corrected import for getMessages
 import { notFound } from 'next/navigation';
 import { FontSizeProvider } from '@/contexts/font-size-context'; // Import FontSizeProvider
 
@@ -19,16 +19,27 @@ export default async function LocaleLayout({
   let messages: AbstractIntlMessages | undefined;
   try {
     messages = await getMessages({ locale });
+    // The check for !messages or empty messages can be here,
+    // but i18n.ts should ideally call notFound() if messages are truly missing/invalid for a supported locale.
+    if (!messages || Object.keys(messages).length === 0) {
+       console.warn(`LocaleLayout: getMessages for locale "${locale}" returned empty or invalid messages. This might indicate an issue with the message file or i18n.ts fallback logic.`);
+       // Depending on strictness, you might call notFound() here too.
+       // For now, let's assume i18n.ts handles critical "not found" scenarios.
+       // If i18n.ts provides an empty object as a last resort, we proceed with that.
+    }
   } catch (error) {
     console.error(`Error fetching messages for locale "${locale}" in LocaleLayout. Details:`, error);
-    // If getMessages calls notFound() or throws an error that isn't caught by i18n.ts's internal fallbacks
+    // If getMessages calls notFound() (e.g., due to i18n.ts calling it for an unsupported locale
+    // or critical message loading failure), it will propagate and Next.js handles it.
+    // If it's another type of error, we'll treat it as not found.
     notFound(); 
   }
 
+  // This check is a final safety net. If messages are still undefined here,
+  // it means the error handling above or in i18n.ts didn't result in a notFound() call
+  // for a situation where messages are truly unavailable.
   if (!messages) {
-    // This case should ideally be handled by getMessages calling notFound()
-    // or src/i18n.ts providing a fallback. If it still reaches here, treat as not found.
-    console.error(`LocaleLayout: Messages object for locale "${locale}" is undefined. Triggering notFound.`);
+    console.error(`LocaleLayout: Messages object for locale "${locale}" is undefined after try-catch. Triggering notFound.`);
     notFound();
   }
   
