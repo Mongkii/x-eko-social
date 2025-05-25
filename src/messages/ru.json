@@ -1,12 +1,13 @@
 
 {
   "Global": {
-    "appName": "Шопими"
+    "appName": "Эко",
+    "loading": "Загрузка..."
   },
   "HomePage": {
-    "greeting": "Добро пожаловать в Шопими",
+    "greeting": "Добро пожаловать в Эко",
     "aiMagicToastTitle": "Магия ИИ ✨",
-    "aiMagicToastDescription": "Персонализация вашей рекламной ленты...",
+    "aiMagicToastDescription": "Персонализация вашей ленты ЭкоДропов...",
     "aiPersonalizationErrorToastTitle": "Ошибка персонализации ИИ",
     "aiPersonalizationErrorToastDescription": "Не удалось персонализировать ленту.",
     "aiFeedPersonalizedToastTitle": "Персонализация ленты ИИ (симуляция)",
@@ -25,16 +26,22 @@
     "followedCategoryToastDescription": "Вы теперь отслеживаете \"{category}\".",
     "unfollowedCategoryToastTitle": "Категория больше не отслеживается!",
     "unfollowedCategoryToastDescription": "Вы перестали отслеживать \"{category}\".",
-    "noFeedItems": "В вашей ленте пока нет элементов.",
+    "noFeedItems": "В вашей ленте пока нет ЭкоДропов. Запишите один!",
+    "subscriptionUpdated": "Подписка обновлена",
+    "subscriptionStatusNow": "Ваш статус подписки теперь: {status}.",
+    "statusActive": "Активен",
+    "statusInactive": "Неактивен",
+    "billingSectionTitle": "Эко+ и Встроенные покупки",
+    "billingSectionDescription": "Управляйте своей подпиской Эко+ и покупками.",
     "subscriptionStatus": "Статус подписки:",
-    "premiumActive": "Премиум активен",
-    "notSubscribed": "Нет подписки",
-    "subscribeToPremium": "Подписаться на Премиум",
+    "premiumActive": "Эко+ Активен",
+    "notSubscribed": "Нет подписки на Эко+",
+    "subscribeToPremium": "Подписаться на Эко+",
     "availableInAppItems": "Доступные встроенные покупки:",
     "processingSubscription": "Обработка подписки...",
     "pleaseWait": "Пожалуйста, подождите.",
     "subscriptionSuccessful": "Подписка успешна!",
-    "youAreNowSubscribed": "Вы подписаны на Премиум.",
+    "youAreNowSubscribed": "Вы подписаны на Эко+.",
     "subscriptionFailed": "Ошибка подписки",
     "couldNotCompleteSubscription": "Не удалось завершить подписку.",
     "subscriptionError": "Ошибка подписки",
@@ -46,22 +53,25 @@
     "purchaseFailed": "Ошибка покупки",
     "couldNotPurchaseItem": "Не удалось приобрести {title}.",
     "purchaseError": "Ошибка покупки",
-    "subscriptionUpdated": "Подписка обновлена",
-    "subscriptionStatusNow": "Ваш статус подписки теперь: {status}.",
-    "statusActive": "Активен",
-    "statusInactive": "Неактивен",
-    "billingSectionTitle": "Подписки и покупки в приложении",
-    "billingSectionDescription": "Управляйте своими подписками и встроенными покупками (Симуляция для мобильного приложения)."
+    "playNext": "Воспр. след.",
+    "playing": "Воспроизведение",
+    "pause": "Пауза",
+    "play": "Воспроизвести"
   },
   "AppHeader": {
-    "shopyme": "Шопими",
-    "savedAdsTooltip": "Сохраненные объявления",
-    "personalizeFeedTooltip": "Персонализировать мою ленту (ИИ)"
+    "eko": "Эко",
+    "savedEkoDropsTooltip": "Сохраненные ЭкоДропы",
+    "personalizeFeedTooltip": "Персонализировать мою ленту (ИИ)",
+    "language": "Язык",
+    "fontSize": "Размер Шрифта",
+    "fontSizeSmall": "Маленький",
+    "fontSizeMedium": "Средний",
+    "fontSizeLarge": "Большой"
   },
   "FeedItemCard": {
     "adBadge": "Реклама",
     "sponsoredBy": "Спонсор: {advertiser}",
-    "categoriesLabel": "Категории",
+    "categoriesLabel": "Категории:",
     "rateThisAdLabel": "Оценить это объявление",
     "rateThisContentLabel": "Оценить этот контент",
     "dislikeAction": "Не нравится",
@@ -71,9 +81,12 @@
     "shareOnFacebook": "Поделиться в Facebook",
     "shareOnTwitter": "Поделиться в Twitter",
     "shareOnInstagram": "Поделиться в Instagram",
-    "videoAdPlaceholder_title": "Посмотрите рекламу, чтобы продолжить",
-    "videoAdPlaceholder_description": "Наслаждайтесь просмотром без прерываний, посмотрев короткое видео.",
-    "videoAdPlaceholder_button": "Смотреть видео"
+    "playEkoDrop": "Воспроизвести ЭкоДроп",
+    "pauseEkoDrop": "Пауза ЭкоДроп",
+    "audioBy": "Аудио от {user}",
+    "hashtags": "Хэштеги:",
+    "postedOn": "Опубликовано {date}",
+    "viewTranscript": "Посмотреть Транскрипт"
   },
   "ThemeToggleSwitch": {
     "switchToLightTheme": "Переключиться на светлую тему",
@@ -81,14 +94,14 @@
   },
   "SavedAdsPage": {
     "backToFeed": "Вернуться к ленте",
-    "mySavedAds": "Мои сохраненные объявления",
-    "errorLoadingSavedAds": "Не удалось загрузить сохраненные объявления.",
+    "mySavedEkoDrops": "Мои сохраненные ЭкоДропы",
+    "errorLoadingSavedEkoDrops": "Не удалось загрузить сохраненные ЭкоДропы.",
     "infoToastTitle": "Информация",
     "personalizeInfoDescription": "Персонализация ленты доступна на главной странице ленты.",
-    "unlikedAndRemovedToastDescription": "Вам больше не нравится \"{title}\". Оно удалено из ваших сохраненных объявлений.",
-    "dislikedAndRemovedToastDescription": "Вам не понравилось \"{title}\". Оно удалено из ваших сохраненных объявлений.",
-    "noSavedAdsYet": "Вы еще не сохранили ни одного объявления.",
-    "likeAdToSave": "Лайкните объявление в основной ленте, чтобы сохранить его здесь!"
+    "unlikedAndRemovedToastDescription": "Вам больше не нравится \"{title}\". Оно удалено из ваших сохраненных ЭкоДропов.",
+    "dislikedAndRemovedToastDescription": "Вам не понравилось \"{title}\". Оно удалено из ваших сохраненных ЭкоДропов.",
+    "noSavedEkoDropsYet": "Вы еще не сохранили ни одного ЭкоДропа.",
+    "likeEkoDropToSave": "Лайкните ЭкоДроп в основной ленте, чтобы сохранить его здесь!"
   },
   "AdMobBanner": {
     "demoBannerTitle": "Демо-баннер AdMob",

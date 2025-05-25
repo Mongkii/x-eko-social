@@ -7,17 +7,18 @@ import { Switch } from "@/components/ui/switch";
 import { Moon, Sun } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Skeleton } from "@/components/ui/skeleton";
+import { useTranslations } from "next-intl";
 
 export function ThemeToggleSwitch() {
   const { theme, setTheme, resolvedTheme } = useTheme();
   const [mounted, setMounted] = useState(false);
+  const t = useTranslations('ThemeToggleSwitch');
 
   useEffect(() => {
     setMounted(true);
   }, []);
 
   if (!mounted) {
-    // Placeholder to prevent layout shift and hydration mismatch
     return (
       <div className="flex items-center space-x-2 h-9 w-[100px]" aria-hidden="true">
         <Skeleton className="h-5 w-5 rounded-full" />
@@ -45,7 +46,7 @@ export function ThemeToggleSwitch() {
         id="theme-switch"
         checked={isDarkMode}
         onCheckedChange={toggleTheme}
-        aria-label={isDarkMode ? "Switch to light theme" : "Switch to dark theme"}
+        aria-label={isDarkMode ? t('switchToLightTheme') : t('switchToDarkTheme')}
       />
       <Moon
         className={cn(

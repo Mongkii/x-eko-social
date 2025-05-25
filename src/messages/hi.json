@@ -1,12 +1,13 @@
 
 {
   "Global": {
-    "appName": "शॉपीमी"
+    "appName": "एको",
+    "loading": "लोड हो रहा है..."
   },
   "HomePage": {
-    "greeting": "शॉपीमी में आपका स्वागत है",
+    "greeting": "एको में आपका स्वागत है",
     "aiMagicToastTitle": "एआई जादू ✨",
-    "aiMagicToastDescription": "आपके विज्ञापन फ़ीड को वैयक्तिकृत किया जा रहा है...",
+    "aiMagicToastDescription": "आपके एकोड्रॉप फ़ीड को वैयक्तिकृत किया जा रहा है...",
     "aiPersonalizationErrorToastTitle": "एआई वैयक्तिकरण त्रुटि",
     "aiPersonalizationErrorToastDescription": "फ़ीड को वैयक्तिकृत नहीं किया जा सका।",
     "aiFeedPersonalizedToastTitle": "एआई फ़ीड वैयक्तिकरण (नकली)",
@@ -25,16 +26,22 @@
     "followedCategoryToastDescription": "अब आप \"{category}\" को फ़ॉलो कर रहे हैं।",
     "unfollowedCategoryToastTitle": "श्रेणी अनफ़ॉलो की गई!",
     "unfollowedCategoryToastDescription": " आपने \"{category}\" को अनफ़ॉलो कर दिया।",
-    "noFeedItems": "आपके फ़ीड में अभी कोई आइटम नहीं है।",
+    "noFeedItems": "आपके फ़ीड में अभी कोई एकोड्रॉप नहीं है। एक रिकॉर्ड करें!",
+    "subscriptionUpdated": "सदस्यता अपडेट की गई",
+    "subscriptionStatusNow": "आपकी सदस्यता स्थिति अब है: {status}।",
+    "statusActive": "सक्रिय",
+    "statusInactive": "निष्क्रिय",
+    "billingSectionTitle": "एको+ और इन-ऐप खरीदारी",
+    "billingSectionDescription": "अपनी एको+ सदस्यता और खरीदारी प्रबंधित करें।",
     "subscriptionStatus": "सदस्यता स्थिति:",
-    "premiumActive": "प्रीमियम सक्रिय",
-    "notSubscribed": "सब्सक्राइब नहीं किया गया",
-    "subscribeToPremium": "प्रीमियम की सदस्यता लें",
+    "premiumActive": "एको+ सक्रिय",
+    "notSubscribed": "एको+ की सदस्यता नहीं ली गई",
+    "subscribeToPremium": "एको+ की सदस्यता लें",
     "availableInAppItems": "उपलब्ध इन-ऐप आइटम:",
     "processingSubscription": "सदस्यता संसाधित हो रही है...",
     "pleaseWait": "कृपया प्रतीक्षा करें।",
     "subscriptionSuccessful": "सदस्यता सफल!",
-    "youAreNowSubscribed": "अब आप प्रीमियम के सदस्य हैं।",
+    "youAreNowSubscribed": "अब आप एको+ के सदस्य हैं।",
     "subscriptionFailed": "सदस्यता विफल",
     "couldNotCompleteSubscription": "सदस्यता पूरी नहीं हो सकी।",
     "subscriptionError": "सदस्यता त्रुटि",
@@ -46,22 +53,25 @@
     "purchaseFailed": "खरीद विफल",
     "couldNotPurchaseItem": "{title} नहीं खरीदा जा सका।",
     "purchaseError": "खरीद त्रुटि",
-    "subscriptionUpdated": "सदस्यता अपडेट की गई",
-    "subscriptionStatusNow": "आपकी सदस्यता स्थिति अब है: {status}।",
-    "statusActive": "सक्रिय",
-    "statusInactive": "निष्क्रिय",
-    "billingSectionTitle": "ऐप सदस्यताएँ और खरीदारी",
-    "billingSectionDescription": "अपनी सदस्यताओं और इन-ऐप आइटमों का प्रबंधन करें (मोबाइल ऐप के लिए नकली)।"
+    "playNext": "अगला चलाएं",
+    "playing": "चल रहा है",
+    "pause": "रोकें",
+    "play": "चलाएं"
   },
   "AppHeader": {
-    "shopyme": "शॉपीमी",
-    "savedAdsTooltip": "सहेजे गए विज्ञापन",
-    "personalizeFeedTooltip": "मेरा फ़ीड वैयक्तिकृत करें (AI)"
+    "eko": "एको",
+    "savedEkoDropsTooltip": "सहेजे गए एकोड्रॉप",
+    "personalizeFeedTooltip": "मेरा फ़ीड वैयक्तिकृत करें (AI)",
+    "language": "भाषा",
+    "fontSize": "फ़ॉन्ट आकार",
+    "fontSizeSmall": "छोटा",
+    "fontSizeMedium": "मध्यम",
+    "fontSizeLarge": "बड़ा"
   },
   "FeedItemCard": {
     "adBadge": "विज्ञापन",
     "sponsoredBy": "{advertiser} द्वारा प्रायोजित",
-    "categoriesLabel": "श्रेणियाँ",
+    "categoriesLabel": "श्रेणियाँ:",
     "rateThisAdLabel": "इस विज्ञापन को रेट करें",
     "rateThisContentLabel": "इस सामग्री को रेट करें",
     "dislikeAction": "नापसंद करें",
@@ -71,9 +81,12 @@
     "shareOnFacebook": "फेसबुक पर साझा करें",
     "shareOnTwitter": "ट्विटर पर साझा करें",
     "shareOnInstagram": "इंस्टाग्राम पर साझा करें",
-    "videoAdPlaceholder_title": "जारी रखने के लिए विज्ञापन देखें",
-    "videoAdPlaceholder_description": "एक छोटा वीडियो देखकर निर्बाध अनुभव का आनंद लें।",
-    "videoAdPlaceholder_button": "वीडियो देखें"
+    "playEkoDrop": "एकोड्रॉप चलाएं",
+    "pauseEkoDrop": "एकोड्रॉप रोकें",
+    "audioBy": "{user} द्वारा ऑडियो",
+    "hashtags": "हैशटैग:",
+    "postedOn": "{date} को पोस्ट किया गया",
+    "viewTranscript": "प्रतिलिपि देखें"
   },
   "ThemeToggleSwitch": {
     "switchToLightTheme": "लाइट थीम पर स्विच करें",
@@ -81,14 +94,14 @@
   },
   "SavedAdsPage": {
     "backToFeed": "फ़ीड पर वापस जाएं",
-    "mySavedAds": "मेरे सहेजे गए विज्ञापन",
-    "errorLoadingSavedAds": "सहेजे गए विज्ञापन लोड नहीं हो सके।",
+    "mySavedEkoDrops": "मेरे सहेजे गए एकोड्रॉप",
+    "errorLoadingSavedEkoDrops": "सहेजे गए एकोड्रॉप लोड नहीं हो सके।",
     "infoToastTitle": "जानकारी",
     "personalizeInfoDescription": "फ़ीड वैयक्तिकरण मुख्य फ़ीड पृष्ठ पर उपलब्ध है।",
-    "unlikedAndRemovedToastDescription": "आपने \"{title}\" को नापसंद किया। इसे आपके सहेजे गए विज्ञापनों से हटा दिया गया है।",
-    "dislikedAndRemovedToastDescription": "आपको \"{title}\" नापसंद आया। इसे आपके सहेजे गए विज्ञापनों से हटा दिया गया है।",
-    "noSavedAdsYet": "आपने अभी तक कोई विज्ञापन नहीं सहेजा है।",
-    "likeAdToSave": "इसे यहाँ सहेजने के लिए मुख्य फ़ीड में एक विज्ञापन पसंद करें!"
+    "unlikedAndRemovedToastDescription": "आपने \"{title}\" को नापसंद किया। इसे आपके सहेजे गए एकोड्रॉप से हटा दिया गया है।",
+    "dislikedAndRemovedToastDescription": "आपको \"{title}\" नापसंद आया। इसे आपके सहेजे गए एकोड्रॉप से हटा दिया गया है।",
+    "noSavedEkoDropsYet": "आपने अभी तक कोई एकोड्रॉप नहीं सहेजा है।",
+    "likeEkoDropToSave": "इसे यहाँ सहेजने के लिए मुख्य फ़ीड में एक एकोड्रॉप पसंद करें!"
   },
   "AdMobBanner": {
     "demoBannerTitle": "AdMob डेमो बैनर",

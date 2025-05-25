@@ -1,12 +1,13 @@
 
 {
   "Global": {
-    "appName": "Shopyme"
+    "appName": "Eko",
+    "loading": "Cargando..."
   },
   "HomePage": {
-    "greeting": "Bienvenido a Shopyme",
+    "greeting": "Bienvenido a Eko",
     "aiMagicToastTitle": "Magia IA ✨",
-    "aiMagicToastDescription": "Personalizando tu feed de anuncios...",
+    "aiMagicToastDescription": "Personalizando tu feed de EkoDrops...",
     "aiPersonalizationErrorToastTitle": "Error de personalización IA",
     "aiPersonalizationErrorToastDescription": "No se pudo personalizar el feed.",
     "aiFeedPersonalizedToastTitle": "Personalización de feed IA (Simulado)",
@@ -25,16 +26,22 @@
     "followedCategoryToastDescription": "Ahora sigues a \"{category}\".",
     "unfollowedCategoryToastTitle": "¡Dejaste de seguir la categoría!",
     "unfollowedCategoryToastDescription": "Dejaste de seguir a \"{category}\".",
-    "noFeedItems": "Aún no hay elementos en tu feed.",
+    "noFeedItems": "Aún no hay EkoDrops en tu feed. ¡Graba uno!",
+    "subscriptionUpdated": "Suscripción actualizada",
+    "subscriptionStatusNow": "El estado de tu suscripción ahora es: {status}.",
+    "statusActive": "Activo",
+    "statusInactive": "Inactivo",
+    "billingSectionTitle": "Eko+ y Compras en la App",
+    "billingSectionDescription": "Gestiona tu suscripción a Eko+ y tus compras.",
     "subscriptionStatus": "Estado de la suscripción:",
-    "premiumActive": "Premium Activo",
-    "notSubscribed": "No suscrito",
-    "subscribeToPremium": "Suscríbete a Premium",
+    "premiumActive": "Eko+ Activo",
+    "notSubscribed": "No suscrito a Eko+",
+    "subscribeToPremium": "Suscríbete a Eko+",
     "availableInAppItems": "Artículos disponibles en la aplicación:",
     "processingSubscription": "Procesando suscripción...",
     "pleaseWait": "Por favor espera.",
     "subscriptionSuccessful": "¡Suscripción exitosa!",
-    "youAreNowSubscribed": "Ahora estás suscrito a Premium.",
+    "youAreNowSubscribed": "Ahora estás suscrito a Eko+.",
     "subscriptionFailed": "Suscripción fallida",
     "couldNotCompleteSubscription": "No se pudo completar la suscripción.",
     "subscriptionError": "Error de suscripción",
@@ -46,22 +53,25 @@
     "purchaseFailed": "Compra fallida",
     "couldNotPurchaseItem": "No se pudo comprar {title}.",
     "purchaseError": "Error de compra",
-    "subscriptionUpdated": "Suscripción actualizada",
-    "subscriptionStatusNow": "El estado de tu suscripción ahora es: {status}.",
-    "statusActive": "Activo",
-    "statusInactive": "Inactivo",
-    "billingSectionTitle": "Suscripciones y compras de la aplicación",
-    "billingSectionDescription": "Gestiona tus suscripciones y artículos dentro de la aplicación (Simulado para aplicación móvil)."
+    "playNext": "Reproducir Siguiente",
+    "playing": "Reproduciendo",
+    "pause": "Pausa",
+    "play": "Reproducir"
   },
   "AppHeader": {
-    "shopyme": "Shopyme",
-    "savedAdsTooltip": "Anuncios guardados",
-    "personalizeFeedTooltip": "Personalizar mi feed (IA)"
+    "eko": "Eko",
+    "savedEkoDropsTooltip": "EkoDrops guardados",
+    "personalizeFeedTooltip": "Personalizar mi feed (IA)",
+    "language": "Idioma",
+    "fontSize": "Tamaño de Fuente",
+    "fontSizeSmall": "Pequeño",
+    "fontSizeMedium": "Mediano",
+    "fontSizeLarge": "Grande"
   },
   "FeedItemCard": {
     "adBadge": "Anuncio",
     "sponsoredBy": "Patrocinado por {advertiser}",
-    "categoriesLabel": "Categorías",
+    "categoriesLabel": "Categorías:",
     "rateThisAdLabel": "Calificar este anuncio",
     "rateThisContentLabel": "Calificar este contenido",
     "dislikeAction": "No me gusta",
@@ -71,9 +81,12 @@
     "shareOnFacebook": "Compartir en Facebook",
     "shareOnTwitter": "Compartir en Twitter",
     "shareOnInstagram": "Compartir en Instagram",
-    "videoAdPlaceholder_title": "Ver anuncio para continuar",
-    "videoAdPlaceholder_description": "Disfruta de una experiencia ininterrumpida viendo un video corto.",
-    "videoAdPlaceholder_button": "Ver video"
+    "playEkoDrop": "Reproducir EkoDrop",
+    "pauseEkoDrop": "Pausar EkoDrop",
+    "audioBy": "Audio por {user}",
+    "hashtags": "Hashtags:",
+    "postedOn": "Publicado el {date}",
+    "viewTranscript": "Ver Transcripción"
   },
   "ThemeToggleSwitch": {
     "switchToLightTheme": "Cambiar a tema claro",
@@ -81,14 +94,14 @@
   },
   "SavedAdsPage": {
     "backToFeed": "Volver al Feed",
-    "mySavedAds": "Mis Anuncios Guardados",
-    "errorLoadingSavedAds": "No se pudieron cargar los anuncios guardados.",
+    "mySavedEkoDrops": "Mis EkoDrops Guardados",
+    "errorLoadingSavedEkoDrops": "No se pudieron cargar los EkoDrops guardados.",
     "infoToastTitle": "Información",
     "personalizeInfoDescription": "La personalización del feed está disponible en la página principal del feed.",
-    "unlikedAndRemovedToastDescription": "Ya no te gusta \"{title}\". Ha sido eliminado de tus anuncios guardados.",
-    "dislikedAndRemovedToastDescription": "No te gustó \"{title}\". Ha sido eliminado de tus anuncios guardados.",
-    "noSavedAdsYet": "Aún no has guardado ningún anuncio.",
-    "likeAdToSave": "¡Dale 'Me gusta' a un anuncio en el feed principal para guardarlo aquí!"
+    "unlikedAndRemovedToastDescription": "Ya no te gusta \"{title}\". Ha sido eliminado de tus EkoDrops guardados.",
+    "dislikedAndRemovedToastDescription": "No te gustó \"{title}\". Ha sido eliminado de tus EkoDrops guardados.",
+    "noSavedEkoDropsYet": "Aún no has guardado ningún EkoDrop.",
+    "likeEkoDropToSave": "¡Dale 'Me gusta' a un EkoDrop en el feed principal para guardarlo aquí!"
   },
   "AdMobBanner": {
     "demoBannerTitle": "Banner de demostración de AdMob",

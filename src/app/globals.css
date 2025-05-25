@@ -3,92 +3,113 @@
 @tailwind components;
 @tailwind utilities;
 
+:root {
+  --font-size-sm: 12px;
+  --font-size-md: 16px;
+  --font-size-lg: 20px;
+  
+  --default-font-size: var(--font-size-md); /* Default to medium */
+
+  --background: 197 98% 94%; /* Light Blue - #E1F5FE */
+  --foreground: 224 71.4% 10.1%; /* Darker Blue/Grey for text */
+  --card: 0 0% 100%; /* White */
+  --card-foreground: 224 71.4% 10.1%;
+  --popover: 0 0% 100%;
+  --popover-foreground: 224 71.4% 10.1%;
+  --primary: 12 95% 52%; /* Firered - Was Eko's request */
+  --primary-foreground: 0 0% 100%; /* White */
+  --secondary: 197 80% 88%; /* Lighter Blue */
+  --secondary-foreground: 197 77% 30%; /* Darker Blue for text on secondary */
+  --muted: 197 30% 88%;
+  --muted-foreground: 197 30% 50%;
+  --accent: 50 100% 55%; /* Vibrant Yellow - Was Eko's request */
+  --accent-foreground: 28 50% 10%; /* Dark color for high contrast on yellow */
+  --destructive: 0 84.2% 60.2%;
+  --destructive-foreground: 0 0% 98%;
+  --border: 197 60% 85%;
+  --input: 197 70% 90%;
+  --ring: 12 95% 52%; /* Firered for rings */
+  --chart-1: 12 76% 61%;
+  --chart-2: 173 58% 39%;
+  --chart-3: 197 37% 24%;
+  --chart-4: 43 74% 66%;
+  --chart-5: 27 87% 67%;
+  --radius: 0.5rem;
+  --sidebar-background: 0 0% 98%;
+  --sidebar-foreground: 240 5.3% 26.1%;
+  --sidebar-primary: 240 5.9% 10%;
+  --sidebar-primary-foreground: 0 0% 98%;
+  --sidebar-accent: 240 4.8% 95.9%;
+  --sidebar-accent-foreground: 240 5.9% 10%;
+  --sidebar-border: 220 13% 91%;
+  --sidebar-ring: 217.2 91.2% 59.8%;
+}
+
+.dark {
+  --background-start-rgb: 23, 0, 0; /* Dark Red for gradient start */
+  --background-end-rgb: 0, 0, 0;   /* Black for gradient end */
+  --background: linear-gradient(to bottom, rgb(var(--background-start-rgb)), rgb(var(--background-end-rgb)));
+
+  --foreground: 30 90% 85%; /* Fiery Orange/Yellow for text */
+  --card: 15 30% 8%; /* Very dark, slightly warm brown for cards */
+  --card-foreground: 30 90% 85%;
+  --popover: 15 25% 6%; /* Even darker for popovers */
+  --popover-foreground: 30 90% 85%;
+  --primary: 12 95% 52%; /* Firered (Vibrant Reddish-Orange) */
+  --primary-foreground: 20 0% 100%; /* White for contrast on firered */
+  --secondary: 25 80% 40%; /* Dark, rich orange */
+  --secondary-foreground: 35 100% 80%; /* Lighter, vibrant yellow for text on secondary */
+  --muted: 20 20% 15%; /* Dark, desaturated brown */
+  --muted-foreground: 30 70% 65%; /* Muted orange/yellow for less important text */
+  --accent: 40 100% 55%; /* Vibrant yellow as accent */
+  --accent-foreground: 20 50% 10%; /* Very dark brown for text on yellow accent */
+  --destructive: 0 70% 50%; /* A clearer, more standard red for destructive actions */
+  --destructive-foreground: 0 0% 100%; /* White */
+  --border: 20 20% 25%; /* Dark, warm gray or very desaturated brown for borders */
+  --input: 20 15% 20%; /* Slightly darker than border for input backgrounds */
+  --ring: 12 95% 52%; /* Firered for focus rings, matching primary */
+  --chart-1: 12 95% 52%; /* Firered */
+  --chart-2: 40 100% 55%; /* Vibrant Yellow */
+  --chart-3: 25 80% 50%; /* Rich Orange */
+  --chart-4: 20 50% 35%; /* Muted Dark Orange */
+  --chart-5: 30 90% 85%; /* Fiery Orange/Yellow Text Color (as a chart option) */
+
+  --sidebar-background: 0 0% 4%; /* Almost pure black for sidebar */
+  --sidebar-foreground: 30 80% 80%; /* Lighter orange/yellow for sidebar text */
+  --sidebar-primary: 12 90% 50%; /* Firered for primary items in sidebar */
+  --sidebar-primary-foreground: 0 0% 100%;
+  --sidebar-accent: 20 30% 12%; /* Dark brown for sidebar hover/active states */
+  --sidebar-accent-foreground: 35 100% 75%; /* Vibrant yellow for text on sidebar accent */
+  --sidebar-border: 15 15% 15%;
+  --sidebar-ring: 12 95% 52%;
+}
+
 body {
   font-family: var(--font-geist-sans), Arial, Helvetica, sans-serif;
+  background: var(--background); /* Applied here for gradient */
+  color: hsl(var(--foreground));
+  font-size: var(--default-font-size); /* Apply default font size */
+  overflow-y: auto; /* Ensure body can scroll if content overflows */
+  background-attachment: fixed; /* For full-page gradient */
+}
+
+html {
+  overflow-x: hidden; /* Prevent horizontal scroll */
 }
 
 html, body, #__next {
   height: 100%;
-  overflow: hidden; /* Prevent body scroll when feed is active */
 }
 
-@layer base {
-  :root {
-    --background: 197 98% 94%; /* Light Blue - #E1F5FE */
-    --foreground: 224 71.4% 10.1%; /* Darker Blue/Grey for text */
-    --card: 0 0% 100%; /* White */
-    --card-foreground: 224 71.4% 10.1%;
-    --popover: 0 0% 100%;
-    --popover-foreground: 224 71.4% 10.1%;
-    --primary: 197 77% 53%; /* Vibrant Blue - #29ABE2 */
-    --primary-foreground: 0 0% 100%; /* White */
-    --secondary: 197 80% 88%; /* Lighter Blue */
-    --secondary-foreground: 197 77% 30%; /* Darker Blue for text on secondary */
-    --muted: 197 30% 88%;
-    --muted-foreground: 197 30% 50%;
-    --accent: 291 64% 42%; /* Saturated Purple - #9C27B0 */
-    --accent-foreground: 0 0% 100%; /* White */
-    --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 0 0% 98%;
-    --border: 197 60% 85%;
-    --input: 197 70% 90%;
-    --ring: 197 77% 53%; /* Primary color for rings */
-    --chart-1: 12 76% 61%;
-    --chart-2: 173 58% 39%;
-    --chart-3: 197 37% 24%;
-    --chart-4: 43 74% 66%;
-    --chart-5: 27 87% 67%;
-    --radius: 0.5rem;
-    --sidebar-background: 0 0% 98%;
-    --sidebar-foreground: 240 5.3% 26.1%;
-    --sidebar-primary: 240 5.9% 10%;
-    --sidebar-primary-foreground: 0 0% 98%;
-    --sidebar-accent: 240 4.8% 95.9%;
-    --sidebar-accent-foreground: 240 5.9% 10%;
-    --sidebar-border: 220 13% 91%;
-    --sidebar-ring: 217.2 91.2% 59.8%;
-  }
-  .dark {
-    --background: 28 15% 8%; /* Very dark, almost black with a hint of deep brown/orange */
-    --foreground: 45 70% 88%; /* Warm, light yellow/off-white for general text */
-    --card: 28 18% 12%; /* Slightly lighter dark brown */
-    --card-foreground: 45 70% 88%; /* Warm, light yellow/off-white */
-    --popover: 28 18% 12%; /* Slightly lighter dark brown */
-    --popover-foreground: 45 70% 88%; /* Warm, light yellow/off-white */
-    --primary: 12 95% 52%; /* Firered (Vibrant Reddish-Orange) */
-    --primary-foreground: 20 0% 100%; /* White */
-    --secondary: 28 40% 30%; /* Muted, browner orange */
-    --secondary-foreground: 40 70% 75%; /* Lighter yellow/orange for text on secondary */
-    --muted: 28 15% 20%; /* Darker, desaturated brown */
-    --muted-foreground: 40 50% 60%; /* Lighter, muted yellow/orange */
-    --accent: 50 100% 55%; /* Vibrant yellow */
-    --accent-foreground: 28 50% 10%; /* Dark color (dark brown/black) for high contrast on yellow */
-    --destructive: 0 70% 50%; /* A clearer, more standard red for destructive actions */
-    --destructive-foreground: 0 0% 100%; /* White */
-    --border: 28 10% 25%; /* Dark, warm gray or very desaturated brown */
-    --input: 28 10% 28%; /* Slightly lighter than border */
-    --ring: 12 95% 52%; /* Firered (Matches primary) */
-    --chart-1: 12 95% 52%; /* Firered */
-    --chart-2: 50 100% 55%; /* Vibrant Yellow */
-    --chart-3: 30 100% 50%; /* Bright Orange */
-    --chart-4: 28 40% 30%; /* Muted, browner orange */
-    --chart-5: 45 70% 88%; /* Warm, light yellow/off-white */
-    --sidebar-background: 28 12% 7%; /* Even darker, almost pure black with a brown hint */
-    --sidebar-foreground: 45 65% 85%; /* Light yellow as main foreground */
-    --sidebar-primary: 12 95% 48%; /* Slightly deeper firered for sidebar primary */
-    --sidebar-primary-foreground: 20 0% 100%; /* White */
-    --sidebar-accent: 28 15% 15%; /* Darker brown for hover/active states */
-    --sidebar-accent-foreground: 45 70% 88%;
-    --sidebar-border: 28 10% 20%;
-    --sidebar-ring: 12 95% 52%; /* Firered for sidebar ring */
-  }
-}
+
+.font-size-sm { --default-font-size: var(--font-size-sm); }
+.font-size-md { --default-font-size: var(--font-size-md); }
+.font-size-lg { --default-font-size: var(--font-size-lg); }
+
 
 @layer base {
   * {
     @apply border-border;
   }
-  body {
-    @apply bg-background text-foreground;
-  }
+  /* body is already styled above for gradient */
 }

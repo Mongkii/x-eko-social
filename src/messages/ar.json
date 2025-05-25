@@ -1,12 +1,13 @@
 
 {
   "Global": {
-    "appName": "شوبيمي"
+    "appName": "إيكو",
+    "loading": "جار التحميل..."
   },
   "HomePage": {
-    "greeting": "مرحباً بك في شوبيمي",
+    "greeting": "مرحباً بك في إيكو",
     "aiMagicToastTitle": "سحر الذكاء الاصطناعي ✨",
-    "aiMagicToastDescription": "يتم تخصيص موجز الإعلانات الخاص بك...",
+    "aiMagicToastDescription": "يتم تخصيص موجز إيكو دروب الخاص بك...",
     "aiPersonalizationErrorToastTitle": "خطأ في تخصيص الذكاء الاصطناعي",
     "aiPersonalizationErrorToastDescription": "تعذر تخصيص الموجز.",
     "aiFeedPersonalizedToastTitle": "تخصيص موجز الذكاء الاصطناعي (محاكاة)",
@@ -25,16 +26,22 @@
     "followedCategoryToastDescription": "أنت الآن تتابع \"{category}\".",
     "unfollowedCategoryToastTitle": "تم إلغاء متابعة الفئة!",
     "unfollowedCategoryToastDescription": "لقد ألغيت متابعة \"{category}\".",
-    "noFeedItems": "لا توجد عناصر في خلاصتك حتى الآن.",
+    "noFeedItems": "لا توجد إيكو دروب في خلاصتك حتى الآن. سجل واحدة!",
+    "subscriptionUpdated": "تم تحديث الاشتراك",
+    "subscriptionStatusNow": "حالة اشتراكك الآن: {status}.",
+    "statusActive": "نشط",
+    "statusInactive": "غير نشط",
+    "billingSectionTitle": "إيكو+ والمشتريات داخل التطبيق",
+    "billingSectionDescription": "إدارة اشتراكك في إيكو+ ومشترياتك.",
     "subscriptionStatus": "حالة الاشتراك:",
-    "premiumActive": "اشتراك مميز نشط",
-    "notSubscribed": "غير مشترك",
-    "subscribeToPremium": "اشترك في المميز",
+    "premiumActive": "إيكو+ نشط",
+    "notSubscribed": "غير مشترك في إيكو+",
+    "subscribeToPremium": "اشترك في إيكو+",
     "availableInAppItems": "العناصر المتاحة داخل التطبيق:",
     "processingSubscription": "جاري معالجة الاشتراك...",
     "pleaseWait": "يرجى الانتظار.",
     "subscriptionSuccessful": "نجاح الاشتراك!",
-    "youAreNowSubscribed": "أنت مشترك الآن في المميز.",
+    "youAreNowSubscribed": "أنت مشترك الآن في إيكو+.",
     "subscriptionFailed": "فشل الاشتراك",
     "couldNotCompleteSubscription": "تعذر إكمال الاشتراك.",
     "subscriptionError": "خطأ في الاشتراك",
@@ -46,22 +53,25 @@
     "purchaseFailed": "فشل الشراء",
     "couldNotPurchaseItem": "تعذر شراء {title}.",
     "purchaseError": "خطأ في الشراء",
-    "subscriptionUpdated": "تم تحديث الاشتراك",
-    "subscriptionStatusNow": "حالة اشتراكك الآن: {status}.",
-    "statusActive": "نشط",
-    "statusInactive": "غير نشط",
-    "billingSectionTitle": "اشتراكات ومشتريات التطبيق",
-    "billingSectionDescription": "إدارة اشتراكاتك وعناصرك داخل التطبيق (محاكاة لتطبيق الجوال)."
+    "playNext": "تشغيل التالي",
+    "playing": "يتم التشغيل",
+    "pause": "إيقاف مؤقت",
+    "play": "تشغيل"
   },
   "AppHeader": {
-    "shopyme": "شوبيمي",
-    "savedAdsTooltip": "الإعلانات المحفوظة",
-    "personalizeFeedTooltip": "تخصيص خلاصتي (AI)"
+    "eko": "إيكو",
+    "savedEkoDropsTooltip": "الإيكو دروب المحفوظة",
+    "personalizeFeedTooltip": "تخصيص خلاصتي (AI)",
+    "language": "اللغة",
+    "fontSize": "حجم الخط",
+    "fontSizeSmall": "صغير",
+    "fontSizeMedium": "متوسط",
+    "fontSizeLarge": "كبير"
   },
   "FeedItemCard": {
     "adBadge": "إعلان",
     "sponsoredBy": "برعاية {advertiser}",
-    "categoriesLabel": "الفئات",
+    "categoriesLabel": "الفئات:",
     "rateThisAdLabel": "قيم هذا الإعلان",
     "rateThisContentLabel": "قيم هذا المحتوى",
     "dislikeAction": "لم يعجبنى",
@@ -71,9 +81,12 @@
     "shareOnFacebook": "مشاركة على Facebook",
     "shareOnTwitter": "مشاركة على Twitter",
     "shareOnInstagram": "مشاركة على Instagram",
-    "videoAdPlaceholder_title": "شاهد إعلان للمتابعة",
-    "videoAdPlaceholder_description": "استمتع بتجربة دون انقطاع بمشاهدة فيديو قصير.",
-    "videoAdPlaceholder_button": "شاهد الفيديو"
+    "playEkoDrop": "تشغيل إيكو دروب",
+    "pauseEkoDrop": "إيقاف إيكو دروب مؤقتًا",
+    "audioBy": "صوت بواسطة {user}",
+    "hashtags": "الوسوم:",
+    "postedOn": "نشر في {date}",
+    "viewTranscript": "عرض النص"
   },
   "ThemeToggleSwitch": {
     "switchToLightTheme": "التبديل إلى المظهر الفاتح",
@@ -81,14 +94,14 @@
   },
   "SavedAdsPage": {
     "backToFeed": "العودة إلى الموجز",
-    "mySavedAds": "إعلاناتي المحفوظة",
-    "errorLoadingSavedAds": "تعذر تحميل الإعلانات المحفوظة.",
+    "mySavedEkoDrops": "الإيكو دروب المحفوظة",
+    "errorLoadingSavedEkoDrops": "تعذر تحميل الإيكو دروب المحفوظة.",
     "infoToastTitle": "معلومات",
     "personalizeInfoDescription": "تخصيص الموجز متاح في صفحة الموجز الرئيسية.",
-    "unlikedAndRemovedToastDescription": "لقد ألغيت الإعجاب بـ \"{title}\". تمت إزالته من إعلاناتك المحفوظة.",
-    "dislikedAndRemovedToastDescription": "لم يعجبك \"{title}\". تمت إزالته من إعلاناتك المحفوظة.",
-    "noSavedAdsYet": "لم تقم بحفظ أي إعلانات بعد.",
-    "likeAdToSave": "قم بالإعجاب بإعلان في الموجز الرئيسي لحفظه هنا!"
+    "unlikedAndRemovedToastDescription": "لقد ألغيت الإعجاب بـ \"{title}\". تمت إزالته من الإيكو دروب المحفوظة.",
+    "dislikedAndRemovedToastDescription": "لم يعجبك \"{title}\". تمت إزالته من الإيكو دروب المحفوظة.",
+    "noSavedEkoDropsYet": "لم تقم بحفظ أي إيكو دروب بعد.",
+    "likeEkoDropToSave": "قم بالإعجاب بإيكو دروب في الموجز الرئيسي لحفظه هنا!"
   },
   "AdMobBanner": {
     "demoBannerTitle": "بانر تجريبي لـ AdMob",

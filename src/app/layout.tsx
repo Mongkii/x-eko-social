@@ -4,8 +4,7 @@ import { Geist, Geist_Mono } from 'next/font/google';
 import './globals.css';
 import { Toaster } from "@/components/ui/toaster";
 import { ThemeProvider } from "@/components/theme-provider";
-import { NextIntlClientProvider, type AbstractIntlMessages } from 'next-intl';
-import { defaultLocale, minimalFallbackMessages } from '@/i18n'; // Import from i18n.ts
+// Removed NextIntlClientProvider and related imports from here, will be in [locale]/layout.tsx
 
 const geistSans = Geist({
   variable: '--font-geist-sans',
@@ -18,8 +17,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: 'Shopyme',
-  description: 'Personalized Ad Feed Experience',
+  title: 'Eko: Voice Social Network', // Updated title
+  description: 'Eko - Your voice-first social network.', // Updated description
 };
 
 // This RootLayout is a Server Component
@@ -28,27 +27,19 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  // For a single-language app (English only),
-  // directly use the imported minimalFallbackMessages and defaultLocale.
-  // This avoids calling getMessages() at the root, which was causing issues.
-  const messages = minimalFallbackMessages;
-  const locale = defaultLocale;
-  console.log("RootLayout: Using MINIMAL hardcoded fallback messages imported from i18n.ts for NextIntlClientProvider.");
-
+  // The lang attribute will be set by [locale]/layout.tsx or defaults to 'en' if no locale context
   return (
-    <html lang={locale} className="h-full" suppressHydrationWarning>
+    <html lang="en" className="h-full" suppressHydrationWarning>
       <body className={`${geistSans.variable} ${geistMono.variable} antialiased h-full flex flex-col`}>
-        <NextIntlClientProvider locale={locale} messages={messages}>
-          <ThemeProvider
-            attribute="class"
-            defaultTheme="system"
-            enableSystem
-            disableTransitionOnChange
-          >
-            {children}
-            <Toaster />
-          </ThemeProvider>
-        </NextIntlClientProvider>
+        <ThemeProvider
+          attribute="class"
+          defaultTheme="system"
+          enableSystem
+          disableTransitionOnChange
+        >
+          {children}
+          <Toaster />
+        </ThemeProvider>
       </body>
     </html>
   );
