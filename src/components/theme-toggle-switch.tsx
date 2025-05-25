@@ -7,12 +7,10 @@ import { Switch } from "@/components/ui/switch";
 import { Moon, Sun } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Skeleton } from "@/components/ui/skeleton";
-import { useTranslations } from "next-intl";
 
 export function ThemeToggleSwitch() {
   const { theme, setTheme, resolvedTheme } = useTheme();
   const [mounted, setMounted] = useState(false);
-  const t = useTranslations('ThemeToggleSwitch');
 
   useEffect(() => {
     setMounted(true);
@@ -46,7 +44,7 @@ export function ThemeToggleSwitch() {
         id="theme-switch"
         checked={isDarkMode}
         onCheckedChange={toggleTheme}
-        aria-label={isDarkMode ? t('switchToLightTheme') : t('switchToDarkTheme')}
+        aria-label={isDarkMode ? "Switch to light theme" : "Switch to dark theme"}
       />
       <Moon
         className={cn(

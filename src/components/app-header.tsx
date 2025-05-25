@@ -1,13 +1,11 @@
 
 "use client";
 
+import Link from 'next/link'; // Changed from '@/navigation'
 import { AppLogoIcon } from '@/components/icons/app-logo-icon';
 import { Button } from '@/components/ui/button';
 import { ThemeToggleSwitch } from '@/components/theme-toggle-switch';
 import { Bookmark, Wand2, Settings } from 'lucide-react';
-import { useTranslations } from 'next-intl';
-import { Link } from '@/navigation';
-import { LanguageSwitcher } from '@/components/language-switcher';
 import { FontSizeSwitcher } from '@/components/font-size-switcher';
 import {
   Tooltip,
@@ -31,7 +29,6 @@ interface AppHeaderProps {
 }
 
 export function AppHeader({ onPersonalize }: AppHeaderProps) {
-  const t = useTranslations('AppHeader');
 
   const handlePersonalizeClick = async () => {
     await onPersonalize();
@@ -43,7 +40,7 @@ export function AppHeader({ onPersonalize }: AppHeaderProps) {
         <Link href="/" className="mr-auto flex items-center space-x-2">
           <AppLogoIcon className="h-6 w-6 text-primary" />
           <span className="font-bold sm:inline-block text-primary">
-            {t('eko')}
+            Eko
           </span>
         </Link>
         <nav className="flex items-center space-x-1 sm:space-x-2">
@@ -51,14 +48,14 @@ export function AppHeader({ onPersonalize }: AppHeaderProps) {
             <Tooltip>
               <TooltipTrigger asChild>
                 <Button variant="ghost" size="icon" asChild className="h-9 w-9">
-                  <Link href="/saved-ads"> {/* Updated route for saved items */}
+                  <Link href="/saved-ads">
                     <Bookmark className="h-5 w-5" />
-                    <span className="sr-only">{t('savedEkoDropsTooltip')}</span>
+                    <span className="sr-only">Saved EkoDrops</span>
                   </Link>
                 </Button>
               </TooltipTrigger>
               <TooltipContent>
-                <p>{t('savedEkoDropsTooltip')}</p>
+                <p>Saved EkoDrops</p>
               </TooltipContent>
             </Tooltip>
           </TooltipProvider>
@@ -68,11 +65,11 @@ export function AppHeader({ onPersonalize }: AppHeaderProps) {
               <TooltipTrigger asChild>
                 <Button onClick={handlePersonalizeClick} variant="ghost" size="icon" className="h-9 w-9">
                   <Wand2 className="h-5 w-5" />
-                  <span className="sr-only">{t('personalizeFeedTooltip')}</span>
+                  <span className="sr-only">Personalize My Feed (AI)</span>
                 </Button>
               </TooltipTrigger>
               <TooltipContent>
-                <p>{t('personalizeFeedTooltip')}</p>
+                <p>Personalize My Feed (AI)</p>
               </TooltipContent>
             </Tooltip>
           </TooltipProvider>
@@ -94,12 +91,8 @@ export function AppHeader({ onPersonalize }: AppHeaderProps) {
               </Tooltip>
             </TooltipProvider>
             <DropdownMenuContent className="w-56" align="end">
-              <DropdownMenuLabel>{t('language')}</DropdownMenuLabel>
-              <DropdownMenuGroup>
-                <LanguageSwitcher />
-              </DropdownMenuGroup>
-              <DropdownMenuSeparator />
-              <DropdownMenuLabel>{t('fontSize')}</DropdownMenuLabel>
+              {/* LanguageSwitcher removed */}
+              <DropdownMenuLabel>Font Size</DropdownMenuLabel>
                <DropdownMenuGroup>
                 <FontSizeSwitcher />
               </DropdownMenuGroup>

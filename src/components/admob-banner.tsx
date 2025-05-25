@@ -3,11 +3,9 @@
 
 import { ShieldBan } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { useTranslations } from 'next-intl';
 
 export function AdMobBanner() {
   const adUnitId = process.env.NEXT_PUBLIC_ADMOB_BANNER_AD_UNIT_ID;
-  const t = useTranslations('AdMobBanner');
 
   if (!adUnitId) {
     return null; 
@@ -18,13 +16,13 @@ export function AdMobBanner() {
       <CardHeader className="pb-2">
         <CardTitle className="text-sm font-medium text-muted-foreground flex items-center">
           <ShieldBan className="w-4 h-4 mr-2 text-yellow-500" />
-          {t('demoBannerTitle')}
+          AdMob Demo Banner
         </CardTitle>
       </CardHeader>
       <CardContent>
         <div className="text-xs text-muted-foreground p-2 bg-muted rounded text-center">
-          {t('demoAdUnitId')} {adUnitId}
-          <p className="text-[10px] mt-1">{t('placeholderText')}</p>
+          Demo Ad Unit ID: {adUnitId}
+          <p className="text-[10px] mt-1">(This is a placeholder, not a live ad)</p>
         </div>
       </CardContent>
     </Card>

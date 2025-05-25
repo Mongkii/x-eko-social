@@ -7,24 +7,11 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { StarRating } from '@/components/ui/star-rating';
 import { Badge } from '@/components/ui/badge';
-import { Heart, ThumbsDown, Plus, Check, ThumbsUp, MessageCircle, Share2, PlayCircle, Facebook, Twitter, Instagram, Play, Pause } from 'lucide-react';
+import { Heart, ThumbsDown, Plus, Check, ThumbsUp, MessageCircle, Share2, PlayCircle, Facebook, Twitter, Instagram, Play, Pause, Gift } from 'lucide-react'; // Added Gift
 import { cn } from '@/lib/utils';
 import React, { useState, useRef, useEffect } from 'react';
-import { useTranslations, useLocale } from 'next-intl';
 import { formatDistanceToNow, parseISO } from 'date-fns';
-import { enUS, arSA, es, fr, hi, ru, de } from 'date-fns/locale'; // Import locales
-
-// Map next-intl locales to date-fns locales
-const dateFnsLocales: { [key: string]: Locale } = {
-  en: enUS,
-  ar: arSA,
-  es: es,
-  fr: fr,
-  hi: hi,
-  ru: ru,
-  de: de,
-  // Add ur, zh, tl if date-fns supports them or use a fallback
-};
+// Removed date-fns locale imports as we are English-only now
 
 interface FeedItemCardProps {
   item: FeedItemData;
@@ -51,8 +38,6 @@ export function FeedItemCard({
   onAudioEnded,
   audioRef,
 }: FeedItemCardProps) {
-  const t = useTranslations('FeedItemCard');
-  const currentLocale = useLocale();
   const [swipeState, setSwipeState] = useState<'left' | 'right' | null>(null);
   const [translateX, setTranslateX] = useState(0);
   const touchStartX = useRef(0);
@@ -63,7 +48,7 @@ export function FeedItemCard({
 
   useEffect(() => {
     if (videoElementRef.current) {
-      audioRef(videoElementRef.current); // Pass ref up to parent
+      audioRef(videoElementRef.current); 
       if (isPlaying) {
         videoElementRef.current.play().catch(e => console.warn("Autoplay prevented:", e));
       } else {
@@ -125,18 +110,16 @@ export function FeedItemCard({
 
   const getFormattedDate = (timestamp: any) => {
     try {
-      // Assuming timestamp is Firestore Timestamp-like or ISO string
       const date = timestamp?.toDate ? timestamp.toDate() : parseISO(timestamp);
-      const locale = dateFnsLocales[currentLocale] || enUS;
-      return formatDistanceToNow(date, { addSuffix: true, locale });
+      return formatDistanceToNow(date, { addSuffix: true }); // Default locale (English)
     } catch (e) {
       console.error("Error formatting date:", e);
       return "some time ago";
     }
   };
 
-  const itemTranscript = item.transcript?.[currentLocale] || item.transcript?.['en'] || item.description;
-  const itemTitle = item.title || item.transcript?.[currentLocale]?.substring(0, 50) || item.transcript?.['en']?.substring(0, 50) || t('audioBy', {user: item.userId});
+  const itemTranscript = item.transcript?.['en'] || item.description; // Default to English transcript
+  const itemTitle = item.title || item.transcript?.['en']?.substring(0, 50) || `Audio by ${item.userId}`;
 
 
   return (
@@ -156,17 +139,40 @@ export function FeedItemCard({
       >
         <CardHeader className="relative p-0">
           <div className="aspect-square w-full relative bg-secondary overflow-hidden rounded-t-lg">
-            {item.audioUrl ? (
+            {item.videoUrl ? ( // Prioritize videoUrl
               <>
                 <video
                   ref={videoElementRef}
-                  src={item.audioUrl} // Using HTML5 video for audio playback control
-                  poster={item.posterUrl}
-                  loop={false} // Continuous play handled by parent
-                  muted={false} // User controls volume, or app global mute
+                  src={item.videoUrl}
+                  poster={item.posterUrl} // Use posterUrl as poster for video
+                  loop={item.type === 'ad'} // Loop ads, non-loop content (or parent controlled)
+                  muted={item.type === 'ad'}  // Mute ads by default
                   playsInline
+                  autoPlay={item.type === 'ad' || isPlaying} // Autoplay ads or if specifically playing
                   onEnded={onAudioEnded}
                   className="object-cover w-full h-full"
+                  data-ai-hint={item.dataAiHint}
+                />
+                {!isPlaying && item.type === 'content' && ( // Show play button for content if not playing
+                  <div 
+                    className="absolute inset-0 flex items-center justify-center bg-black/30 cursor-pointer"
+                    onClick={() => onPlayRequest(item.id)}
+                  >
+                    <PlayCircle className="w-16 h-16 text-white/70 opacity-80" />
+                  </div>
+                )}
+              </>
+            ) : item.audioUrl ? ( // Fallback to audioUrl if videoUrl is not present
+              <>
+                <video // Using video tag for audio as well for consistent controls/events
+                  ref={videoElementRef}
+                  src={item.audioUrl}
+                  poster={item.posterUrl}
+                  loop={false}
+                  muted={false}
+                  playsInline
+                  onEnded={onAudioEnded}
+                  className="object-cover w-full h-full" 
                   data-ai-hint={item.dataAiHint}
                 />
                 <div 
@@ -176,7 +182,7 @@ export function FeedItemCard({
                   {!isPlaying && <PlayCircle className="w-16 h-16 text-white/70 opacity-80" />}
                 </div>
               </>
-            ) : item.posterUrl ? ( // Fallback to image if no audio
+            ) : item.posterUrl ? ( 
               <Image
                 src={item.posterUrl}
                 alt={itemTitle}
@@ -191,7 +197,7 @@ export function FeedItemCard({
               </div>
             )}
              <div className="absolute top-2 right-2">
-              {item.type === 'ad' && <Badge variant="destructive">{t('adBadge')}</Badge>}
+              {item.type === 'ad' && <Badge variant="destructive">Ad</Badge>}
             </div>
             {swipeState === 'right' && (
               <div className="absolute top-1/2 left-8 -translate-y-1/2 opacity-80">
@@ -208,13 +214,13 @@ export function FeedItemCard({
         
         <CardContent className="flex-grow p-4 space-y-2 overflow-y-auto">
           <CardTitle className="text-lg">{itemTitle}</CardTitle>
-          {item.advertiser && <p className="text-xs text-muted-foreground">{t('sponsoredBy', {advertiser: item.advertiser})}</p>}
+          {item.advertiser && <p className="text-xs text-muted-foreground">Sponsored by {item.advertiser}</p>}
           <CardDescription className="text-sm">{itemTranscript}</CardDescription>
-          <p className="text-xs text-muted-foreground">{t('postedOn', {date: getFormattedDate(item.createdAt)})}</p>
+          <p className="text-xs text-muted-foreground">Posted {getFormattedDate(item.createdAt)}</p>
           
           {item.hashtags && item.hashtags.length > 0 && (
             <div className="space-y-1">
-              <p className="text-xs font-medium text-muted-foreground">{t('hashtags')}</p>
+              <p className="text-xs font-medium text-muted-foreground">Hashtags:</p>
               <div className="flex flex-wrap gap-2">
                 {item.hashtags.map((category) => (
                   <Button
@@ -236,41 +242,41 @@ export function FeedItemCard({
         <CardFooter className="flex flex-col items-start gap-3 p-4 border-t">
           <div className="w-full">
             <p className="text-xs font-medium text-muted-foreground mb-1">
-              {item.type === 'ad' ? t('rateThisAdLabel') : t('rateThisContentLabel')}:
+              {item.type === 'ad' ? "Rate this ad:" : "Rate this content:"}
             </p>
             <StarRating currentRating={item.userRating} onRatingChange={(rating) => onRate(item.id, rating)} size={20} />
           </div>
           <div className="flex w-full justify-around items-center">
             <Button variant="ghost" size="icon" onClick={() => onToggleDislike(item.id)} className={cn(item.isDisliked && "text-destructive")}>
               <ThumbsDown className={cn(item.isDisliked && "fill-destructive")} />
-              <span className="sr-only">{t('dislikeAction')}</span>
+              <span className="sr-only">Dislike</span>
             </Button>
             <Button variant="ghost" size="icon" onClick={() => onToggleLike(item.id)} className={cn(item.isLiked && "text-primary")}>
               <Heart className={cn(item.isLiked && "fill-primary")}/>
-              <span className="sr-only">{t('likeAction')}</span>
+              <span className="sr-only">Like</span>
             </Button>
              <Button variant="ghost" size="icon">
               <MessageCircle />
-              <span className="sr-only">{t('commentAction')}</span>
+              <span className="sr-only">Comment</span>
             </Button>
             {item.type !== 'ad' && (
               <Button variant="ghost" size="icon">
                 <Share2 />
-                <span className="sr-only">{t('shareAction')}</span>
+                <span className="sr-only">Share</span>
               </Button>
             )}
           </div>
 
-          {item.type === 'ad' && (
+          {item.type === 'ad' && ( // Social share for ads
             <div className="w-full">
               <div className="flex w-full justify-center items-center gap-4">
-                <Button variant="outline" size="icon" aria-label={t('shareOnFacebook')} className="rounded-full">
+                <Button variant="outline" size="icon" aria-label="Share on Facebook" className="rounded-full">
                   <Facebook className="h-5 w-5" />
                 </Button>
-                <Button variant="outline" size="icon" aria-label={t('shareOnTwitter')} className="rounded-full">
+                <Button variant="outline" size="icon" aria-label="Share on Twitter" className="rounded-full">
                   <Twitter className="h-5 w-5" />
                 </Button>
-                <Button variant="outline" size="icon" aria-label={t('shareOnInstagram')} className="rounded-full">
+                <Button variant="outline" size="icon" aria-label="Share on Instagram" className="rounded-full">
                   <Instagram className="h-5 w-5" />
                 </Button>
               </div>

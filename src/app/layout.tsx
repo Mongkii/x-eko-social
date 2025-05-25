@@ -4,7 +4,7 @@ import { Geist, Geist_Mono } from 'next/font/google';
 import './globals.css';
 import { Toaster } from "@/components/ui/toaster";
 import { ThemeProvider } from "@/components/theme-provider";
-// Removed NextIntlClientProvider and related imports from here, will be in [locale]/layout.tsx
+import { FontSizeProvider } from '@/contexts/font-size-context'; // Import FontSizeProvider
 
 const geistSans = Geist({
   variable: '--font-geist-sans',
@@ -17,17 +17,15 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: 'Eko: Voice Social Network', // Updated title
-  description: 'Eko - Your voice-first social network.', // Updated description
+  title: 'Eko: Voice Social Network',
+  description: 'Eko - Your voice-first social network.',
 };
 
-// This RootLayout is a Server Component
 export default function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  // The lang attribute will be set by [locale]/layout.tsx or defaults to 'en' if no locale context
   return (
     <html lang="en" className="h-full" suppressHydrationWarning>
       <body className={`${geistSans.variable} ${geistMono.variable} antialiased h-full flex flex-col`}>
@@ -37,7 +35,9 @@ export default function RootLayout({
           enableSystem
           disableTransitionOnChange
         >
-          {children}
+          <FontSizeProvider> {/* Wrap children with FontSizeProvider */}
+            {children}
+          </FontSizeProvider>
           <Toaster />
         </ThemeProvider>
       </body>
