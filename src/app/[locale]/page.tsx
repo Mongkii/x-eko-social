@@ -9,7 +9,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useToast } from '@/hooks/use-toast';
-import { initialEkoDrops } from '@/lib/eko-data';
+import { initialEkoDrops } from '@/lib/eko-data'; // Updated import
 import { AdMobBanner } from '@/components/admob-banner';
 import { mockInAppPurchaseItems, premiumSubscriptionSku } from '@/lib/billing-data';
 import { CheckCircle, ShoppingCart, Star, Play, Pause, Gift } from 'lucide-react';
@@ -181,7 +181,7 @@ export default function HomePage() {
     );
     if (item) {
       recordInteraction(itemId, 'rate', rating);
-      toast({ title: t('ratingSubmittedToastTitle'), description: t('ratingSubmittedToastDescription', { title: item.title, rating }) });
+      toast({ title: tGlobal('ratingSubmittedToastTitle'), description: tGlobal('ratingSubmittedToastDescription', { title: item.title, rating }) });
     }
   };
 
@@ -196,8 +196,8 @@ export default function HomePage() {
 
     recordInteraction(itemId, isNowLiked ? 'like' : 'unlike');
     toast({
-      title: isNowLiked ? t('likedToastTitle') : t('unlikedToastTitle'),
-      description: isNowLiked ? t('likedToastDescription', { title: item.title }) : t('unlikedToastDescription', { title: item.title })
+      title: isNowLiked ? tGlobal('likedToastTitle') : tGlobal('unlikedToastTitle'),
+      description: isNowLiked ? tGlobal('likedToastDescription', { title: item.title }) : tGlobal('unlikedToastDescription', { title: item.title })
     });
 
     try {
@@ -231,8 +231,8 @@ export default function HomePage() {
     
     recordInteraction(itemId, 'dislike');
     toast({
-      title: isNowDisliked ? t('dislikedToastTitle') : t('dislikeRemovedToastTitle'),
-      description: isNowDisliked ? t('dislikedToastDescription', { title: item.title }) : t('dislikeRemovedToastDescription', { title: item.title })
+      title: isNowDisliked ? tGlobal('dislikedToastTitle') : tGlobal('dislikeRemovedToastTitle'),
+      description: isNowDisliked ? tGlobal('dislikedToastDescription', { title: item.title }) : tGlobal('dislikeRemovedToastDescription', { title: item.title })
     });
 
     if (isNowDisliked && item.isLiked) { // Also remove from liked if it was liked
@@ -259,18 +259,17 @@ export default function HomePage() {
     });
     recordInteraction(category, isNowFollowing ? 'followCategory' : 'unfollowCategory');
     toast({
-      title: isNowFollowing ? t('followedCategoryToastTitle') : t('unfollowedCategoryToastTitle'),
-      description: isNowFollowing ? t('followedCategoryToastDescription', {category}) : t('unfollowedCategoryToastDescription', {category})
+      title: isNowFollowing ? tGlobal('followedCategoryToastTitle') : tGlobal('unfollowedCategoryToastTitle'),
+      description: isNowFollowing ? tGlobal('followedCategoryToastDescription', {category}) : tGlobal('unfollowedCategoryToastDescription', {category})
     });
   };
 
   const handlePersonalizeFeed = async () => {
+    // Placeholder for BRD - AI personalization is a backend task
     toast({ title: t('aiMagicToastTitle'), description: t('aiMagicToastDescription') });
-    // Simulate AI personalization - In a real app, this would call a backend service
     await new Promise(resolve => setTimeout(resolve, 1500));
-    // Example: shuffle feed items
-    setFeedItems(prev => [...prev].sort(() => Math.random() - 0.5));
-    toast({ title: t('aiFeedPersonalizedToastTitle'), description: t('aiFeedPersonalizedToastDescription') + " (Simulated)" });
+    setFeedItems(prev => [...prev].sort(() => Math.random() - 0.5)); // Simulate by shuffling
+    toast({ title: t('aiFeedPersonalizedToastTitle'), description: t('aiFeedPersonalizedToastDescription')});
   };
 
   const handleSubscribe = async (sku: string) => {

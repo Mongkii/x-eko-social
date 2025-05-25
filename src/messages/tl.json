@@ -1,4 +1,109 @@
 
 {
-  "comment": "This file will be deleted as part of removing i18n features."
+  "Global": {
+    "appName": "Eko (tl)"
+  },
+  "HomePage": {
+    "aiMagicToastTitle": "AI Magic ✨ (tl)",
+    "aiMagicToastDescription": "Pini-personalize ang iyong feed... (tl)",
+    "aiPersonalizationErrorToastTitle": "Error sa AI Personalization (tl)",
+    "aiPersonalizationErrorToastDescription": "Hindi ma-personalize ang feed sa ngayon. (tl)",
+    "aiFeedPersonalizedToastTitle": "AI Feed Personalization (Simulated) (tl)",
+    "aiFeedPersonalizedToastDescription": "Na-update ang iyong feed batay sa iyong mga interaksyon. (tl)",
+    "noFeedItems": "Wala pang EkoDrops sa iyong feed. Mag-explore o gumawa! (tl)",
+    "billingSectionTitle": "Eko+ & Mga In-App Purchase (tl)",
+    "billingSectionDescription": "Pamahalaan ang iyong subscription at kumuha ng mga cool na extra! (tl)",
+    "subscriptionStatus": "Katayuan ng Subscription (tl)",
+    "premiumActive": "Eko+ Premium Aktibo (tl)",
+    "notSubscribed": "Hindi Naka-subscribe sa Eko+ (tl)",
+    "subscribeToPremium": "Mag-subscribe sa Eko+ (tl)",
+    "availableInAppItems": "Mga Available na In-App Item (tl)",
+    "processingSubscription": "Pinoproseso ang Subscription... (tl)",
+    "pleaseWait": "Mangyaring maghintay sandali. (tl)",
+    "subscriptionSuccessful": "Matagumpay ang Subscription! (tl)",
+    "youAreNowSubscribed": "Isa ka nang Eko+ subscriber. (tl)",
+    "subscriptionFailed": "Nabigo ang Subscription (tl)",
+    "couldNotCompleteSubscription": "Hindi namin makumpleto ang iyong subscription. Pakisubukang muli. (tl)",
+    "subscriptionError": "Error sa Subscription (tl)",
+    "mobileBridgeNotFound": "Hindi Natagpuan ang Mobile App Bridge (tl)",
+    "featureOnlyInMobileApp": "Ang feature na ito ay available lamang sa mobile app. (tl)",
+    "purchasingItem": "Binibili ang {title}... (tl)",
+    "purchaseSuccessful": "Matagumpay ang Pagbili! (tl)",
+    "youHavePurchasedItem": "Matagumpay mong nabili ang {title}. (tl)",
+    "purchaseFailed": "Nabigo ang Pagbili (tl)",
+    "couldNotPurchaseItem": "Hindi makumpleto ang pagbili para sa {title}. (tl)",
+    "purchaseError": "Error sa Pagbili (tl)",
+    "subscriptionUpdated": "Na-update ang Katayuan ng Subscription (tl)",
+    "subscriptionStatusNow": "Ang iyong Eko+ subscription ay {status} na ngayon. (tl)",
+    "statusActive": "Aktibo (tl)",
+    "statusInactive": "Hindi Aktibo (tl)"
+  },
+  "AppHeader": {
+    "appName": "Eko (tl)",
+    "savedEkoDropsTooltip": "Mga Naka-save na EkoDrop (tl)",
+    "personalizeFeedTooltip": "I-personalize ang Aking Feed (AI) (tl)",
+    "settingsTooltip": "Mga Setting (tl)",
+    "languageLabel": "Wika (tl)",
+    "fontSizeLabel": "Laki ng Font (tl)",
+    "themeLabel": "Tema (tl)"
+  },
+  "FeedItemCard": {
+    "voicePost": "Voice Post (tl)",
+    "adBadge": "Ad (tl)",
+    "sponsoredBy": "Sponsor ng {advertiser} (tl)",
+    "noDescription": "Walang available na deskripsyon. (tl)",
+    "postedDate": "Nai-post {date} (tl)",
+    "byUser": "ni (tl)",
+    "durationLabel": "Tagal (tl)",
+    "categoriesLabel": "Mga Kategorya (tl)",
+    "rateThisAdLabel": "I-rate ang Ad na ito (tl)",
+    "rateThisContentLabel": "I-rate ang EkoDrop na ito (tl)",
+    "dislikeAction": "Ayaw (tl)",
+    "likeAction": "Gusto (tl)",
+    "commentAction": "Komento (tl)",
+    "shareAction": "Ibahagi (tl)",
+    "noMedia": "Walang audio para sa EkoDrop na ito. (tl)",
+    "dateUnknown": "kanina pa (tl)",
+    "dateInvalid": "di-wastong petsa (tl)",
+    "dateRecently": "kamakailan lang (tl)",
+    "watchRewardedAdButton": "Manood ng Ad para sa Gantimpala (tl)"
+  },
+  "ThemeToggleSwitch": {
+    "switchToLightTheme": "Lumipat sa Light Theme (tl)",
+    "switchToDarkTheme": "Lumipat sa Dark Theme (tl)"
+  },
+  "SavedEkoDropsPage": {
+    "backToFeed": "Bumalik sa Feed (tl)",
+    "mySavedAds": "Aking Mga Naka-save na EkoDrop (tl)",
+    "errorLoadingSavedAds": "Error: Hindi ma-load ang mga naka-save na EkoDrop. (tl)",
+    "infoToastTitle": "Impormasyon (tl)",
+    "personalizeInfoDescription": "Available ang personalization ng feed sa pangunahing pahina ng feed. (tl)",
+    "unlikedAndRemovedToastDescription": "In-unlike mo ang \"{title}\". Inalis na ito sa iyong mga naka-save na EkoDrop. (tl)",
+    "dislikedAndRemovedToastDescription": "Hindi mo nagustuhan ang \"{title}\". Inalis na ito sa iyong mga naka-save na EkoDrop. (tl)",
+    "noSavedAdsYet": "Wala ka pang nai-save na EkoDrop. (tl)",
+    "likeAdToSave": "I-like ang isang EkoDrop sa pangunahing feed para i-save ito dito! (tl)"
+  },
+  "AdMobBanner": {
+    "demoBannerTitle": "AdMob Demo Banner (tl)",
+    "demoAdUnitIdLabel": "Demo Ad Unit ID (tl)",
+    "placeholderNotice": "Placeholder ito para sa isang tunay na ad. (tl)"
+  },
+  "LanguageSwitcher": {
+    "selectLanguagePlaceholder": "Pumili ng Wika (tl)",
+    "english": "English (tl)",
+    "arabic": "العربية (tl)",
+    "spanish": "Español (tl)",
+    "urdu": "اردو (tl)",
+    "french": "Français (tl)",
+    "german": "Deutsch (tl)",
+    "hindi": "हिन्दी (tl)",
+    "chinese": "中文 (tl)",
+    "tagalog": "Tagalog (tl)"
+  },
+  "FontSizeSwitcher": {
+    "selectFontSizePlaceholder": "Pumili ng Laki ng Font (tl)",
+    "small": "Maliit (tl)",
+    "medium": "Katamtaman (tl)",
+    "large": "Malaki (tl)"
+  }
 }

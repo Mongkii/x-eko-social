@@ -24,17 +24,30 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { useToast } from '@/hooks/use-toast'; // Import useToast
 
 interface AppHeaderProps {
-  onPersonalize: () => Promise<void> | void;
+  onPersonalize: () => Promise<void> | void; // Keep this prop for flexibility if needed elsewhere
 }
 
 export function AppHeader({ onPersonalize }: AppHeaderProps) {
   const t = useTranslations('AppHeader');
+  const tHomePage = useTranslations('HomePage'); // For AI personalization toast
   const tGlobal = useTranslations('Global');
+  const { toast } = useToast(); // Initialize toast
 
   const handlePersonalizeClick = async () => {
-    await onPersonalize();
+    // As per BRD, AI personalization is backend. This is a UI placeholder.
+    toast({ 
+      title: tHomePage('aiMagicToastTitle'), 
+      description: tHomePage('aiMagicToastDescription') 
+    });
+    // Simulate some action if needed for UI feedback
+    await new Promise(resolve => setTimeout(resolve, 1000));
+    toast({
+      title: tHomePage('aiFeedPersonalizedToastTitle'),
+      description: tHomePage('aiFeedPersonalizedToastDescription')
+    });
   };
 
   return (

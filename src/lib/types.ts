@@ -4,22 +4,22 @@ import type { AbstractIntlMessages } from 'next-intl';
 // Corresponds to Firestore posts/{postId} as per BRD
 export interface EkoDrop {
   id: string;
-  audioURL: string; // Firebase Cloud Storage path to compressed audio (e.g., Opus)
+  audioURL: string; // Firebase Storage path to compressed audio (e.g., Opus)
   rawAudioURL?: string; // Optional: path to raw audio if needed for reprocessing
   duration: number; // in seconds
   userId: string; // ID of the user who posted
-  transcript?: { // Translated transcripts
+  transcript: { // Translated transcripts
     [key: string]: string; // e.g., { en: "Hello", ar: "مرحبا", ... }
   };
-  sourceLanguage?: string; // Original language of the EkoDrop, e.g., 'en'
+  sourceLanguage: string; // Original language of the EkoDrop, e.g., 'en'
   hashtags?: string[];
-  likes: number;
+  likes: number; // Or likesCount
   replyCount?: number;
   repostCount?: number;
   parentId?: string | null; // For threaded replies
   topicId?: string | null; // If EkoDrops can belong to topics/channels
-  createdAt: any; // Firestore Timestamp or ISO string for web simulation
-  updatedAt?: any; // Firestore Timestamp or ISO string
+  createdAt: string; // ISO string for web simulation, Firestore Timestamp in real app
+  updatedAt?: string; // ISO string for web simulation
   // Fields for ad-specific data if this EkoDrop is a native ad
   isAd?: boolean;
   advertiserName?: string;
@@ -28,8 +28,9 @@ export interface EkoDrop {
 }
 
 // UI data structure, derived from EkoDrop for feed display
+// For simplicity, we can make FeedItemData directly use/extend EkoDrop
 export interface FeedItemData extends EkoDrop {
-  // Additional UI-specific fields if needed, but mostly maps to EkoDrop
+  // Additional UI-specific fields
   posterUrl?: string; // Optional poster image for the audio
   dataAiHint?: string; // For placeholder images if posterUrl is missing
   userRating?: number; // Client-side rating
@@ -81,3 +82,4 @@ export interface InAppPurchaseItem {
 
 // For next-intl messages
 export interface Messages extends AbstractIntlMessages {}
+

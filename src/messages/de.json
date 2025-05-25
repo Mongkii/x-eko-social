@@ -1,4 +1,109 @@
 
 {
-  "comment": "This file will be deleted as part of removing i18n features."
+  "Global": {
+    "appName": "Eko (de)"
+  },
+  "HomePage": {
+    "aiMagicToastTitle": "KI-Magie ✨ (de)",
+    "aiMagicToastDescription": "Dein Feed wird personalisiert... (de)",
+    "aiPersonalizationErrorToastTitle": "Fehler bei der KI-Personalisierung (de)",
+    "aiPersonalizationErrorToastDescription": "Feed konnte derzeit nicht personalisiert werden. (de)",
+    "aiFeedPersonalizedToastTitle": "KI-Feed-Personalisierung (Simuliert) (de)",
+    "aiFeedPersonalizedToastDescription": "Dein Feed wurde basierend auf deinen Interaktionen aktualisiert. (de)",
+    "noFeedItems": "Noch keine EkoDrops in deinem Feed. Entdecke oder erstelle! (de)",
+    "billingSectionTitle": "Eko+ & In-App-Käufe (de)",
+    "billingSectionDescription": "Verwalte dein Abonnement und erhalte coole Extras! (de)",
+    "subscriptionStatus": "Abonnementstatus (de)",
+    "premiumActive": "Eko+ Premium Aktiv (de)",
+    "notSubscribed": "Nicht bei Eko+ angemeldet (de)",
+    "subscribeToPremium": "Eko+ abonnieren (de)",
+    "availableInAppItems": "Verfügbare In-App-Artikel (de)",
+    "processingSubscription": "Abonnement wird bearbeitet... (de)",
+    "pleaseWait": "Bitte warte einen Moment. (de)",
+    "subscriptionSuccessful": "Abonnement erfolgreich! (de)",
+    "youAreNowSubscribed": "Du bist jetzt Eko+-Abonnent. (de)",
+    "subscriptionFailed": "Abonnement fehlgeschlagen (de)",
+    "couldNotCompleteSubscription": "Wir konnten dein Abonnement nicht abschließen. Bitte versuche es erneut. (de)",
+    "subscriptionError": "Abonnementfehler (de)",
+    "mobileBridgeNotFound": "Mobile App Bridge nicht gefunden (de)",
+    "featureOnlyInMobileApp": "Diese Funktion ist nur in der mobilen App verfügbar. (de)",
+    "purchasingItem": "Kaufe {title}... (de)",
+    "purchaseSuccessful": "Kauf erfolgreich! (de)",
+    "youHavePurchasedItem": "Du hast {title} erfolgreich gekauft. (de)",
+    "purchaseFailed": "Kauf fehlgeschlagen (de)",
+    "couldNotPurchaseItem": "Kauf von {title} konnte nicht abgeschlossen werden. (de)",
+    "purchaseError": "Kauffehler (de)",
+    "subscriptionUpdated": "Abonnementstatus aktualisiert (de)",
+    "subscriptionStatusNow": "Dein Eko+-Abonnement ist jetzt {status}. (de)",
+    "statusActive": "Aktiv (de)",
+    "statusInactive": "Inaktiv (de)"
+  },
+  "AppHeader": {
+    "appName": "Eko (de)",
+    "savedEkoDropsTooltip": "Gespeicherte EkoDrops (de)",
+    "personalizeFeedTooltip": "Meinen Feed personalisieren (KI) (de)",
+    "settingsTooltip": "Einstellungen (de)",
+    "languageLabel": "Sprache (de)",
+    "fontSizeLabel": "Schriftgröße (de)",
+    "themeLabel": "Thema (de)"
+  },
+  "FeedItemCard": {
+    "voicePost": "Sprachbeitrag (de)",
+    "adBadge": "Anzeige (de)",
+    "sponsoredBy": "Gesponsert von {advertiser} (de)",
+    "noDescription": "Keine Beschreibung verfügbar. (de)",
+    "postedDate": "Gepostet {date} (de)",
+    "byUser": "von (de)",
+    "durationLabel": "Dauer (de)",
+    "categoriesLabel": "Kategorien (de)",
+    "rateThisAdLabel": "Diese Anzeige bewerten (de)",
+    "rateThisContentLabel": "Diesen EkoDrop bewerten (de)",
+    "dislikeAction": "Ablehnen (de)",
+    "likeAction": "Gefällt mir (de)",
+    "commentAction": "Kommentieren (de)",
+    "shareAction": "Teilen (de)",
+    "noMedia": "Kein Audio für diesen EkoDrop. (de)",
+    "dateUnknown": "vor einer Weile (de)",
+    "dateInvalid": "ungültiges Datum (de)",
+    "dateRecently": "kürzlich (de)",
+    "watchRewardedAdButton": "Anzeige für Belohnung ansehen (de)"
+  },
+  "ThemeToggleSwitch": {
+    "switchToLightTheme": "Zum hellen Thema wechseln (de)",
+    "switchToDarkTheme": "Zum dunklen Thema wechseln (de)"
+  },
+  "SavedEkoDropsPage": {
+    "backToFeed": "Zurück zum Feed (de)",
+    "mySavedAds": "Meine gespeicherten EkoDrops (de)",
+    "errorLoadingSavedAds": "Fehler: Gespeicherte EkoDrops konnten nicht geladen werden. (de)",
+    "infoToastTitle": "Info (de)",
+    "personalizeInfoDescription": "Die Feed-Personalisierung ist auf der Haupt-Feed-Seite verfügbar. (de)",
+    "unlikedAndRemovedToastDescription": "Du magst \"{title}\" nicht mehr. Es wurde aus deinen gespeicherten EkoDrops entfernt. (de)",
+    "dislikedAndRemovedToastDescription": "Du mochtest \"{title}\" nicht. Es wurde aus deinen gespeicherten EkoDrops entfernt. (de)",
+    "noSavedAdsYet": "Du hast noch keine EkoDrops gespeichert. (de)",
+    "likeAdToSave": "Like einen EkoDrop im Hauptfeed, um ihn hier zu speichern! (de)"
+  },
+  "AdMobBanner": {
+    "demoBannerTitle": "AdMob Demo-Banner (de)",
+    "demoAdUnitIdLabel": "Demo-Anzeigeneinheiten-ID (de)",
+    "placeholderNotice": "Dies ist ein Platzhalter für eine echte Anzeige. (de)"
+  },
+  "LanguageSwitcher": {
+    "selectLanguagePlaceholder": "Sprache auswählen (de)",
+    "english": "English (de)",
+    "arabic": "العربية (de)",
+    "spanish": "Español (de)",
+    "urdu": "اردو (de)",
+    "french": "Français (de)",
+    "german": "Deutsch (de)",
+    "hindi": "हिन्दी (de)",
+    "chinese": "中文 (de)",
+    "tagalog": "Tagalog (de)"
+  },
+  "FontSizeSwitcher": {
+    "selectFontSizePlaceholder": "Schriftgröße auswählen (de)",
+    "small": "Klein (de)",
+    "medium": "Mittel (de)",
+    "large": "Groß (de)"
+  }
 }

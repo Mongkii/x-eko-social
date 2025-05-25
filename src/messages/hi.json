@@ -1,4 +1,109 @@
 
 {
-  "comment": "This file will be deleted as part of removing i18n features."
+  "Global": {
+    "appName": "एको (hi)"
+  },
+  "HomePage": {
+    "aiMagicToastTitle": "एआई मैजिक ✨ (hi)",
+    "aiMagicToastDescription": "आपकी फ़ीड को वैयक्तिकृत किया जा रहा है... (hi)",
+    "aiPersonalizationErrorToastTitle": "एआई वैयक्तिकरण त्रुटि (hi)",
+    "aiPersonalizationErrorToastDescription": "इस समय फ़ीड को वैयक्तिकृत नहीं किया जा सका। (hi)",
+    "aiFeedPersonalizedToastTitle": "एआई फ़ीड वैयक्तिकरण (सिम्युलेटेड) (hi)",
+    "aiFeedPersonalizedToastDescription": "आपकी बातचीत के आधार पर आपकी फ़ीड अपडेट कर दी गई है। (hi)",
+    "noFeedItems": "आपकी फ़ीड में अभी तक कोई इकोड्रॉप नहीं है। अन्वेषण करें या बनाएं! (hi)",
+    "billingSectionTitle": "एको+ और इन-ऐप खरीदारी (hi)",
+    "billingSectionDescription": "अपनी सदस्यता प्रबंधित करें और शानदार अतिरिक्त चीज़ें पाएं! (hi)",
+    "subscriptionStatus": "सदस्यता स्थिति (hi)",
+    "premiumActive": "एको+ प्रीमियम सक्रिय (hi)",
+    "notSubscribed": "एको+ के लिए सब्सक्राइब नहीं किया गया (hi)",
+    "subscribeToPremium": "एको+ के लिए सब्सक्राइब करें (hi)",
+    "availableInAppItems": "उपलब्ध इन-ऐप आइटम (hi)",
+    "processingSubscription": "सदस्यता संसाधित हो रही है... (hi)",
+    "pleaseWait": "कृपया थोड़ा इंतजार करें। (hi)",
+    "subscriptionSuccessful": "सदस्यता सफल! (hi)",
+    "youAreNowSubscribed": "अब आप एको+ सब्सक्राइबर हैं। (hi)",
+    "subscriptionFailed": "सदस्यता विफल (hi)",
+    "couldNotCompleteSubscription": "हम आपकी सदस्यता पूरी नहीं कर सके। कृपया पुनः प्रयास करें। (hi)",
+    "subscriptionError": "सदस्यता त्रुटि (hi)",
+    "mobileBridgeNotFound": "मोबाइल ऐप ब्रिज नहीं मिला (hi)",
+    "featureOnlyInMobileApp": "यह सुविधा केवल मोबाइल ऐप में उपलब्ध है। (hi)",
+    "purchasingItem": "{title} खरीदा जा रहा है... (hi)",
+    "purchaseSuccessful": "खरीद सफल! (hi)",
+    "youHavePurchasedItem": "आपने सफलतापूर्वक {title} खरीद लिया है। (hi)",
+    "purchaseFailed": "खरीद विफल (hi)",
+    "couldNotPurchaseItem": "{title} के लिए खरीद पूरी नहीं की जा सकी। (hi)",
+    "purchaseError": "खरीद त्रुटि (hi)",
+    "subscriptionUpdated": "सदस्यता स्थिति अपडेट की गई (hi)",
+    "subscriptionStatusNow": "आपकी एको+ सदस्यता अब {status} है। (hi)",
+    "statusActive": "सक्रिय (hi)",
+    "statusInactive": "निष्क्रिय (hi)"
+  },
+  "AppHeader": {
+    "appName": "एको (hi)",
+    "savedEkoDropsTooltip": "सहेजे गए इकोड्रॉप्स (hi)",
+    "personalizeFeedTooltip": "मेरी फ़ीड को वैयक्तिकृत करें (AI) (hi)",
+    "settingsTooltip": "सेटिंग्स (hi)",
+    "languageLabel": "भाषा (hi)",
+    "fontSizeLabel": "फ़ॉन्ट आकार (hi)",
+    "themeLabel": "थीम (hi)"
+  },
+  "FeedItemCard": {
+    "voicePost": "वॉयस पोस्ट (hi)",
+    "adBadge": "विज्ञापन (hi)",
+    "sponsoredBy": "{advertiser} द्वारा प्रायोजित (hi)",
+    "noDescription": "कोई विवरण उपलब्ध नहीं है। (hi)",
+    "postedDate": "पोस्ट किया गया {date} (hi)",
+    "byUser": "द्वारा (hi)",
+    "durationLabel": "अवधि (hi)",
+    "categoriesLabel": "श्रेणियाँ (hi)",
+    "rateThisAdLabel": "इस विज्ञापन को रेट करें (hi)",
+    "rateThisContentLabel": "इस इकोड्रॉप को रेट करें (hi)",
+    "dislikeAction": "नापसंद (hi)",
+    "likeAction": "पसंद (hi)",
+    "commentAction": "टिप्पणी (hi)",
+    "shareAction": "साझा करें (hi)",
+    "noMedia": "इस इकोड्रॉप के लिए कोई ऑडियो नहीं है। (hi)",
+    "dateUnknown": "कुछ समय पहले (hi)",
+    "dateInvalid": "अमान्य दिनांक (hi)",
+    "dateRecently": "हाल ही में (hi)",
+    "watchRewardedAdButton": "इनाम के लिए विज्ञापन देखें (hi)"
+  },
+  "ThemeToggleSwitch": {
+    "switchToLightTheme": "लाइट थीम पर स्विच करें (hi)",
+    "switchToDarkTheme": "डार्क थीम पर स्विच करें (hi)"
+  },
+  "SavedEkoDropsPage": {
+    "backToFeed": "फ़ीड पर वापस जाएं (hi)",
+    "mySavedAds": "मेरे सहेजे गए इकोड्रॉप्स (hi)",
+    "errorLoadingSavedAds": "त्रुटि: सहेजे गए इकोड्रॉप्स लोड नहीं किए जा सके। (hi)",
+    "infoToastTitle": "जानकारी (hi)",
+    "personalizeInfoDescription": "फ़ीड वैयक्तिकरण मुख्य फ़ीड पेज पर उपलब्ध है। (hi)",
+    "unlikedAndRemovedToastDescription": "आपने \"{title}\" को नापसंद किया। इसे आपके सहेजे गए इकोड्रॉप्स से हटा दिया गया है। (hi)",
+    "dislikedAndRemovedToastDescription": "आपने \"{title}\" को नापसंद किया। इसे आपके सहेजे गए इकोड्रॉप्स से हटा दिया गया है। (hi)",
+    "noSavedAdsYet": "आपने अभी तक कोई इकोड्रॉप नहीं सहेजा है। (hi)",
+    "likeAdToSave": "इसे यहाँ सहेजने के लिए मुख्य फ़ीड में एक इकोड्रॉप पसंद करें! (hi)"
+  },
+  "AdMobBanner": {
+    "demoBannerTitle": "AdMob डेमो बैनर (hi)",
+    "demoAdUnitIdLabel": "डेमो विज्ञापन इकाई आईडी (hi)",
+    "placeholderNotice": "यह एक वास्तविक विज्ञापन के लिए एक प्लेसहोल्डर है। (hi)"
+  },
+  "LanguageSwitcher": {
+    "selectLanguagePlaceholder": "भाषा चुनें (hi)",
+    "english": "English (hi)",
+    "arabic": "العربية (hi)",
+    "spanish": "Español (hi)",
+    "urdu": "اردو (hi)",
+    "french": "Français (hi)",
+    "german": "Deutsch (hi)",
+    "hindi": "हिन्दी (hi)",
+    "chinese": "中文 (hi)",
+    "tagalog": "Tagalog (hi)"
+  },
+  "FontSizeSwitcher": {
+    "selectFontSizePlaceholder": "फ़ॉन्ट आकार चुनें (hi)",
+    "small": "छोटा (hi)",
+    "medium": "मध्यम (hi)",
+    "large": "बड़ा (hi)"
+  }
 }

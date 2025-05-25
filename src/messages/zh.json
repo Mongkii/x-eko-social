@@ -1,4 +1,109 @@
 
 {
-  "comment": "This file will be deleted as part of removing i18n features."
+  "Global": {
+    "appName": "Eko (zh)"
+  },
+  "HomePage": {
+    "aiMagicToastTitle": "AI 魔力 ✨ (zh)",
+    "aiMagicToastDescription": "正在个性化您的动态... (zh)",
+    "aiPersonalizationErrorToastTitle": "AI 个性化错误 (zh)",
+    "aiPersonalizationErrorToastDescription": "目前无法个性化动态。 (zh)",
+    "aiFeedPersonalizedToastTitle": "AI 动态个性化 (模拟) (zh)",
+    "aiFeedPersonalizedToastDescription": "您的动态已根据您的互动更新。 (zh)",
+    "noFeedItems": "您的动态中还没有任何 EkoDrop。去探索或创建吧！ (zh)",
+    "billingSectionTitle": "Eko+ 及应用内购买 (zh)",
+    "billingSectionDescription": "管理您的订阅并获得酷炫的额外内容！ (zh)",
+    "subscriptionStatus": "订阅状态 (zh)",
+    "premiumActive": "Eko+ 高级版已激活 (zh)",
+    "notSubscribed": "未订阅 Eko+ (zh)",
+    "subscribeToPremium": "订阅 Eko+ (zh)",
+    "availableInAppItems": "可用的应用内项目 (zh)",
+    "processingSubscription": "正在处理订阅... (zh)",
+    "pleaseWait": "请稍候。 (zh)",
+    "subscriptionSuccessful": "订阅成功！ (zh)",
+    "youAreNowSubscribed": "您现在是 Eko+ 订阅者。 (zh)",
+    "subscriptionFailed": "订阅失败 (zh)",
+    "couldNotCompleteSubscription": "我们无法完成您的订阅。请重试。 (zh)",
+    "subscriptionError": "订阅错误 (zh)",
+    "mobileBridgeNotFound": "未找到移动应用桥接 (zh)",
+    "featureOnlyInMobileApp": "此功能仅在移动应用中可用。 (zh)",
+    "purchasingItem": "正在购买 {title}... (zh)",
+    "purchaseSuccessful": "购买成功！ (zh)",
+    "youHavePurchasedItem": "您已成功购买 {title}。 (zh)",
+    "purchaseFailed": "购买失败 (zh)",
+    "couldNotPurchaseItem": "无法完成 {title} 的购买。 (zh)",
+    "purchaseError": "购买错误 (zh)",
+    "subscriptionUpdated": "订阅状态已更新 (zh)",
+    "subscriptionStatusNow": "您的 Eko+ 订阅现在是 {status}。 (zh)",
+    "statusActive": "有效 (zh)",
+    "statusInactive": "无效 (zh)"
+  },
+  "AppHeader": {
+    "appName": "Eko (zh)",
+    "savedEkoDropsTooltip": "已保存的 EkoDrop (zh)",
+    "personalizeFeedTooltip": "个性化我的动态 (AI) (zh)",
+    "settingsTooltip": "设置 (zh)",
+    "languageLabel": "语言 (zh)",
+    "fontSizeLabel": "字体大小 (zh)",
+    "themeLabel": "主题 (zh)"
+  },
+  "FeedItemCard": {
+    "voicePost": "语音帖子 (zh)",
+    "adBadge": "广告 (zh)",
+    "sponsoredBy": "由 {advertiser} 赞助 (zh)",
+    "noDescription": "无描述。 (zh)",
+    "postedDate": "发布于 {date} (zh)",
+    "byUser": "由 (zh)",
+    "durationLabel": "时长 (zh)",
+    "categoriesLabel": "类别 (zh)",
+    "rateThisAdLabel": "评价此广告 (zh)",
+    "rateThisContentLabel": "评价此 EkoDrop (zh)",
+    "dislikeAction": "不喜欢 (zh)",
+    "likeAction": "喜欢 (zh)",
+    "commentAction": "评论 (zh)",
+    "shareAction": "分享 (zh)",
+    "noMedia": "此 EkoDrop 没有音频。 (zh)",
+    "dateUnknown": "不久前 (zh)",
+    "dateInvalid": "无效日期 (zh)",
+    "dateRecently": "最近 (zh)",
+    "watchRewardedAdButton": "观看广告获取奖励 (zh)"
+  },
+  "ThemeToggleSwitch": {
+    "switchToLightTheme": "切换到浅色主题 (zh)",
+    "switchToDarkTheme": "切换到深色主题 (zh)"
+  },
+  "SavedEkoDropsPage": {
+    "backToFeed": "返回动态 (zh)",
+    "mySavedAds": "我保存的 EkoDrop (zh)",
+    "errorLoadingSavedAds": "错误：无法加载已保存的 EkoDrop。 (zh)",
+    "infoToastTitle": "信息 (zh)",
+    "personalizeInfoDescription": "动态个性化在主动态页面可用。 (zh)",
+    "unlikedAndRemovedToastDescription": "您取消了对 \"{title}\" 的喜欢。它已从您保存的 EkoDrop 中移除。 (zh)",
+    "dislikedAndRemovedToastDescription": "您不喜欢 \"{title}\"。它已从您保存的 EkoDrop 中移除。 (zh)",
+    "noSavedAdsYet": "您还没有保存任何 EkoDrop。 (zh)",
+    "likeAdToSave": "在主动态中喜欢一个 EkoDrop 以在此处保存！ (zh)"
+  },
+  "AdMobBanner": {
+    "demoBannerTitle": "AdMob 演示横幅 (zh)",
+    "demoAdUnitIdLabel": "演示广告单元 ID (zh)",
+    "placeholderNotice": "这是真实广告的占位符。 (zh)"
+  },
+  "LanguageSwitcher": {
+    "selectLanguagePlaceholder": "选择语言 (zh)",
+    "english": "English (zh)",
+    "arabic": "العربية (zh)",
+    "spanish": "Español (zh)",
+    "urdu": "اردو (zh)",
+    "french": "Français (zh)",
+    "german": "Deutsch (zh)",
+    "hindi": "हिन्दी (zh)",
+    "chinese": "中文 (zh)",
+    "tagalog": "Tagalog (zh)"
+  },
+  "FontSizeSwitcher": {
+    "selectFontSizePlaceholder": "选择字体大小 (zh)",
+    "small": "小 (zh)",
+    "medium": "中 (zh)",
+    "large": "大 (zh)"
+  }
 }

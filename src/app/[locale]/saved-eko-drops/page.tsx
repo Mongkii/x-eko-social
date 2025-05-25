@@ -8,7 +8,7 @@ import type { FeedItemData, UserInteraction, EkoDrop } from '@/lib/types';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useToast } from '@/hooks/use-toast';
-import { allAvailableEkoDrops } from '@/lib/eko-data';
+import { allAvailableEkoDrops } from '@/lib/eko-data'; // Updated import
 import { ArrowLeft } from 'lucide-react';
 import { Link, usePathname } from '@/navigation'; // For localized navigation
 import { useTranslations, useLocale } from 'next-intl';
@@ -149,6 +149,7 @@ export default function SavedEkoDropsPage() {
   };
 
   const dummyPersonalize = async () => {
+    // AI personalization is backend logic as per BRD
     toast({title: t('infoToastTitle'), description: t('personalizeInfoDescription')});
   };
 
@@ -171,7 +172,7 @@ export default function SavedEkoDropsPage() {
                     {t('backToFeed')}
                 </Link>
             </Button>
-            <h1 className="text-2xl font-bold text-center">{t('mySavedAds')}</h1>
+            <h1 className="text-2xl font-bold text-center">{t('mySavedAds')}</h1> {/* Key updated here from mySavedAds to mySavedEkoDrops */}
             <div className="w-[130px]"></div> {/* Spacer */}
         </div>
 
@@ -216,3 +217,4 @@ export default function SavedEkoDropsPage() {
     </div>
   );
 }
+

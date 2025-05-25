@@ -1,4 +1,109 @@
 
 {
-  "comment": "This file will be deleted as part of removing i18n features."
+  "Global": {
+    "appName": "Eko (fr)"
+  },
+  "HomePage": {
+    "aiMagicToastTitle": "Magie IA ✨ (fr)",
+    "aiMagicToastDescription": "Personnalisation de votre flux... (fr)",
+    "aiPersonalizationErrorToastTitle": "Erreur de Personnalisation IA (fr)",
+    "aiPersonalizationErrorToastDescription": "Impossible de personnaliser le flux pour le moment. (fr)",
+    "aiFeedPersonalizedToastTitle": "Personnalisation du Flux IA (Simulée) (fr)",
+    "aiFeedPersonalizedToastDescription": "Votre flux a été mis à jour en fonction de vos interactions. (fr)",
+    "noFeedItems": "Aucun EkoDrop dans votre flux pour l'instant. Explorez ou créez ! (fr)",
+    "billingSectionTitle": "Eko+ et Achats In-App (fr)",
+    "billingSectionDescription": "Gérez votre abonnement et obtenez des extras sympas ! (fr)",
+    "subscriptionStatus": "Statut de l'Abonnement (fr)",
+    "premiumActive": "Eko+ Premium Actif (fr)",
+    "notSubscribed": "Non Abonné à Eko+ (fr)",
+    "subscribeToPremium": "S'abonner à Eko+ (fr)",
+    "availableInAppItems": "Articles Disponibles In-App (fr)",
+    "processingSubscription": "Traitement de l'Abonnement... (fr)",
+    "pleaseWait": "Veuillez patienter un instant. (fr)",
+    "subscriptionSuccessful": "Abonnement Réussi ! (fr)",
+    "youAreNowSubscribed": "Vous êtes maintenant abonné à Eko+. (fr)",
+    "subscriptionFailed": "Échec de l'Abonnement (fr)",
+    "couldNotCompleteSubscription": "Nous n'avons pas pu finaliser votre abonnement. Veuillez réessayer. (fr)",
+    "subscriptionError": "Erreur d'Abonnement (fr)",
+    "mobileBridgeNotFound": "Pont d'Application Mobile Non Trouvé (fr)",
+    "featureOnlyInMobileApp": "Cette fonctionnalité n'est disponible que dans l'application mobile. (fr)",
+    "purchasingItem": "Achat de {title}... (fr)",
+    "purchaseSuccessful": "Achat Réussi ! (fr)",
+    "youHavePurchasedItem": "Vous avez acheté {title} avec succès. (fr)",
+    "purchaseFailed": "Échec de l'Achat (fr)",
+    "couldNotPurchaseItem": "Impossible de finaliser l'achat de {title}. (fr)",
+    "purchaseError": "Erreur d'Achat (fr)",
+    "subscriptionUpdated": "Statut de l'Abonnement Mis à Jour (fr)",
+    "subscriptionStatusNow": "Votre abonnement Eko+ est maintenant {status}. (fr)",
+    "statusActive": "Actif (fr)",
+    "statusInactive": "Inactif (fr)"
+  },
+  "AppHeader": {
+    "appName": "Eko (fr)",
+    "savedEkoDropsTooltip": "EkoDrops Enregistrés (fr)",
+    "personalizeFeedTooltip": "Personnaliser Mon Flux (IA) (fr)",
+    "settingsTooltip": "Paramètres (fr)",
+    "languageLabel": "Langue (fr)",
+    "fontSizeLabel": "Taille de Police (fr)",
+    "themeLabel": "Thème (fr)"
+  },
+  "FeedItemCard": {
+    "voicePost": "Message Vocal (fr)",
+    "adBadge": "Publicité (fr)",
+    "sponsoredBy": "Sponsorisé par {advertiser} (fr)",
+    "noDescription": "Aucune description disponible. (fr)",
+    "postedDate": "Publié {date} (fr)",
+    "byUser": "par (fr)",
+    "durationLabel": "Durée (fr)",
+    "categoriesLabel": "Catégories (fr)",
+    "rateThisAdLabel": "Noter cette Publicité (fr)",
+    "rateThisContentLabel": "Noter cet EkoDrop (fr)",
+    "dislikeAction": "Je n'aime pas (fr)",
+    "likeAction": "J'aime (fr)",
+    "commentAction": "Commenter (fr)",
+    "shareAction": "Partager (fr)",
+    "noMedia": "Aucun audio pour cet EkoDrop. (fr)",
+    "dateUnknown": "il y a quelque temps (fr)",
+    "dateInvalid": "date invalide (fr)",
+    "dateRecently": "récemment (fr)",
+    "watchRewardedAdButton": "Regarder la Publicité pour une Récompense (fr)"
+  },
+  "ThemeToggleSwitch": {
+    "switchToLightTheme": "Passer au Thème Clair (fr)",
+    "switchToDarkTheme": "Passer au Thème Sombre (fr)"
+  },
+  "SavedEkoDropsPage": {
+    "backToFeed": "Retour au Flux (fr)",
+    "mySavedAds": "Mes EkoDrops Enregistrés (fr)",
+    "errorLoadingSavedAds": "Erreur : Impossible de charger les EkoDrops enregistrés. (fr)",
+    "infoToastTitle": "Info (fr)",
+    "personalizeInfoDescription": "La personnalisation du flux est disponible sur la page principale du flux. (fr)",
+    "unlikedAndRemovedToastDescription": "Vous n'aimez plus \"{title}\". Il a été retiré de vos EkoDrops enregistrés. (fr)",
+    "dislikedAndRemovedToastDescription": "Vous n'avez pas aimé \"{title}\". Il a été retiré de vos EkoDrops enregistrés. (fr)",
+    "noSavedAdsYet": "Vous n'avez encore enregistré aucun EkoDrop. (fr)",
+    "likeAdToSave": "Aimez un EkoDrop dans le flux principal pour l'enregistrer ici ! (fr)"
+  },
+  "AdMobBanner": {
+    "demoBannerTitle": "Bannière de Démo AdMob (fr)",
+    "demoAdUnitIdLabel": "ID d'Unité Publicitaire de Démo (fr)",
+    "placeholderNotice": "Ceci est un espace réservé pour une vraie publicité. (fr)"
+  },
+  "LanguageSwitcher": {
+    "selectLanguagePlaceholder": "Sélectionner la Langue (fr)",
+    "english": "English (fr)",
+    "arabic": "العربية (fr)",
+    "spanish": "Español (fr)",
+    "urdu": "اردو (fr)",
+    "french": "Français (fr)",
+    "german": "Deutsch (fr)",
+    "hindi": "हिन्दी (fr)",
+    "chinese": "中文 (fr)",
+    "tagalog": "Tagalog (fr)"
+  },
+  "FontSizeSwitcher": {
+    "selectFontSizePlaceholder": "Sélectionner la Taille de Police (fr)",
+    "small": "Petite (fr)",
+    "medium": "Moyenne (fr)",
+    "large": "Grande (fr)"
+  }
 }
