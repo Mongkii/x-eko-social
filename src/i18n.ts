@@ -1,14 +1,15 @@
 
 import {getRequestConfig, type AbstractIntlMessages} from 'next-intl/server';
 import {notFound} from 'next/navigation';
+import enMessages from './messages/en.json'; // Static import for default locale
 
 // Define locales and default locale directly
 export const locales = ['en', 'ar', 'es', 'ur', 'fr', 'de', 'hi', 'zh', 'tl', 'ru'] as const;
 export const defaultLocale = 'en' as const;
 export type Locale = (typeof locales)[number];
 
-// Minimal messages to ensure NextIntlClientProvider has *something* if all else fails.
-// This is used as an ultimate fallback within this file if even English messages fail.
+// A minimal set of messages for ultimate fallback if even English fails to load.
+// This ensures NextIntlClientProvider always gets a structured object.
 const ultimateFallbackMessages: AbstractIntlMessages = {
   Global: {
     appName: "Eko (Ultimate Fallback)",
@@ -57,11 +58,11 @@ const ultimateFallbackMessages: AbstractIntlMessages = {
     subscriptionError: "Subscription Error (Ultimate Fallback)",
     mobileBridgeNotFound: "Mobile App Bridge Not Found (Ultimate Fallback)",
     featureOnlyInMobileApp: "This feature is only available in the mobile app. (Ultimate Fallback)",
-    purchasingItem: "Purchasing {title}... (Ultimate Fallback)",
+    purchasingItem: "Purchasing {item}... (Ultimate Fallback)", // Note: using item, ensure consistency
     purchaseSuccessful: "Purchase Successful! (Ultimate Fallback)",
-    youHavePurchasedItem: "You have purchased {title}. (Ultimate Fallback)",
+    youHavePurchasedItem: "You have purchased {item}. (Ultimate Fallback)",
     purchaseFailed: "Purchase Failed (Ultimate Fallback)",
-    couldNotPurchaseItem: "Could not purchase {title}. (Ultimate Fallback)",
+    couldNotPurchaseItem: "Could not purchase {item}. (Ultimate Fallback)",
     purchaseError: "Purchase Error (Ultimate Fallback)",
     playNext: "Play Next (Ultimate Fallback)",
     playing: "Playing (Ultimate Fallback)",
@@ -95,10 +96,10 @@ const ultimateFallbackMessages: AbstractIntlMessages = {
     pauseEkoDrop: "Pause EkoDrop (Ultimate Fallback)",
     audioBy: "Audio by {user} (Ultimate Fallback)",
     hashtags: "Hashtags: (Ultimate Fallback)",
-    postedOn: "Posted on {date} (Ultimate Fallback)",
+    postedOn: "Posted {date} (Ultimate Fallback)",
     viewTranscript: "View Transcript (Ultimate Fallback)",
-    rewardedAdTitle: "Watch a Rewarded Ad! (Ultimate Fallback)",
-    rewardedAdDescription: "Watch this short video to earn a reward. (Ultimate Fallback)",
+    rewardedAdTitle: "Watch Ad! (Ultimate Fallback)",
+    rewardedAdDescription: "Watch video for reward. (Ultimate Fallback)",
     watchAdButton: "Watch Ad (Ultimate Fallback)",
     rewardedAdBadge: "Rewarded Ad (Ultimate Fallback)",
   },
@@ -126,39 +127,52 @@ const ultimateFallbackMessages: AbstractIntlMessages = {
 
 
 export default getRequestConfig(async ({locale}) => {
-  // Validate that the incoming `locale` parameter is valid.
+  // Validate that the incoming `locale` parameter is a supported locale
   if (!locales.includes(locale as any)) {
     console.warn(`i18n.ts: Unsupported locale "${locale}" requested. Triggering notFound().`);
     notFound();
   }
 
-  let messages;
-  try {
-    const module = await import(`./messages/${locale}.json`);
-    let rawMessages = module.default;
+  let messages: AbstractIntlMessages;
 
-    if (typeof rawMessages === 'string') {
-      console.warn(`i18n.ts: Messages for locale "${locale}" were imported as a string. Attempting JSON.parse.`);
-      try {
-        messages = JSON.parse(rawMessages);
-      } catch (parseError) {
-        console.error(`i18n.ts: Failed to parse JSON string for locale "${locale}". Error: ${parseError}. This locale will be marked as not found.`);
+  if (locale === defaultLocale) {
+    // For the default locale (English), use the statically imported messages.
+    // This ensures en.json is always available and parsed correctly.
+    messages = enMessages as AbstractIntlMessages;
+    if (typeof messages !== 'object' || messages === null || Object.keys(messages).length === 0) {
+      console.error(`i18n.ts: Statically imported 'en.json' for locale "${locale}" is invalid or empty. Using ultimate fallback.`);
+      messages = ultimateFallbackMessages;
+    }
+  } else {
+    // For other locales, use dynamic import.
+    try {
+      const module = await import(`./messages/${locale}.json`);
+      let rawMessages = module.default;
+
+      if (typeof rawMessages === 'string') {
+        // This handles cases where the build system might return a string for JSON.
+        console.warn(`i18n.ts: Messages for locale "${locale}" were imported as a string. Attempting JSON.parse.`);
+        try {
+          messages = JSON.parse(rawMessages);
+        } catch (parseError) {
+          console.error(`i18n.ts: Failed to parse JSON string for locale "${locale}". Error: ${parseError}. This locale will be marked as not found.`);
+          notFound(); // Critical error for this locale
+        }
+      } else {
+        messages = rawMessages as AbstractIntlMessages;
+      }
+
+      if (!messages || typeof messages !== 'object' || Object.keys(messages).length === 0) {
+        console.error(`i18n.ts: Messages for locale "${locale}" are empty or invalid after import/parse. This locale will be marked as not found.`);
         notFound(); // Critical error for this locale
       }
-    } else {
-      messages = rawMessages;
-    }
-
-    if (!messages || typeof messages !== 'object' || Object.keys(messages).length === 0) {
-      console.error(`i18n.ts: Messages for locale "${locale}" are empty or invalid after import/parse. This locale will be marked as not found.`);
+    } catch (error) {
+      console.error(`i18n.ts: Could not load messages for locale "${locale}" (e.g., file missing). Error: ${error}. This locale will be marked as not found.`);
       notFound(); // Critical error for this locale
     }
-  } catch (error) {
-    console.error(`i18n.ts: Could not load messages for locale "${locale}" (e.g., file missing). Error: ${error}. This locale will be marked as not found.`);
-    notFound(); // Critical error for this locale
   }
 
   return {
-    messages: messages as AbstractIntlMessages,
+    messages,
   };
 });
