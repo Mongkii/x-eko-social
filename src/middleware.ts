@@ -1,15 +1,23 @@
 
-// src/middleware.ts
-import type { NextRequest, NextResponse } from 'next/server';
+import createMiddleware from 'next-intl/middleware';
+import { locales, defaultLocale, Locale } from './i18n';
 
-// Minimal no-op middleware
-export function middleware(request: NextRequest): NextResponse | void {
-  // Perform no operations, just pass through
-  // console.log('Minimal middleware executed for path:', request.nextUrl.pathname);
-  // return NextResponse.next(); // Or simply do nothing for pass-through
-}
+export default createMiddleware({
+  // A list of all locales that are supported
+  locales: locales as unknown as Locale[], // Cast needed for createMiddleware
+  
+  // Used when no locale prefix is present (e.g. `/about`)
+  defaultLocale: defaultLocale,
 
+  // Always show the locale prefix, even for the default locale (e.g. /en/about)
+  // localePrefix: 'always', 
+  // Or 'as-needed' to only show for non-default locales (e.g. /fr/about but /about for English)
+  localePrefix: 'as-needed',
+});
+ 
 export const config = {
-  // Match all paths except for internal Next.js paths and static assets
-  matcher: ['/((?!api|_next/static|_next/image|favicon.ico).*)'],
+  // Match only internationalized pathnames
+  // Skip all paths that should not be internationalized. This example skips the
+  // folders "api", "_next" and all files with an extension (e.g. favicon.ico)
+  matcher: ['/((?!api|_next|.*\\..*).*)']
 };

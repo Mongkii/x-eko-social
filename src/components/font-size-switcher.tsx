@@ -11,14 +11,17 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Type } from 'lucide-react';
+import { useTranslations } from 'next-intl';
+
 
 export function FontSizeSwitcher() {
   const { fontSize, setFontSize } = useFontSize();
+  const t = useTranslations('FontSizeSwitcher');
 
   const fontSizes: { value: FontSizePreference; label: string }[] = [
-    { value: 'sm', label: "Small" },
-    { value: 'md', label: "Medium" },
-    { value: 'lg', label: "Large" },
+    { value: 'sm', label: t('small') },
+    { value: 'md', label: t('medium') },
+    { value: 'lg', label: t('large') },
   ];
 
   const handleFontSizeChange = (newSize: string) => {
@@ -31,7 +34,7 @@ export function FontSizeSwitcher() {
         <SelectTrigger className="w-full h-8 text-xs">
           <div className="flex items-center gap-2">
             <Type size={14} />
-            <SelectValue placeholder="Font Size" />
+            <SelectValue placeholder={t('selectFontSizePlaceholder')} />
           </div>
         </SelectTrigger>
         <SelectContent>

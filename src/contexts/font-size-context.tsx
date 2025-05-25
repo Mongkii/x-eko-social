@@ -11,27 +11,48 @@ interface FontSizeContextType {
 
 const FontSizeContext = createContext<FontSizeContextType | undefined>(undefined);
 
+const FONT_SIZE_STORAGE_KEY = 'eko-font-size';
+const VALID_FONT_SIZES: FontSizePreference[] = ['sm', 'md', 'lg'];
+
 export const FontSizeProvider = ({ children }: { children: ReactNode }) => {
   const [fontSize, setFontSizeState] = useState<FontSizePreference>('md'); // Default font size
 
   useEffect(() => {
-    const storedFontSize = localStorage.getItem('eko-font-size') as FontSizePreference | null;
-    if (storedFontSize && ['sm', 'md', 'lg'].includes(storedFontSize)) {
+    let storedFontSize: FontSizePreference | null = null;
+    try {
+      storedFontSize = localStorage.getItem(FONT_SIZE_STORAGE_KEY) as FontSizePreference | null;
+    } catch (error) {
+        console.warn("Could not access localStorage for font size:", error);
+    }
+
+    if (storedFontSize && VALID_FONT_SIZES.includes(storedFontSize)) {
       setFontSizeState(storedFontSize);
-      document.documentElement.classList.remove('font-size-sm', 'font-size-md', 'font-size-lg');
-      document.documentElement.classList.add(`font-size-${storedFontSize}`);
     } else {
-      // Apply default if nothing stored or invalid
-      document.documentElement.classList.add(`font-size-md`);
+      // Apply default if nothing stored or invalid, and store it
+      setFontSizeState('md');
+      try {
+        localStorage.setItem(FONT_SIZE_STORAGE_KEY, 'md');
+      } catch (error) {
+        console.warn("Could not save default font size to localStorage:", error);
+      }
     }
   }, []);
 
+  // Apply class to documentElement whenever fontSize changes
+  useEffect(() => {
+    document.documentElement.classList.remove(...VALID_FONT_SIZES.map(s => `font-size-${s}`));
+    document.documentElement.classList.add(`font-size-${fontSize}`);
+  }, [fontSize]);
+
+
   const setFontSize = (size: FontSizePreference) => {
-    if (['sm', 'md', 'lg'].includes(size)) {
+    if (VALID_FONT_SIZES.includes(size)) {
       setFontSizeState(size);
-      localStorage.setItem('eko-font-size', size);
-      document.documentElement.classList.remove('font-size-sm', 'font-size-md', 'font-size-lg');
-      document.documentElement.classList.add(`font-size-${size}`);
+      try {
+        localStorage.setItem(FONT_SIZE_STORAGE_KEY, size);
+      } catch (error) {
+        console.warn("Could not save font size to localStorage:", error);
+      }
     }
   };
 

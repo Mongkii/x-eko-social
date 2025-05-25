@@ -1,5 +1,7 @@
 
-// Corresponds to Firestore posts/{postId}
+import type { AbstractIntlMessages } from 'next-intl';
+
+// Corresponds to Firestore posts/{postId} as per BRD
 export interface EkoDrop {
   id: string;
   audioURL: string; // Firebase Cloud Storage path to compressed audio (e.g., Opus)
@@ -16,8 +18,8 @@ export interface EkoDrop {
   repostCount?: number;
   parentId?: string | null; // For threaded replies
   topicId?: string | null; // If EkoDrops can belong to topics/channels
-  createdAt: any; // Firestore Timestamp
-  updatedAt?: any; // Firestore Timestamp
+  createdAt: any; // Firestore Timestamp or ISO string for web simulation
+  updatedAt?: any; // Firestore Timestamp or ISO string
   // Fields for ad-specific data if this EkoDrop is a native ad
   isAd?: boolean;
   advertiserName?: string;
@@ -25,32 +27,14 @@ export interface EkoDrop {
   adTargetingInfo?: Record<string, any>; // For analytics or specific ad logic
 }
 
-// For UI display, often derived from EkoDrop
-export interface FeedItemData {
-  id: string;
-  type: 'ad' | 'content'; // 'content' for regular EkoDrops, 'ad' for native/sponsored
-  audioUrl: string; // Renamed from sourceUrl to be specific for audio
-  videoUrl?: string; // Kept for consistency, though BRD focuses on voice. Could be poster.
-  posterUrl?: string; // Image to show before audio plays or if it's an image ad
-  dataAiHint: string; // For placeholder image generation if needed
-  title: string; // Could be derived from transcript, or a user-set title
-  description: string; // Could be first few lines of transcript or a summary
-  categories: string[]; // Corresponds to hashtags or topics
-  userRating: number; // User's rating of the content/ad (0-5)
-  isLiked: boolean;
-  isDisliked: boolean;
-  
-  // Fields from EkoDrop
-  userId: string;
-  duration: number;
-  transcript?: { [key: string]: string };
-  sourceLanguage?: string;
-  hashtags?: string[];
-  likesCount: number;
-  createdAt: any; // Firestore Timestamp
-
-  // Ad specific fields
-  advertiser?: string; // For ads, maps to advertiserName
+// UI data structure, derived from EkoDrop for feed display
+export interface FeedItemData extends EkoDrop {
+  // Additional UI-specific fields if needed, but mostly maps to EkoDrop
+  posterUrl?: string; // Optional poster image for the audio
+  dataAiHint?: string; // For placeholder images if posterUrl is missing
+  userRating?: number; // Client-side rating
+  isLiked?: boolean; // Client-side like status
+  isDisliked?: boolean; // Client-side dislike status
 }
 
 export type InteractionType = 'like' | 'unlike' | 'dislike' | 'rate' | 'followCategory' | 'unfollowCategory' | 'play' | 'pause' | 'ended';
@@ -62,15 +46,7 @@ export interface UserInteraction {
   timestamp: Date;
 }
 
-export interface InAppPurchaseItem {
-  id: string; // SKU (e.g., 'eko_plus_monthly', 'ad_free_permanent')
-  title: string;
-  description: string;
-  price: string; // e.g., "$0.99"
-  type: 'subscription' | 'one-time';
-}
-
-// Corresponds to Firestore users/{userId}
+// Corresponds to Firestore users/{userId} as per BRD
 export type ThemePreference = 'light' | 'dark' | 'system';
 export type FontSizePreference = 'sm' | 'md' | 'lg';
 
@@ -78,20 +54,30 @@ export interface EkoUser {
   id: string;
   displayName?: string;
   photoURL?: string;
-  email?: string; // If email auth is used
-  phoneNumber?: string; // If phone auth is used
-  createdAt: any; // Firestore Timestamp
+  email?: string;
+  phoneNumber?: string;
+  createdAt: any; // Firestore Timestamp or ISO string
   themePreference?: ThemePreference;
   fontSizePreference?: FontSizePreference;
   isEkoPlusSubscriber?: boolean;
-  ekoPlusSubscriptionExpiry?: any; // Firestore Timestamp
-  // Ad-related user data from BRD
+  ekoPlusSubscriptionExpiry?: any; // Firestore Timestamp or ISO string
   adInteractionCount?: {
     interstitialLastHour: number;
-    lastInterstitialTimestamp?: any; // Firestore Timestamp
+    lastInterstitialTimestamp?: any; // Firestore Timestamp or ISO string
   };
   adFreeMinutesRemaining?: number;
-  lastRewardedAdTimestamp?: any; // Firestore Timestamp
+  lastRewardedAdTimestamp?: any; // Firestore Timestamp or ISO string
   followedTopics?: string[];
   blockedUsers?: string[];
 }
+
+export interface InAppPurchaseItem {
+  id: string; // SKU
+  title: string;
+  description: string;
+  price: string;
+  type: 'subscription' | 'one-time';
+}
+
+// For next-intl messages
+export interface Messages extends AbstractIntlMessages {}

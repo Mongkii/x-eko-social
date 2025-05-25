@@ -4,25 +4,27 @@
 @tailwind utilities;
 
 :root {
+  /* Font Size Variables */
   --font-size-sm: 12px;
   --font-size-md: 16px;
   --font-size-lg: 20px;
   
   --default-font-size: var(--font-size-md); /* Default to medium */
 
+  /* Light Theme - Blue/Yellow as per previous Eko request */
   --background: 197 98% 94%; /* Light Blue - #E1F5FE */
   --foreground: 224 71.4% 10.1%; /* Darker Blue/Grey for text */
   --card: 0 0% 100%; /* White */
   --card-foreground: 224 71.4% 10.1%;
   --popover: 0 0% 100%;
   --popover-foreground: 224 71.4% 10.1%;
-  --primary: 12 95% 52%; /* Firered - Was Eko's request */
+  --primary: 12 95% 52%; /* Firered */
   --primary-foreground: 0 0% 100%; /* White */
   --secondary: 197 80% 88%; /* Lighter Blue */
   --secondary-foreground: 197 77% 30%; /* Darker Blue for text on secondary */
   --muted: 197 30% 88%;
   --muted-foreground: 197 30% 50%;
-  --accent: 50 100% 55%; /* Vibrant Yellow - Was Eko's request */
+  --accent: 50 100% 55%; /* Vibrant Yellow */
   --accent-foreground: 28 50% 10%; /* Dark color for high contrast on yellow */
   --destructive: 0 84.2% 60.2%;
   --destructive-foreground: 0 0% 98%;
@@ -35,6 +37,8 @@
   --chart-4: 43 74% 66%;
   --chart-5: 27 87% 67%;
   --radius: 0.5rem;
+
+  /* Sidebar specific colors (can be adjusted later if sidebar design is implemented) */
   --sidebar-background: 0 0% 98%;
   --sidebar-foreground: 240 5.3% 26.1%;
   --sidebar-primary: 240 5.9% 10%;
@@ -44,53 +48,68 @@
   --sidebar-border: 220 13% 91%;
   --sidebar-ring: 217.2 91.2% 59.8%;
 }
-
+ 
 .dark {
-  --background-start-rgb: 23, 0, 0; /* Dark Red for gradient start */
-  --background-end-rgb: 0, 0, 0;   /* Black for gradient end */
-  --background: linear-gradient(to bottom, rgb(var(--background-start-rgb)), rgb(var(--background-end-rgb)));
+  /* Dark Theme - Fire Red to Black Gradient */
+  --background-start-rgb: 200, 20, 20; /* Fire Red approx (adjust for desired intensity) */
+  --background-end-rgb: 0, 0, 0;     /* Black */
 
-  --foreground: 30 90% 85%; /* Fiery Orange/Yellow for text */
-  --card: 15 30% 8%; /* Very dark, slightly warm brown for cards */
-  --card-foreground: 30 90% 85%;
-  --popover: 15 25% 6%; /* Even darker for popovers */
-  --popover-foreground: 30 90% 85%;
+  --foreground: 0 0% 98%; /* Light grey/off-white for general text */
+  --card: 10 10% 8%; /* Very dark, slightly warm brown for cards */
+  --card-foreground: 0 0% 90%; /* Lighter text for cards */
+  --popover: 10 10% 6%; /* Even darker for popovers */
+  --popover-foreground: 0 0% 90%;
   --primary: 12 95% 52%; /* Firered (Vibrant Reddish-Orange) */
-  --primary-foreground: 20 0% 100%; /* White for contrast on firered */
-  --secondary: 25 80% 40%; /* Dark, rich orange */
-  --secondary-foreground: 35 100% 80%; /* Lighter, vibrant yellow for text on secondary */
-  --muted: 20 20% 15%; /* Dark, desaturated brown */
-  --muted-foreground: 30 70% 65%; /* Muted orange/yellow for less important text */
+  --primary-foreground: 0 0% 100%; /* White for contrast on firered */
+  --secondary: 25 80% 30%; /* Dark, rich orange/brown as secondary */
+  --secondary-foreground: 35 100% 85%; /* Lighter, vibrant yellow for text on secondary */
+  --muted: 20 20% 12%; /* Dark, desaturated brown for muted elements */
+  --muted-foreground: 0 0% 65%; /* Muted grey for less important text */
   --accent: 40 100% 55%; /* Vibrant yellow as accent */
   --accent-foreground: 20 50% 10%; /* Very dark brown for text on yellow accent */
   --destructive: 0 70% 50%; /* A clearer, more standard red for destructive actions */
   --destructive-foreground: 0 0% 100%; /* White */
-  --border: 20 20% 25%; /* Dark, warm gray or very desaturated brown for borders */
-  --input: 20 15% 20%; /* Slightly darker than border for input backgrounds */
-  --ring: 12 95% 52%; /* Firered for focus rings, matching primary */
+  --border: 20 15% 20%; /* Dark, warm gray or very desaturated brown for borders */
+  --input: 20 10% 15%; /* Slightly darker than border for input backgrounds */
+  --ring: 12 95% 52%; /* Firered for focus rings */
   --chart-1: 12 95% 52%; /* Firered */
   --chart-2: 40 100% 55%; /* Vibrant Yellow */
   --chart-3: 25 80% 50%; /* Rich Orange */
   --chart-4: 20 50% 35%; /* Muted Dark Orange */
   --chart-5: 30 90% 85%; /* Fiery Orange/Yellow Text Color (as a chart option) */
 
-  --sidebar-background: 0 0% 4%; /* Almost pure black for sidebar */
-  --sidebar-foreground: 30 80% 80%; /* Lighter orange/yellow for sidebar text */
-  --sidebar-primary: 12 90% 50%; /* Firered for primary items in sidebar */
+  /* Sidebar specific colors for dark theme */
+  --sidebar-background: 0 0% 4%; 
+  --sidebar-foreground: 0 0% 80%; 
+  --sidebar-primary: 12 90% 50%; 
   --sidebar-primary-foreground: 0 0% 100%;
-  --sidebar-accent: 20 30% 12%; /* Dark brown for sidebar hover/active states */
-  --sidebar-accent-foreground: 35 100% 75%; /* Vibrant yellow for text on sidebar accent */
+  --sidebar-accent: 20 30% 12%; 
+  --sidebar-accent-foreground: 35 100% 75%;
   --sidebar-border: 15 15% 15%;
   --sidebar-ring: 12 95% 52%;
 }
 
-body {
-  font-family: var(--font-geist-sans), Arial, Helvetica, sans-serif;
-  background: var(--background); /* Applied here for gradient */
-  color: hsl(var(--foreground));
-  font-size: var(--default-font-size); /* Apply default font size */
-  overflow-y: auto; /* Ensure body can scroll if content overflows */
-  background-attachment: fixed; /* For full-page gradient */
+/* Apply font size classes to the html element */
+.font-size-sm { --default-font-size: var(--font-size-sm); }
+.font-size-md { --default-font-size: var(--font-size-md); }
+.font-size-lg { --default-font-size: var(--font-size-lg); }
+ 
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground;
+    font-family: var(--font-geist-sans), Arial, Helvetica, sans-serif; /* Add Geist Sans */
+    font-size: var(--default-font-size); /* Apply default font size */
+    overflow-y: auto; /* Ensure body can scroll if content overflows */
+  }
+  
+  /* Apply gradient background for dark theme */
+  .dark body {
+    background: linear-gradient(to bottom, rgb(var(--background-start-rgb)), rgb(var(--background-end-rgb)));
+    background-attachment: fixed; /* For full-page gradient */
+  }
 }
 
 html {
@@ -98,18 +117,5 @@ html {
 }
 
 html, body, #__next {
-  height: 100%;
-}
-
-
-.font-size-sm { --default-font-size: var(--font-size-sm); }
-.font-size-md { --default-font-size: var(--font-size-md); }
-.font-size-lg { --default-font-size: var(--font-size-lg); }
-
-
-@layer base {
-  * {
-    @apply border-border;
-  }
-  /* body is already styled above for gradient */
+  height: 100%; /* Ensure full height for layout components */
 }

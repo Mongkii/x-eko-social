@@ -1,3 +1,6 @@
-// This file will be deleted.
-// Placeholder to satisfy the XML change format if the file is to be deleted.
-// Internationalization features are being removed, so next-intl navigation is no longer needed.
+
+import {createSharedPathnamesNavigation} from 'next-intl/navigation';
+import {locales, defaultLocale, Locale} from './i18n';
+ 
+export const {Link, redirect, usePathname, useRouter} =
+  createSharedPathnamesNavigation({locales: locales as unknown as Locale[], localePrefix: 'as-needed'});

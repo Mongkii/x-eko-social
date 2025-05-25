@@ -1,2 +1,4 @@
-// This file will be deleted.
-// Placeholder to satisfy the XML change format if the file is to be deleted.
+
+// This file is no longer needed as Genkit is removed.
+// Placeholder for deletion by the build system.
+export {};

@@ -1,6 +1,7 @@
+
 import type { SVGProps } from "react";
-import { ShoppingBag } from "lucide-react";
+import { Speaker } from "lucide-react"; // Using Speaker as a placeholder for Eko
 
 export function AppLogoIcon(props: SVGProps<SVGSVGElement>) {
-  return <ShoppingBag {...props} />;
+  return <Speaker {...props} />;
 }

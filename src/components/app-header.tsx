@@ -1,11 +1,13 @@
 
 "use client";
 
-import Link from 'next/link'; // Changed from '@/navigation'
 import { AppLogoIcon } from '@/components/icons/app-logo-icon';
 import { Button } from '@/components/ui/button';
 import { ThemeToggleSwitch } from '@/components/theme-toggle-switch';
 import { Bookmark, Wand2, Settings } from 'lucide-react';
+import { useTranslations } from 'next-intl';
+import { Link } from '@/navigation';
+import { LanguageSwitcher } from '@/components/language-switcher';
 import { FontSizeSwitcher } from '@/components/font-size-switcher';
 import {
   Tooltip,
@@ -23,12 +25,13 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 
-
 interface AppHeaderProps {
   onPersonalize: () => Promise<void> | void;
 }
 
 export function AppHeader({ onPersonalize }: AppHeaderProps) {
+  const t = useTranslations('AppHeader');
+  const tGlobal = useTranslations('Global');
 
   const handlePersonalizeClick = async () => {
     await onPersonalize();
@@ -40,7 +43,7 @@ export function AppHeader({ onPersonalize }: AppHeaderProps) {
         <Link href="/" className="mr-auto flex items-center space-x-2">
           <AppLogoIcon className="h-6 w-6 text-primary" />
           <span className="font-bold sm:inline-block text-primary">
-            Eko
+            {tGlobal('appName')}
           </span>
         </Link>
         <nav className="flex items-center space-x-1 sm:space-x-2">
@@ -48,14 +51,14 @@ export function AppHeader({ onPersonalize }: AppHeaderProps) {
             <Tooltip>
               <TooltipTrigger asChild>
                 <Button variant="ghost" size="icon" asChild className="h-9 w-9">
-                  <Link href="/saved-ads">
+                  <Link href="/saved-eko-drops">
                     <Bookmark className="h-5 w-5" />
-                    <span className="sr-only">Saved EkoDrops</span>
+                    <span className="sr-only">{t('savedEkoDropsTooltip')}</span>
                   </Link>
                 </Button>
               </TooltipTrigger>
               <TooltipContent>
-                <p>Saved EkoDrops</p>
+                <p>{t('savedEkoDropsTooltip')}</p>
               </TooltipContent>
             </Tooltip>
           </TooltipProvider>
@@ -65,11 +68,11 @@ export function AppHeader({ onPersonalize }: AppHeaderProps) {
               <TooltipTrigger asChild>
                 <Button onClick={handlePersonalizeClick} variant="ghost" size="icon" className="h-9 w-9">
                   <Wand2 className="h-5 w-5" />
-                  <span className="sr-only">Personalize My Feed (AI)</span>
+                  <span className="sr-only">{t('personalizeFeedTooltip')}</span>
                 </Button>
               </TooltipTrigger>
               <TooltipContent>
-                <p>Personalize My Feed (AI)</p>
+                <p>{t('personalizeFeedTooltip')}</p>
               </TooltipContent>
             </Tooltip>
           </TooltipProvider>
@@ -81,23 +84,27 @@ export function AppHeader({ onPersonalize }: AppHeaderProps) {
                   <DropdownMenuTrigger asChild>
                     <Button variant="ghost" size="icon" className="h-9 w-9">
                       <Settings className="h-5 w-5" />
-                       <span className="sr-only">Settings</span>
+                       <span className="sr-only">{t('settingsTooltip')}</span>
                     </Button>
                   </DropdownMenuTrigger>
                 </TooltipTrigger>
                 <TooltipContent>
-                  <p>Settings</p>
+                  <p>{t('settingsTooltip')}</p>
                 </TooltipContent>
               </Tooltip>
             </TooltipProvider>
             <DropdownMenuContent className="w-56" align="end">
-              {/* LanguageSwitcher removed */}
-              <DropdownMenuLabel>Font Size</DropdownMenuLabel>
+              <DropdownMenuLabel>{t('languageLabel')}</DropdownMenuLabel>
+              <DropdownMenuGroup>
+                 <LanguageSwitcher />
+              </DropdownMenuGroup>
+              <DropdownMenuSeparator />
+              <DropdownMenuLabel>{t('fontSizeLabel')}</DropdownMenuLabel>
                <DropdownMenuGroup>
                 <FontSizeSwitcher />
               </DropdownMenuGroup>
               <DropdownMenuSeparator />
-              <DropdownMenuLabel>Theme</DropdownMenuLabel>
+              <DropdownMenuLabel>{t('themeLabel')}</DropdownMenuLabel>
               <DropdownMenuItem className="focus:bg-transparent focus:text-current hover:bg-transparent">
                 <div className="w-full flex justify-center">
                    <ThemeToggleSwitch />
@@ -105,7 +112,6 @@ export function AppHeader({ onPersonalize }: AppHeaderProps) {
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
-
         </nav>
       </div>
     </header>
