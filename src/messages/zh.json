@@ -47,11 +47,11 @@
     "subscriptionError": "订阅错误",
     "mobileBridgeNotFound": "未找到移动应用桥",
     "featureOnlyInMobileApp": "此功能仅在移动应用中可用。",
-    "purchasingItem": "正在购买 {title}...",
+    "purchasingItem": "正在购买 {item}...",
     "purchaseSuccessful": "购买成功！",
-    "youHavePurchasedItem": "您已购买 {title}。",
+    "youHavePurchasedItem": "您已购买 {item}。",
     "purchaseFailed": "购买失败",
-    "couldNotPurchaseItem": "无法购买 {title}。",
+    "couldNotPurchaseItem": "无法购买 {item}。",
     "purchaseError": "购买错误",
     "playNext": "播放下一个",
     "playing": "播放中",
@@ -86,7 +86,11 @@
     "audioBy": "{user} 的音频",
     "hashtags": "话题标签:",
     "postedOn": "发布于 {date}",
-    "viewTranscript": "查看文字稿"
+    "viewTranscript": "查看文字稿",
+    "rewardedAdTitle": "观看激励广告！",
+    "rewardedAdDescription": "观看此短视频以获得奖励。",
+    "watchAdButton": "观看广告",
+    "rewardedAdBadge": "激励广告"
   },
   "ThemeToggleSwitch": {
     "switchToLightTheme": "切换到浅色主题",

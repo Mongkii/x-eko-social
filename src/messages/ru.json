@@ -47,11 +47,11 @@
     "subscriptionError": "Ошибка подписки",
     "mobileBridgeNotFound": "Мост мобильного приложения не найден",
     "featureOnlyInMobileApp": "Эта функция доступна только в мобильном приложении.",
-    "purchasingItem": "Покупка {title}...",
+    "purchasingItem": "Покупка {item}...",
     "purchaseSuccessful": "Покупка успешна!",
-    "youHavePurchasedItem": "Вы приобрели {title}.",
+    "youHavePurchasedItem": "Вы приобрели {item}.",
     "purchaseFailed": "Ошибка покупки",
-    "couldNotPurchaseItem": "Не удалось приобрести {title}.",
+    "couldNotPurchaseItem": "Не удалось приобрести {item}.",
     "purchaseError": "Ошибка покупки",
     "playNext": "Воспр. след.",
     "playing": "Воспроизведение",
@@ -86,7 +86,11 @@
     "audioBy": "Аудио от {user}",
     "hashtags": "Хэштеги:",
     "postedOn": "Опубликовано {date}",
-    "viewTranscript": "Посмотреть Транскрипт"
+    "viewTranscript": "Посмотреть Транскрипт",
+    "rewardedAdTitle": "Смотрите рекламу с вознаграждением!",
+    "rewardedAdDescription": "Посмотрите это короткое видео, чтобы получить вознаграждение.",
+    "watchAdButton": "Смотреть Рекламу",
+    "rewardedAdBadge": "Реклама с Вознаграждением"
   },
   "ThemeToggleSwitch": {
     "switchToLightTheme": "Переключиться на светлую тему",

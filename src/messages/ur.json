@@ -47,11 +47,11 @@
     "subscriptionError": "سبسکرپشن کی خرابی",
     "mobileBridgeNotFound": "موبائل ایپ برج نہیں ملا",
     "featureOnlyInMobileApp": "یہ خصوصیت صرف موبائل ایپ میں دستیاب ہے۔",
-    "purchasingItem": "{title} خریدا جا رہا ہے...",
+    "purchasingItem": "{item} خریدا جا رہا ہے...",
     "purchaseSuccessful": "خریداری کامیاب!",
-    "youHavePurchasedItem": "آپ نے {title} خریدا ہے۔",
+    "youHavePurchasedItem": "آپ نے {item} خریدا ہے۔",
     "purchaseFailed": "خریداری ناکام",
-    "couldNotPurchaseItem": "{title} نہیں خریدا جا سکا۔",
+    "couldNotPurchaseItem": "{item} نہیں خریدا جا سکا۔",
     "purchaseError": "خریداری کی خرابی",
     "playNext": "اگلا چلائیں",
     "playing": "چل رہا ہے",
@@ -86,7 +86,11 @@
     "audioBy": "{user} کی آڈیو",
     "hashtags": "ہیش ٹیگز:",
     "postedOn": "{date} کو پوسٹ کیا گیا",
-    "viewTranscript": "ٹرانسکرپٹ دیکھیں"
+    "viewTranscript": "ٹرانسکرپٹ دیکھیں",
+    "rewardedAdTitle": "انعام والا اشتہار دیکھیں!",
+    "rewardedAdDescription": "انعام حاصل کرنے کے لیے یہ مختصر ویڈیو دیکھیں۔",
+    "watchAdButton": "اشتہار دیکھیں",
+    "rewardedAdBadge": "انعام والا اشتہار"
   },
   "ThemeToggleSwitch": {
     "switchToLightTheme": "لائٹ تھیم پر سوئچ کریں",

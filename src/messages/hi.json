@@ -47,11 +47,11 @@
     "subscriptionError": "सदस्यता त्रुटि",
     "mobileBridgeNotFound": "मोबाइल ऐप ब्रिज नहीं मिला",
     "featureOnlyInMobileApp": "यह सुविधा केवल मोबाइल ऐप में उपलब्ध है।",
-    "purchasingItem": "{title} खरीदा जा रहा है...",
+    "purchasingItem": "{item} खरीदा जा रहा है...",
     "purchaseSuccessful": "खरीद सफल!",
-    "youHavePurchasedItem": "आपने {title} खरीदा है।",
+    "youHavePurchasedItem": "आपने {item} खरीदा है।",
     "purchaseFailed": "खरीद विफल",
-    "couldNotPurchaseItem": "{title} नहीं खरीदा जा सका।",
+    "couldNotPurchaseItem": "{item} नहीं खरीदा जा सका।",
     "purchaseError": "खरीद त्रुटि",
     "playNext": "अगला चलाएं",
     "playing": "चल रहा है",
@@ -86,7 +86,11 @@
     "audioBy": "{user} द्वारा ऑडियो",
     "hashtags": "हैशटैग:",
     "postedOn": "{date} को पोस्ट किया गया",
-    "viewTranscript": "प्रतिलिपि देखें"
+    "viewTranscript": "प्रतिलिपि देखें",
+    "rewardedAdTitle": "पुरस्कृत विज्ञापन देखें!",
+    "rewardedAdDescription": "इनाम पाने के लिए यह छोटा वीडियो देखें।",
+    "watchAdButton": "विज्ञापन देखें",
+    "rewardedAdBadge": "पुरस्कृत विज्ञापन"
   },
   "ThemeToggleSwitch": {
     "switchToLightTheme": "लाइट थीम पर स्विच करें",
