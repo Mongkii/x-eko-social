@@ -7,11 +7,10 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { StarRating } from '@/components/ui/star-rating';
 import { Badge } from '@/components/ui/badge';
-import { Heart, ThumbsDown, Plus, Check, ThumbsUp, MessageCircle, Share2, PlayCircle, Facebook, Twitter, Instagram, Play, Pause, Gift } from 'lucide-react'; // Added Gift
+import { Heart, ThumbsDown, Plus, Check, ThumbsUp, MessageCircle, Share2, Play, Pause, Gift, PlayCircle } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import React, { useState, useRef, useEffect } from 'react';
 import { formatDistanceToNow, parseISO } from 'date-fns';
-// Removed date-fns locale imports as we are English-only now
 
 interface FeedItemCardProps {
   item: FeedItemData;
@@ -48,7 +47,7 @@ export function FeedItemCard({
 
   useEffect(() => {
     if (videoElementRef.current) {
-      audioRef(videoElementRef.current); 
+      audioRef(videoElementRef.current);
       if (isPlaying) {
         videoElementRef.current.play().catch(e => console.warn("Autoplay prevented:", e));
       } else {
@@ -60,7 +59,7 @@ export function FeedItemCard({
 
   const handleTouchStart = (e: React.TouchEvent<HTMLDivElement> | React.MouseEvent<HTMLDivElement>) => {
     touchStartX.current = 'touches' in e ? e.touches[0].clientX : e.clientX;
-    document.body.style.overflow = 'hidden'; 
+    document.body.style.overflow = 'hidden';
   };
 
   const handleTouchMove = (e: React.TouchEvent<HTMLDivElement> | React.MouseEvent<HTMLDivElement>) => {
@@ -68,8 +67,8 @@ export function FeedItemCard({
     const currentX = 'touches' in e ? e.touches[0].clientX : e.clientX;
     const deltaX = currentX - touchStartX.current;
     setTranslateX(deltaX);
-    if (deltaX > SWIPE_THRESHOLD / 2) setSwipeState('right'); 
-    else if (deltaX < -SWIPE_THRESHOLD / 2) setSwipeState('left'); 
+    if (deltaX > SWIPE_THRESHOLD / 2) setSwipeState('right');
+    else if (deltaX < -SWIPE_THRESHOLD / 2) setSwipeState('left');
     else setSwipeState(null);
   };
 
@@ -81,9 +80,9 @@ export function FeedItemCard({
     setTranslateX(0);
     setSwipeState(null);
     touchStartX.current = 0;
-    document.body.style.overflow = ''; 
+    document.body.style.overflow = '';
   };
-  
+
   useEffect(() => {
     const cardElement = cardRef.current;
     if (!cardElement) return;
@@ -91,15 +90,15 @@ export function FeedItemCard({
     const handleMouseDown = (e: MouseEvent) => handleTouchStart(e as unknown as React.MouseEvent<HTMLDivElement>);
     const handleMouseMove = (e: MouseEvent) => handleTouchMove(e as unknown as React.MouseEvent<HTMLDivElement>);
     const handleMouseUp = () => handleTouchEnd();
-    const handleMouseLeave = () => { 
+    const handleMouseLeave = () => {
       if (touchStartX.current !== 0) handleTouchEnd();
     };
 
     cardElement.addEventListener('mousedown', handleMouseDown);
-    document.addEventListener('mousemove', handleMouseMove); 
-    document.addEventListener('mouseup', handleMouseUp);     
+    document.addEventListener('mousemove', handleMouseMove);
+    document.addEventListener('mouseup', handleMouseUp);
     cardElement.addEventListener('mouseleave', handleMouseLeave);
-    
+
     return () => {
       cardElement.removeEventListener('mousedown', handleMouseDown);
       document.removeEventListener('mousemove', handleMouseMove);
@@ -109,21 +108,34 @@ export function FeedItemCard({
   }, [item.id, onToggleLike, onToggleDislike, translateX]);
 
   const getFormattedDate = (timestamp: any) => {
-    try {
-      const date = timestamp?.toDate ? timestamp.toDate() : parseISO(timestamp);
-      return formatDistanceToNow(date, { addSuffix: true }); // Default locale (English)
-    } catch (e) {
-      console.error("Error formatting date:", e);
+    if (!timestamp) { // Guard against null or undefined timestamp
       return "some time ago";
+    }
+    try {
+      // Check if it's a Firebase Timestamp-like object
+      if (timestamp && typeof timestamp === 'object' && typeof timestamp.toDate === 'function') {
+        return formatDistanceToNow(timestamp.toDate(), { addSuffix: true });
+      }
+      // Assume it's an ISO string or can be parsed by Date
+      const date = typeof timestamp === 'string' ? parseISO(timestamp) : new Date(timestamp);
+      if (isNaN(date.getTime())) { // Check if date is valid
+        console.error("Error formatting date: Invalid date value", timestamp);
+        return "a while ago";
+      }
+      return formatDistanceToNow(date, { addSuffix: true });
+    } catch (e) {
+      console.error("Error formatting date:", e, "Timestamp:", timestamp);
+      return "recently"; // Fallback for other errors
     }
   };
 
-  const itemTranscript = item.transcript?.['en'] || item.description; // Default to English transcript
-  const itemTitle = item.title || item.transcript?.['en']?.substring(0, 50) || `Audio by ${item.userId}`;
+
+  const itemTranscript = item.transcript?.['en'] || item.description || "No description available.";
+  const itemTitle = item.title || item.transcript?.['en']?.substring(0, 50) || `Item ${item.id}`;
 
 
   return (
-    <div 
+    <div
       ref={cardRef}
       className="h-full w-full flex-shrink-0 snap-start relative overflow-hidden flex items-center justify-center select-none p-4"
       onTouchStart={handleTouchStart}
@@ -139,66 +151,69 @@ export function FeedItemCard({
       >
         <CardHeader className="relative p-0">
           <div className="aspect-square w-full relative bg-secondary overflow-hidden rounded-t-lg">
-            {item.videoUrl ? ( // Prioritize videoUrl
+            {item.type === 'ad' && item.videoUrl ? (
               <>
                 <video
                   ref={videoElementRef}
                   src={item.videoUrl}
-                  poster={item.posterUrl} // Use posterUrl as poster for video
-                  loop={item.type === 'ad'} // Loop ads, non-loop content (or parent controlled)
-                  muted={item.type === 'ad'}  // Mute ads by default
+                  poster={item.sourceUrl}
+                  loop
+                  muted
+                  autoPlay
                   playsInline
-                  autoPlay={item.type === 'ad' || isPlaying} // Autoplay ads or if specifically playing
                   onEnded={onAudioEnded}
                   className="object-cover w-full h-full"
                   data-ai-hint={item.dataAiHint}
                 />
-                {!isPlaying && item.type === 'content' && ( // Show play button for content if not playing
-                  <div 
+                 <div className="absolute top-2 right-2">
+                   <Badge variant="destructive">Ad</Badge>
+                 </div>
+              </>
+            ) : item.audioUrl ? ( // For content EkoDrops (voice posts)
+              <>
+                {/* Display a poster image for audio, or a placeholder */}
+                {item.posterUrl ? (
+                   <Image
+                    src={item.posterUrl}
+                    alt={itemTitle}
+                    fill
+                    className="object-cover"
+                    data-ai-hint={item.dataAiHint}
+                    priority
+                  />
+                ) : (
+                  <div className="w-full h-full bg-muted flex items-center justify-center text-muted-foreground">
+                    Voice Post
+                  </div>
+                )}
+                <video // Hidden video element for audio control
+                  ref={videoElementRef}
+                  src={item.audioUrl}
+                  onEnded={onAudioEnded}
+                  className="hidden"
+                />
+                <div
                     className="absolute inset-0 flex items-center justify-center bg-black/30 cursor-pointer"
                     onClick={() => onPlayRequest(item.id)}
                   >
-                    <PlayCircle className="w-16 h-16 text-white/70 opacity-80" />
-                  </div>
-                )}
-              </>
-            ) : item.audioUrl ? ( // Fallback to audioUrl if videoUrl is not present
-              <>
-                <video // Using video tag for audio as well for consistent controls/events
-                  ref={videoElementRef}
-                  src={item.audioUrl}
-                  poster={item.posterUrl}
-                  loop={false}
-                  muted={false}
-                  playsInline
-                  onEnded={onAudioEnded}
-                  className="object-cover w-full h-full" 
-                  data-ai-hint={item.dataAiHint}
-                />
-                <div 
-                  className="absolute inset-0 flex items-center justify-center bg-black/30 cursor-pointer"
-                  onClick={() => onPlayRequest(item.id)}
-                >
-                  {!isPlaying && <PlayCircle className="w-16 h-16 text-white/70 opacity-80" />}
+                  {isPlaying ? <Pause className="w-12 h-12 text-white/70" /> : <PlayCircle className="w-16 h-16 text-white/70 opacity-80" />}
                 </div>
               </>
-            ) : item.posterUrl ? ( 
+            ) : item.sourceUrl ? ( // Fallback for content items that are images (not typical for Eko BRD)
               <Image
-                src={item.posterUrl}
+                src={item.sourceUrl}
                 alt={itemTitle}
                 fill
                 className="object-cover"
                 data-ai-hint={item.dataAiHint}
-                priority 
+                priority
               />
             ) : (
               <div className="w-full h-full bg-muted flex items-center justify-center">
                 <p className="text-muted-foreground">No media</p>
               </div>
             )}
-             <div className="absolute top-2 right-2">
-              {item.type === 'ad' && <Badge variant="destructive">Ad</Badge>}
-            </div>
+
             {swipeState === 'right' && (
               <div className="absolute top-1/2 left-8 -translate-y-1/2 opacity-80">
                 <ThumbsUp className="w-16 h-16 text-green-500" />
@@ -211,18 +226,20 @@ export function FeedItemCard({
             )}
           </div>
         </CardHeader>
-        
+
         <CardContent className="flex-grow p-4 space-y-2 overflow-y-auto">
           <CardTitle className="text-lg">{itemTitle}</CardTitle>
           {item.advertiser && <p className="text-xs text-muted-foreground">Sponsored by {item.advertiser}</p>}
           <CardDescription className="text-sm">{itemTranscript}</CardDescription>
-          <p className="text-xs text-muted-foreground">Posted {getFormattedDate(item.createdAt)}</p>
-          
-          {item.hashtags && item.hashtags.length > 0 && (
+          <p className="text-xs text-muted-foreground">
+            Posted {getFormattedDate(item.createdAt)} {item.userId && `by ${item.userId}`}
+          </p>
+
+          {(item.categories || item.hashtags) && (item.categories?.length || 0) + (item.hashtags?.length || 0) > 0 && (
             <div className="space-y-1">
-              <p className="text-xs font-medium text-muted-foreground">Hashtags:</p>
+              <p className="text-xs font-medium text-muted-foreground">Categories:</p>
               <div className="flex flex-wrap gap-2">
-                {item.hashtags.map((category) => (
+                {(item.categories || item.hashtags)?.map((category) => (
                   <Button
                     key={category}
                     variant={followedCategories.has(category) ? 'default' : 'outline'}
@@ -252,38 +269,21 @@ export function FeedItemCard({
               <span className="sr-only">Dislike</span>
             </Button>
             <Button variant="ghost" size="icon" onClick={() => onToggleLike(item.id)} className={cn(item.isLiked && "text-primary")}>
-              <Heart className={cn(item.isLiked && "fill-primary")}/>
+              <Heart className={cn(item.isLiked && "fill-primary")} />
               <span className="sr-only">Like</span>
             </Button>
-             <Button variant="ghost" size="icon">
+            <Button variant="ghost" size="icon">
               <MessageCircle />
               <span className="sr-only">Comment</span>
             </Button>
-            {item.type !== 'ad' && (
-              <Button variant="ghost" size="icon">
-                <Share2 />
-                <span className="sr-only">Share</span>
-              </Button>
-            )}
+            <Button variant="ghost" size="icon">
+              <Share2 />
+              <span className="sr-only">Share</span>
+            </Button>
           </div>
-
-          {item.type === 'ad' && ( // Social share for ads
-            <div className="w-full">
-              <div className="flex w-full justify-center items-center gap-4">
-                <Button variant="outline" size="icon" aria-label="Share on Facebook" className="rounded-full">
-                  <Facebook className="h-5 w-5" />
-                </Button>
-                <Button variant="outline" size="icon" aria-label="Share on Twitter" className="rounded-full">
-                  <Twitter className="h-5 w-5" />
-                </Button>
-                <Button variant="outline" size="icon" aria-label="Share on Instagram" className="rounded-full">
-                  <Instagram className="h-5 w-5" />
-                </Button>
-              </div>
-            </div>
-          )}
         </CardFooter>
       </Card>
     </div>
   );
 }
+
