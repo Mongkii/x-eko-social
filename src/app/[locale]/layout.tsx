@@ -19,7 +19,7 @@ export function generateStaticParams() {
 
 // This is the comprehensive fallback messages object for the NextIntlClientProvider
 // It ensures all UI components have the necessary keys, even if actual locale files fail to load.
-// It's derived from the structure of src/messages/en.json.
+// Derived from the structure of src/messages/en.json.
 const clientProviderFallbackMessages: AbstractIntlMessages = {
   Global: {
     appName: "Eko (Client Fallback)",
@@ -109,7 +109,7 @@ const clientProviderFallbackMessages: AbstractIntlMessages = {
   },
   SavedEkoDropsPage: {
     backToFeed: "Back to Feed (FB)",
-    mySavedAds: "My Saved EkoDrops (FB)", // Key name was mySavedAds
+    mySavedAds: "My Saved EkoDrops (FB)", 
     errorLoadingSavedAds: "Error: Could not load saved EkoDrops. (FB)",
     infoToastTitle: "Info (FB)",
     personalizeInfoDescription: "Feed personalization is available on the main feed page. (FB)",
@@ -118,12 +118,12 @@ const clientProviderFallbackMessages: AbstractIntlMessages = {
     noSavedAdsYet: "You haven't saved any EkoDrops yet. (FB)",
     likeAdToSave: "Like an EkoDrop in the main feed to save it here! (FB)"
   },
-  AdMobBanner: { // Corrected to be an object
+  AdMobBanner: { 
     demoBannerTitle: "AdMob Demo Banner (FB)",
     demoAdUnitIdLabel: "Demo Ad Unit ID (FB)",
     placeholderNotice: "This is a placeholder for a real ad. (FB)"
   },
-  LanguageSwitcher: { // Corrected to be an object
+  LanguageSwitcher: { 
     selectLanguagePlaceholder: "Select Language (FB)",
     english: "English (FB)",
     arabic: "العربية (FB)",
@@ -134,9 +134,8 @@ const clientProviderFallbackMessages: AbstractIntlMessages = {
     hindi: "हिन्दी (FB)",
     chinese: "中文 (FB)",
     tagalog: "Tagalog (FB)"
-    // Russian removed as per BRD update
   },
-  FontSizeSwitcher: { // Corrected to be an object
+  FontSizeSwitcher: { 
     selectFontSizePlaceholder: "Select Font Size (FB)",
     small: "Small (FB)",
     medium: "Medium (FB)",
@@ -169,9 +168,9 @@ export default async function LocaleLayout({
       console.log(`LocaleLayout: Successfully received messages from getMessages for locale "${locale}". Will use these for NextIntlClientProvider.`);
     }
   } catch (error) {
-    console.error(`LocaleLayout: Error calling getMessages for locale "${locale}". Using comprehensive clientProviderFallbackMessages. Details:`, error);
-    // Ensure messages is clientProviderFallbackMessages in case of error
-    messagesFromGetMessages = undefined; // Explicitly set to undefined to trigger fallback logic below
+    console.error(`LocaleLayout: Error calling getMessages for locale "${locale}". This typically means i18n.ts called notFound(). Propagating notFound(). Details:`, error);
+    // If getMessages throws (e.g., because i18n.ts called notFound()), re-throw notFound().
+    notFound();
   }
 
   // Determine which messages to pass to the provider.
@@ -196,3 +195,5 @@ export default async function LocaleLayout({
     </NextIntlClientProvider>
   );
 }
+
+    

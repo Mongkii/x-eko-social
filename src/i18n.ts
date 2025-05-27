@@ -9,35 +9,10 @@ export const defaultLocale = 'en' as const;
 
 export type Locale = (typeof locales)[number];
 
-// This is an EXTREMELY minimal message object for next-intl's core server-side config.
-// It's intended to pass basic structural checks by next-intl's middleware or getMessages.
-// The rich messages for the client will be provided by LocaleLayout's own fallback.
-const minimalCoreMessages: AbstractIntlMessages = {
-  Global: { appName: "Eko (Core Fallback)" }
-};
-
-export default getRequestConfig(async ({locale}) => {
-  // Validate that the incoming `locale` parameter is a supported locale
-  if (!locales.includes(locale as Locale)) {
-    console.warn(`i18n.ts: Unsupported locale "${locale}" requested. Calling notFound().`);
-    notFound();
-  }
-
-  // For this very robust setup, we always return the minimal core messages.
-  // The actual display messages will come from LocaleLayout's comprehensive fallback.
-  // This helps ensure next-intl's core initializes without "config file not found" errors.
-  console.log(`i18n.ts: Providing minimalCoreMessages for locale "${locale}".`);
-  return {
-    messages: minimalCoreMessages
-  };
-});
-
-// Ensure type safety for the default export (getRequestConfig)
-export type GetRequestConfig = typeof getRequestConfig;
-
-// This is the comprehensive fallback that will be used by LocaleLayout
-// It's defined here so it's easily accessible if needed elsewhere,
-// but LocaleLayout will likely define its own copy or import this one.
+// This is the comprehensive fallback messages object for the NextIntlClientProvider if primary loading fails.
+// It ensures all UI components have the necessary keys.
+// It's derived from the structure of src/messages/en.json.
+// This object is exported for use in LocaleLayout if getMessages returns minimal/core messages.
 export const i18nUltimateFallbackMessages: AbstractIntlMessages = {
   Global: {
     appName: "Eko (Client Fallback)",
@@ -92,7 +67,7 @@ export const i18nUltimateFallbackMessages: AbstractIntlMessages = {
     statusInactive: "Inactive (FB)"
   },
   AppHeader: {
-    appName: "Eko (Client Fallback)",
+    appName: "Eko (Client Fallback)", 
     savedEkoDropsTooltip: "Saved EkoDrops (FB)",
     personalizeFeedTooltip: "Personalize My Feed (AI) (FB)",
     settingsTooltip: "Settings (FB)",
@@ -127,7 +102,7 @@ export const i18nUltimateFallbackMessages: AbstractIntlMessages = {
   },
   SavedEkoDropsPage: {
     backToFeed: "Back to Feed (FB)",
-    mySavedAds: "My Saved EkoDrops (FB)", // Key name changed from mySavedAds
+    mySavedAds: "My Saved EkoDrops (FB)", 
     errorLoadingSavedAds: "Error: Could not load saved EkoDrops. (FB)",
     infoToastTitle: "Info (FB)",
     personalizeInfoDescription: "Feed personalization is available on the main feed page. (FB)",
@@ -136,12 +111,12 @@ export const i18nUltimateFallbackMessages: AbstractIntlMessages = {
     noSavedAdsYet: "You haven't saved any EkoDrops yet. (FB)",
     likeAdToSave: "Like an EkoDrop in the main feed to save it here! (FB)"
   },
-  AdMobBanner: { // Corrected Structure
+  AdMobBanner: { 
     demoBannerTitle: "AdMob Demo Banner (FB)",
     demoAdUnitIdLabel: "Demo Ad Unit ID (FB)",
     placeholderNotice: "This is a placeholder for a real ad. (FB)"
   },
-  LanguageSwitcher: { // Corrected Structure
+  LanguageSwitcher: { 
     selectLanguagePlaceholder: "Select Language (FB)",
     english: "English (FB)",
     arabic: "العربية (FB)",
@@ -152,12 +127,46 @@ export const i18nUltimateFallbackMessages: AbstractIntlMessages = {
     hindi: "हिन्दी (FB)",
     chinese: "中文 (FB)",
     tagalog: "Tagalog (FB)"
-    // russian: "Русский (FB)" // Removed as per BRD
   },
-  FontSizeSwitcher: { // Corrected Structure
+  FontSizeSwitcher: { 
     selectFontSizePlaceholder: "Select Font Size (FB)",
     small: "Small (FB)",
     medium: "Medium (FB)",
     large: "Large (FB)"
   }
 };
+
+
+// Provides a minimal configuration to satisfy next-intl's core server-side checks.
+const minimalCoreMessages: AbstractIntlMessages = {
+  Global: {
+    appName: "Eko (Core Fallback)"
+  }
+};
+
+export default getRequestConfig(async ({locale}) => {
+  // Validate that the incoming `locale` parameter is a supported locale
+  if (!locales.includes(locale as Locale)) {
+    console.warn(`i18n.ts: Unsupported locale "${locale}" requested. Calling notFound().`);
+    notFound();
+  }
+
+  try {
+    const localeMessages = (await import(`./messages/${locale}.json`)).default;
+    if (localeMessages && typeof localeMessages === 'object' && Object.keys(localeMessages).length > 0) {
+      console.log(`i18n.ts: Successfully loaded messages for locale "${locale}".`);
+      return { messages: localeMessages as AbstractIntlMessages };
+    } else {
+      console.warn(`i18n.ts: Messages for locale "${locale}" are empty or invalid. Calling notFound().`);
+      notFound(); // Signal that this locale cannot be served
+    }
+  } catch (error) {
+    console.error(`i18n.ts: Failed to load messages for locale "${locale}". Calling notFound(). Error:`, error);
+    notFound(); // Signal that this locale cannot be served
+  }
+
+  // This part should ideally not be reached if notFound() is called correctly.
+  // However, as a last resort for next-intl's core, provide minimal config.
+  console.warn(`i18n.ts: Returning minimalCoreMessages for locale "${locale}" as a last resort. This usually indicates a problem.`);
+  return { messages: minimalCoreMessages };
+});

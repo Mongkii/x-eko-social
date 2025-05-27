@@ -13,9 +13,9 @@
     "dislikeRemovedToastTitle": "Dislike Removed!",
     "dislikeRemovedToastDescription": "You removed your dislike for \"{title}\".",
     "followedCategoryToastTitle": "Followed Category!",
-    "followedCategoryToastDescription": "You are now following \"{category}\".",
+    "followedCategoryToastDescription": "Following {category}.",
     "unfollowedCategoryToastTitle": "Unfollowed Category!",
-    "unfollowedCategoryToastDescription": "You have unfollowed \"{category}\"."
+    "unfollowedCategoryToastDescription": "Unfollowed {category}."
   },
   "HomePage": {
     "aiMagicToastTitle": "AI Magic ✨",
@@ -88,7 +88,7 @@
   },
   "SavedEkoDropsPage": {
     "backToFeed": "Back to Feed",
-    "mySavedAds": "My Saved EkoDrops",
+    "mySavedAds": "My Saved EkoDrops", 
     "errorLoadingSavedAds": "Error: Could not load saved EkoDrops.",
     "infoToastTitle": "Info",
     "personalizeInfoDescription": "Feed personalization is available on the main feed page.",
@@ -97,12 +97,12 @@
     "noSavedAdsYet": "You haven't saved any EkoDrops yet.",
     "likeAdToSave": "Like an EkoDrop in the main feed to save it here!"
   },
-  "AdMobBanner": {
+  "AdMobBanner": { 
     "demoBannerTitle": "AdMob Demo Banner",
     "demoAdUnitIdLabel": "Demo Ad Unit ID",
     "placeholderNotice": "This is a placeholder for a real ad."
   },
-  "LanguageSwitcher": {
+  "LanguageSwitcher": { 
     "selectLanguagePlaceholder": "Select Language",
     "english": "English",
     "arabic": "العربية",
@@ -114,7 +114,7 @@
     "chinese": "中文",
     "tagalog": "Tagalog"
   },
-  "FontSizeSwitcher": {
+  "FontSizeSwitcher": { 
     "selectFontSizePlaceholder": "Select Font Size",
     "small": "Small",
     "medium": "Medium",
