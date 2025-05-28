@@ -11,7 +11,7 @@ export type Locale = (typeof locales)[number];
 
 // Define a comprehensive fallback structure matching en.json
 // This will be used if a specific locale file is missing or corrupt.
-const i18nUltimateFallbackMessages: AbstractIntlMessages = {
+export const i18nUltimateFallbackMessages: AbstractIntlMessages = {
   Global: {
     appName: "Ameenee Marketplace (Fallback)",
     searchPlaceholder: "Search services, keywords... (Fallback)",
@@ -106,7 +106,7 @@ const i18nUltimateFallbackMessages: AbstractIntlMessages = {
     countryLabel: "Country of Practice (Fallback)",
     cityLabel: "Primary City of Practice (Fallback)",
     applicationSubmittedTitle: "Application Submitted Successfully! (Fallback)",
-    applicationSubmittedDescription": "Thank you for applying to become a provider on Ameenee Marketplace. Our team will review your application and contact you within 5-7 business days. (Fallback)"
+    "applicationSubmittedDescription": "Thank you for applying to become a provider on Ameenee Marketplace. Our team will review your application and contact you within 5-7 business days. (Fallback)"
   },
   ProviderDashboardPage: {
     pageTitle: "Provider Dashboard (Fallback)",
@@ -149,7 +149,7 @@ const i18nUltimateFallbackMessages: AbstractIntlMessages = {
     rejected: "Rejected (Fallback)",
     providerApprovedMsg: "Provider approved successfully. (Fallback)",
     providerRejectedMsg: "Provider rejected. (Fallback)",
-    providerStatusUpdatedMsg": "Provider status updated. (Fallback)"
+    providerStatusUpdatedMsg: "Provider status updated. (Fallback)"
   },
   AdminCategoryManagementPage: {
     pageTitle: "Service Category Management (Fallback)",
@@ -160,13 +160,13 @@ const i18nUltimateFallbackMessages: AbstractIntlMessages = {
     isActive: "Active Status (Fallback)",
     edit: "Edit (Fallback)",
     addCategory: "Add New Category (Fallback)",
-    categoryNameLabel": "Name (EN) (Fallback)",
-    categoryNameArLabel": "Name (AR) (Fallback)",
-    categoryDescriptionLabel": "Description (EN) (Fallback)",
-    categoryDescriptionArLabel": "Description (AR) (Fallback)",
+    categoryNameLabel: "Name (EN) (Fallback)",
+    categoryNameArLabel: "Name (AR) (Fallback)",
+    categoryDescriptionLabel: "Description (EN) (Fallback)",
+    categoryDescriptionArLabel: "Description (AR) (Fallback)",
     saveCategory: "Save Category (Fallback)",
-    categoryAddedMsg": "Category added successfully. (Fallback)",
-    categoryUpdatedMsg": "Category updated successfully. (Fallback)"
+    categoryAddedMsg: "Category added successfully. (Fallback)",
+    categoryUpdatedMsg: "Category updated successfully. (Fallback)"
   },
   AppHeader: {
     marketplace: "Marketplace (Fallback)",
@@ -198,28 +198,34 @@ const i18nUltimateFallbackMessages: AbstractIntlMessages = {
   }
 };
 
-
 export default getRequestConfig(async ({ locale }) => {
+  // Validate that the incoming `locale` parameter is valid
   if (!locales.includes(locale as Locale)) {
-    console.warn(`i18n.ts: Unsupported locale "${locale}" requested. Calling notFound().`);
+    console.warn(`i18n.ts: Unsupported locale "${locale}" requested in getRequestConfig. Calling notFound().`);
     notFound();
   }
 
   let messages: AbstractIntlMessages;
   try {
+    // Dynamically import the message file for the requested locale
     const localeMessagesModule = await import(`./messages/${locale}.json`);
     messages = localeMessagesModule.default;
 
-    if (!messages || Object.keys(messages).length === 0) {
+    // Check if messages are empty or not an object (e.g., if JSON file is empty or malformed)
+    if (!messages || typeof messages !== 'object' || Object.keys(messages).length === 0) {
       console.warn(`i18n.ts: Messages for locale "${locale}" are empty or invalid after import. Using ultimate English fallback.`);
       messages = i18nUltimateFallbackMessages;
     }
   } catch (error) {
+    // This catch block handles errors during the dynamic import (e.g., file not found)
     console.error(`i18n.ts: Failed to load messages for locale "${locale}". Error:`, error, `Using ultimate English fallback.`);
     messages = i18nUltimateFallbackMessages;
   }
-
+  
   return {
     messages
   };
 });
+
+
+    

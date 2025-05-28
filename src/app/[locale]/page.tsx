@@ -4,12 +4,12 @@ import { useTranslations } from 'next-intl';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
-import { Search, ArrowRight, CheckCircle, Users, FileText, Scale } from 'lucide-react'; // Added Scale for legal
-import { sampleCategories, sampleServices } from '@/lib/placeholder-data';
+import { Search, ArrowRight, CheckCircle, Users, FileText, Scale, Star } from 'lucide-react'; // Added Scale for legal, Star
+import { sampleCategoriesData, sampleServicesData } from '@/lib/placeholder-data'; // Corrected import names
 import Image from 'next/image';
 import { Link } from '@/navigation';
 import { AppHeader } from '@/components/app-header';
-import { AppFooter } from '@/components/app-footer'; // To be created
+import { AppFooter } from '@/components/app-footer'; 
 import type { MarketplaceCategory, MarketplaceService } from '@/lib/types';
 import { useLocale } from 'next-intl';
 
@@ -113,7 +113,7 @@ export default function MarketplaceHomepage() {
           <div className="container">
             <h2 className="text-3xl font-bold mb-10 text-center">{t('categoriesTitle')}</h2>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8">
-              {sampleCategories.filter(c => c.is_active).slice(0,3).map(category => ( // Show top 3 categories
+              {sampleCategoriesData.filter(c => c.is_active).slice(0,3).map(category => ( // Show top 3 categories, corrected variable name
                 <CategoryCard key={category.id} category={category} />
               ))}
             </div>
@@ -129,7 +129,7 @@ export default function MarketplaceHomepage() {
           <div className="container">
             <h2 className="text-3xl font-bold mb-10 text-center">{t('featuredServicesTitle')}</h2>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 md:gap-8">
-              {sampleServices.slice(0, 4).map(service => (
+              {sampleServicesData.slice(0, 4).map(service => ( // Corrected variable name
                 <ServiceCard key={service.id} service={service} />
               ))}
             </div>
@@ -174,3 +174,4 @@ export default function MarketplaceHomepage() {
     </div>
   );
 }
+
