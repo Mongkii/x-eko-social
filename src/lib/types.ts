@@ -10,11 +10,10 @@ export interface MarketplaceCategory {
   description_ar?: string;
   is_active: boolean;
   imageUrl?: string; 
-  dataAiHint?: string; 
+  dataAiHint?: string; // For placeholder image generation hints
 }
 
-// Based on BRD: marketplace.services (within categories collection in BRD, but often a top-level collection too)
-// For simplicity, I'll treat services as potentially queryable across categories.
+// Based on BRD: marketplace.services
 export interface MarketplaceService {
   id: string; // service_id
   provider_id: string; // Reference to providers collection
@@ -34,11 +33,12 @@ export interface MarketplaceService {
   review_count?: number;
 
   main_image_url?: string;
-  dataAiHint?: string;
+  dataAiHint?: string; // For placeholder image generation hints
 
-  // Denormalized provider info for easier listing
-  provider_name?: string;
+  // Denormalized provider info for easier listing - useful for service cards
+  provider_name?: string; // Could be firm name or individual
   provider_avatar_url?: string;
+  dataAiHintProvider?: string;
 }
 
 // Based on BRD: providers
@@ -50,7 +50,7 @@ export interface LegalProvider {
   bio_ar?: string;
   avatar_url?: string;
   dataAiHint?: string;
-  license_number?: string; // Can be an array if multiple jurisdictions
+  license_number?: string; 
   qualifications?: string[]; // e.g., ["JD", "LLM in International Law", "Bar Member (Riyadh)"]
   service_category_ids?: string[]; // Array of category_ids they serve
   languages_spoken?: string[]; // e.g., ['en', 'ar', 'fr']
@@ -62,7 +62,6 @@ export interface LegalProvider {
   overall_rating?: number;
   total_reviews?: number;
   member_since?: string; // ISO Date string
-  // services_offered: This is represented by MarketplaceService documents linking to this provider_id
 }
 
 // Based on BRD: orders
@@ -82,9 +81,6 @@ export interface MarketplaceOrder {
   price_paid?: number;
   currency_paid?: string;
   payment_id?: string; // e.g., Stripe Charge ID
-  
-  // For document uploads, typically a subcollection or links to Cloud Storage paths
-  // uploaded_documents_meta?: Array<{ name: string, path: string, uploadedAt: string }>;
 }
 
 export interface ServiceReview {
@@ -94,7 +90,8 @@ export interface ServiceReview {
   user_id: string;
   provider_id: string;
   user_name?: string; // Denormalized
-  user_avatar_url?: string;
+  user_avatar_url?: string; // Denormalized
+  dataAiHintUser?: string;
   rating: number; // 1-5
   comment?: string;
   created_at: string; // ISO Date string

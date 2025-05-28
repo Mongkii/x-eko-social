@@ -1,3 +1,4 @@
-// This file is deleted. Its content is moved to src/app/saved-eko-drops/page.tsx.
+
+// This file is deleted.
 // Placeholder for deletion.
 export {};

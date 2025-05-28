@@ -8,9 +8,11 @@ import { ThemeProvider } from "@/components/theme-provider";
 import { FontSizeProvider } from '@/contexts/font-size-context';
 import { cn } from '@/lib/utils';
 
+// Metadata will be handled by the [locale]/layout.tsx for localized titles.
+// This RootLayout can have generic metadata if needed.
 export const metadata: Metadata = {
-  title: 'إيكو: شبكة التواصل الصوتي', // Arabic: Eko: Voice Social Network
-  description: 'إيكو - شبكتك الاجتماعية الصوتية الأولى.', // Arabic: Eko - Your voice-first social network.
+  title: 'Ameenee Marketplace', // Generic title
+  description: 'Legal services marketplace by Ameenee.',
 };
 
 export default function RootLayout({
@@ -18,8 +20,9 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  // The lang and dir attributes will be set in [locale]/layout.tsx
   return (
-    <html lang="ar" dir="rtl" className={cn("h-full", GeistSans.variable, GeistMono.variable)} suppressHydrationWarning>
+    <html lang="en" dir="ltr" className={cn("h-full", GeistSans.variable, GeistMono.variable)} suppressHydrationWarning>
       <body className="antialiased h-full flex flex-col bg-background text-foreground">
         <ThemeProvider
           attribute="class"

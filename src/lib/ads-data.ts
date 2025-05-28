@@ -1,3 +1,4 @@
-// This file is no longer needed (replaced by placeholder-data.ts for Ameenee).
-// Placeholder for deletion.
+
+// This file is no longer needed for the Ameenee Marketplace project.
+// Placeholder for deletion. Marketplace data is in placeholder-data.ts.
 export {};

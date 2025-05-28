@@ -59,3 +59,16 @@ export default async function LocaleLayout({
     </NextIntlClientProvider>
   );
 }
+
+// It's good practice to set metadata in the layout closest to the page
+// that defines the language.
+export async function generateMetadata({ params: { locale } }: { params: { locale: Locale }}) {
+  // You can fetch translated metadata here if needed
+  // For now, a simple example:
+  const title = locale === 'ar' ? "أميني ماركت بليس" : "Ameenee Marketplace";
+  const description = locale === 'ar' ? "سوق الخدمات القانونية." : "Legal Services Marketplace.";
+  return {
+    title,
+    description,
+  };
+}

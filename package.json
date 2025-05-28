@@ -1,10 +1,9 @@
-
 {
-  "name": "eko-voice-social",
+  "name": "ameenee-marketplace",
   "version": "1.0.0",
   "private": true,
   "scripts": {
-    "dev": "next dev --turbopack -p 9000",
+    "dev": "next dev --turbopack -p 6000",
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
@@ -40,7 +39,6 @@
     "next": "15.2.3",
     "next-intl": "^3.17.2",
     "next-themes": "^0.3.0",
-    "openai": "^4.53.2",
     "react": "^18.3.1",
     "react-day-picker": "^8.10.1",
     "react-dom": "^18.3.1",

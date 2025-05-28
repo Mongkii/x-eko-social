@@ -3,149 +3,221 @@ import {notFound} from 'next/navigation';
 import {getRequestConfig} from 'next-intl/server';
 import type {AbstractIntlMessages} from 'next-intl';
 
-// Define your supported locales
-export const locales = ['en', 'ar', 'es', 'ur', 'fr', 'de', 'hi', 'zh', 'tl'] as const;
+// Define your supported locales based on BRD V1 (English & Arabic)
+export const locales = ['en', 'ar'] as const;
 export type Locale = (typeof locales)[number];
 export const defaultLocale: Locale = 'en';
 
-// Define a comprehensive fallback message object directly in this file.
+// Define a comprehensive fallback message object directly in this file for English.
 // This structure should mirror your en.json to ensure all keys are present.
+// This will be used if a specific locale's file is missing or corrupt.
 export const i18nUltimateFallbackMessages: AbstractIntlMessages = {
   Global: {
-    appName: "Eko",
-    ratingSubmittedToastTitle: "Rating Submitted! (Fallback)",
-    ratingSubmittedToastDescription: "You rated \"{title}\" {rating} stars. (Fallback)",
-    likedToastTitle: "Liked! (Fallback)",
-    likedToastDescription: "You liked \"{title}\". (Fallback)",
-    unlikedToastTitle: "Unliked! (Fallback)",
-    unlikedToastDescription: "You unliked \"{title}\". (Fallback)",
-    dislikedToastTitle: "Disliked! (Fallback)",
-    dislikedToastDescription: "You disliked \"{title}\". (Fallback)",
-    dislikeRemovedToastTitle: "Dislike removed! (Fallback)",
-    dislikeRemovedToastDescription: "Removed dislike for \"{title}\". (Fallback)",
-    followedCategoryToastTitle: "Followed Category! (Fallback)",
-    followedCategoryToastDescription: "Following {category}. (Fallback)",
-    unfollowedCategoryToastTitle: "Unfollowed Category! (Fallback)",
-    unfollowedCategoryToastDescription: "Unfollowed {category}. (Fallback)"
-  },
-  HomePage: {
-    aiMagicToastTitle: "AI Magic ✨ (Fallback)",
-    aiMagicToastDescription: "Personalizing your feed... (Fallback)",
-    aiPersonalizationErrorToastTitle: "AI Personalization Error (Fallback)",
-    aiPersonalizationErrorToastDescription: "Could not personalize feed at this time. (Fallback)",
-    aiFeedPersonalizedToastTitle: "AI Feed Personalization (Simulated) (Fallback)",
-    aiFeedPersonalizedToastDescription: "Your feed has been updated based on your interactions. (Fallback)",
-    noFeedItems: "No EkoDrops in your feed yet. Explore or create! (Fallback)",
-    billingSectionTitle: "Eko+ & In-App Purchases (Fallback)",
-    billingSectionDescription: "Manage your subscription and get cool extras! (Fallback)",
-    subscriptionStatus: "Subscription Status (Fallback)",
-    premiumActive: "Eko+ Premium Active (Fallback)",
-    notSubscribed: "Not Subscribed to Eko+ (Fallback)",
-    subscribeToPremium: "Subscribe to Eko+ (Fallback)",
-    availableInAppItems: "Available In-App Items (Fallback)",
-    processingSubscription: "Processing Subscription... (Fallback)",
-    pleaseWait: "Please wait a moment. (Fallback)",
-    subscriptionSuccessful: "Subscription Successful! (Fallback)",
-    youAreNowSubscribed: "You are now an Eko+ subscriber. (Fallback)",
-    subscriptionFailed: "Subscription Failed (Fallback)",
-    couldNotCompleteSubscription: "We could not complete your subscription. Please try again. (Fallback)",
-    subscriptionError: "Subscription Error (Fallback)",
-    mobileBridgeNotFound: "Mobile App Bridge Not Found (Fallback)",
-    featureOnlyInMobileApp: "This feature is only available in the mobile app. (Fallback)",
-    purchasingItem: "Purchasing {title}... (Fallback)",
-    purchaseSuccessful: "Purchase Successful! (Fallback)",
-    youHavePurchasedItem: "You have successfully purchased {title}. (Fallback)",
-    purchaseFailed: "Purchase Failed (Fallback)",
-    couldNotPurchaseItem: "Could not complete the purchase for {title}. (Fallback)",
-    purchaseError: "Purchase Error (Fallback)",
-    subscriptionUpdated: "Subscription Status Updated (Fallback)",
-    subscriptionStatusNow: "Your Eko+ subscription is now {status}. (Fallback)",
-    statusActive: "Active (Fallback)",
-    statusInactive: "Inactive (Fallback)"
+    appName: "Ameenee Marketplace",
+    searchPlaceholder: "Search for legal services...",
+    viewAll: "View All",
+    loading: "Loading...",
+    error: "An error occurred.",
+    goBack: "Go Back",
+    submit: "Submit",
+    save: "Save",
+    cancel: "Cancel",
+    bookNow: "Book Now",
+    sendMessage: "Send Message",
+    readMore: "Read More",
+    readLess: "Read Less",
+    requiredField: "This field is required.",
+    // Common status
+    statusPending: "Pending",
+    statusInProgress: "In Progress",
+    statusCompleted: "Completed",
+    statusCancelled: "Cancelled",
+    statusApproved: "Approved",
+    statusRejected: "Rejected",
+    statusSuspended: "Suspended",
   },
   AppHeader: {
-    appName: "Eko (Fallback)",
-    savedEkoDropsTooltip: "Saved EkoDrops (Fallback)",
-    personalizeFeedTooltip: "Personalize My Feed (AI) (Fallback)",
-    settingsTooltip: "Settings (Fallback)",
-    languageLabel: "Language (Fallback)",
-    fontSizeLabel: "Font Size (Fallback)",
-    themeLabel: "Theme (Fallback)"
+    appName: "Ameenee Marketplace",
+    home: "Home",
+    services: "Services",
+    becomeAProvider: "Become a Provider",
+    dashboard: "Dashboard",
+    admin: "Admin Panel",
+    login: "Login",
+    logout: "Logout",
+    settings: "Settings",
+    theme: "Theme",
+    fontSize: "Font Size",
+    language: "Language",
   },
-  FeedItemCard: {
-    voicePost: "Voice Post (Fallback)",
-    adBadge: "Ad (Fallback)",
-    sponsoredBy: "Sponsored by {advertiser} (Fallback)",
-    noDescription: "No description available. (Fallback)",
-    postedDate: "Posted {date} (Fallback)",
-    byUser: "by (Fallback)",
-    durationLabel: "Duration (Fallback)",
-    categoriesLabel: "Categories (Fallback)",
-    rateThisAdLabel: "Rate this Ad (Fallback)",
-    rateThisContentLabel: "Rate this EkoDrop (Fallback)",
-    dislikeAction: "Dislike (Fallback)",
-    likeAction: "Like (Fallback)",
-    commentAction: "Comment (Fallback)",
-    shareAction: "Share (Fallback)",
-    noMedia: "No audio for this EkoDrop. (Fallback)",
-    dateUnknown: "a while ago (Fallback)",
-    dateInvalid: "an invalid date (Fallback)",
-    dateRecently: "recently (Fallback)",
-    watchRewardedAdButton: "Watch Ad for Reward (Fallback)"
+  AppFooter: {
+    copyright: "© {year} Ameenee Marketplace. All rights reserved.",
+    aboutUs: "About Us",
+    contactUs: "Contact Us",
+    termsOfService: "Terms of Service",
+    privacyPolicy: "Privacy Policy",
+    faq: "FAQ",
   },
-  ThemeToggleSwitch: {
-    switchToLightTheme: "Switch to Light Theme (Fallback)",
-    switchToDarkTheme: "Switch to Dark Theme (Fallback)",
-    systemTheme: "System (Fallback)"
+  HomePage: {
+    heroTitle: "Find Trusted Legal Services, Globally.",
+    heroSubtitle: "Your partner for accessible and reliable legal expertise.",
+    categoriesTitle: "Service Categories",
+    featuredServicesTitle: "Featured Services",
+    howItWorksTitle: "How It Works",
+    step1Title: "Browse Services",
+    step1Description: "Explore categories or search for specific legal needs.",
+    step2Title: "Book Securely",
+    step2Description: "Choose a provider, upload documents, and pay securely.",
+    step3Title: "Track Progress",
+    step3Description: "Monitor your service progress and communicate with your advisor.",
+    becomeProviderTitle: "Are you a Legal Advisor?",
+    becomeProviderAction: "Join Our Network",
   },
-  SavedEkoDropsPage: {
-    backToFeed: "Back to Feed (Fallback)",
-    mySavedAds: "My Saved EkoDrops (Fallback)",
-    errorLoadingSavedAds: "Error: Could not load saved EkoDrops. (Fallback)",
-    infoToastTitle: "Info (Fallback)",
-    personalizeInfoDescription: "Feed personalization is available on the main feed page. (Fallback)",
-    unlikedAndRemovedToastDescription: "You unliked \"{title}\". It has been removed from your saved EkoDrops. (Fallback)",
-    dislikedAndRemovedToastDescription: "You disliked \"{title}\". It has been removed from your saved EkoDrops. (Fallback)",
-    noSavedAdsYet: "You haven't saved any EkoDrops yet. (Fallback)",
-    likeAdToSave: "Like an EkoDrop in the main feed to save it here! (Fallback)"
+  ServiceListingPage: { // For /services and /services/[categoryId]
+    pageTitleAllServices: "All Legal Services",
+    pageTitleInCategory: "Services in {categoryName}",
+    noServicesFound: "No services found matching your criteria.",
+    filterByPrice: "Filter by Price",
+    filterByRating: "Filter by Rating",
+    filterByLocation: "Filter by Location (Coming Soon)",
   },
-  AdMobBanner: {
-    demoBannerTitle: "AdMob Demo Banner (Fallback)",
-    demoBannerDescription: "This is a simulation of an AdMob banner ad. (Fallback)",
-    adUnitIdLabel: "Ad Unit ID: (Fallback)"
+  ServiceDetailPage: {
+    overview: "Overview",
+    aboutProvider: "About the Provider",
+    providerDetails: "Provider Details",
+    reviews: "Reviews ({count})",
+    bookThisService: "Book This Service",
+    price: "Price:",
+    turnaroundTime: "Estimated Turnaround:",
+    noReviewsYet: "No reviews yet for this service.",
+    loginToBook: "Please login to book this service.",
+    bookingSuccessTitle: "Booking Initiated!",
+    bookingSuccessDescription: "Your service request has been sent. You will be notified once the provider accepts.",
+    bookingErrorTitle: "Booking Failed",
+    bookingErrorDescription: "Could not initiate booking. Please try again.",
   },
-  LanguageSwitcher: {
-    selectLanguageLabel: "Select Language (Fallback)"
+  ProviderProfilePage: {
+    memberSince: "Member Since {date}",
+    languagesSpoken: "Languages Spoken:",
+    qualifications: "Qualifications:",
+    servicesOffered: "Services Offered:",
+    overallRating: "Overall Rating:",
+    contactProvider: "Contact Provider",
+  },
+  UserDashboardPage: {
+    pageTitle: "My Dashboard",
+    myOrders: "My Orders",
+    myDocuments: "My Documents (Coming Soon)",
+    accountSettings: "Account Settings",
+    noOrdersYet: "You haven't booked any services yet.",
+  },
+  ProviderOnboardingPage: {
+    pageTitle: "Become a Provider on Ameenee Marketplace",
+    formTitle: "Provider Application Form",
+    fullNameLabel: "Full Name / Firm Name",
+    emailLabel: "Contact Email",
+    bioLabel: "Biography / Firm Overview",
+    licenseNumberLabel: "License Number & Issuing Authority",
+    qualificationsLabel: "Key Qualifications (comma-separated)",
+    serviceCategoriesLabel: "Service Categories You Offer",
+    languagesSpokenLabel: "Languages Spoken (comma-separated)",
+    countryLabel: "Country of Practice",
+    cityLabel: "Primary City of Practice",
+    agreeToTermsLabel: "I agree to the <termsLink>Terms & Conditions</termsLink> and <privacyLink>Privacy Policy</privacyLink> of Ameenee Marketplace.",
+    applicationSubmittedTitle: "Application Submitted Successfully!",
+    applicationSubmittedDescription: "Thank you for applying. Our team will review your application and contact you.",
+    applicationErrorTitle: "Application Error",
+    applicationErrorDescription: "Failed to submit application. Please try again.",
+  },
+  ProviderDashboardPage: {
+    pageTitle: "Provider Dashboard",
+    manageServices: "Manage My Services",
+    activeOrders: "Active Orders",
+    earnings: "Earnings",
+    profileSettings: "Profile Settings",
+    availability: "Availability Calendar",
+  },
+  AdminLayout: {
+    adminPanelTitle: "Ameenee Admin",
+    dashboard: "Dashboard",
+    providerManagement: "Providers",
+    categoryManagement: "Categories",
+    disputeResolution: "Disputes",
+  },
+  AdminDashboardPage: {
+    pageTitle: "Admin Analytics Dashboard",
+    description: "Overview of marketplace performance.",
+  },
+  AdminProvidersPage: {
+    pageTitle: "Provider Management",
+    approveAction: "Approve",
+    rejectAction: "Reject",
+    suspendAction: "Suspend",
+    providerApprovedToast: "Provider {providerId} approved.",
+    providerRejectedToast: "Provider {providerId} rejected.",
+    providerSuspendedToast: "Provider {providerId} suspended.",
+    errorUpdatingProvider: "Error updating provider status.",
+  },
+  AdminCategoriesPage: {
+    pageTitle: "Category Management",
+    addNewCategory: "Add New Category",
+    editCategory: "Edit Category",
+    categoryNameEnLabel: "Category Name (English)",
+    categoryNameArLabel: "Category Name (Arabic)",
+    categoryDescriptionEnLabel: "Description (English)",
+    categoryDescriptionArLabel: "Description (Arabic)",
+    categoryIsActiveLabel: "Is Active",
+    categoryImageUrlLabel: "Image URL (Optional)",
+    categorySavedSuccess: "Category saved successfully.",
+    categorySaveError: "Failed to save category.",
+    categoryDeleteConfirmTitle: "Confirm Deletion",
+    categoryDeleteConfirmText: "Are you sure you want to delete/deactivate this category?",
+    categoryDeletedSuccess: "Category status updated/deleted.",
+    categoryDeleteError: "Failed to update category status.",
+  },
+  ThemeToggle: {
+    light: "Light",
+    dark: "Dark",
+    system: "System",
   },
   FontSizeSwitcher: {
-    small: "Small (Fallback)",
-    medium: "Medium (Fallback)",
-    large: "Large (Fallback)"
-  }
+    small: "Small",
+    medium: "Medium",
+    large: "Large",
+  },
+  LanguageSwitcher: {
+    selectLanguage: "Select Language",
+  },
 };
 
 export default getRequestConfig(async ({locale}) => {
   // Validate that the incoming `locale` parameter is a valid locale
   if (!locales.includes(locale as any)) {
-    console.warn(`i18n.ts: Invalid locale "${locale}" requested. Calling notFound().`);
+    console.warn(`i18n.ts: Invalid locale "${locale}" requested from URL params. Calling notFound().`);
     notFound();
   }
 
   let messages;
   try {
     // Dynamically import the message file for the requested locale
-    // The `default` is important here because the JSON files are CJS modules
     messages = (await import(`./messages/${locale}.json`)).default;
     
     if (!messages || typeof messages !== 'object' || Object.keys(messages).length === 0) {
-      console.warn(`i18n.ts: Messages for locale "${locale}" are empty or invalid after import. Using ultimate fallback messages.`);
+      console.warn(`i18n.ts: Messages for locale "${locale}" are empty or invalid after import. Using ultimate English fallback messages.`);
       messages = i18nUltimateFallbackMessages;
     }
   } catch (error) {
-    console.error(`i18n.ts: Could not load messages for locale "${locale}". Error: ${error}. Using ultimate fallback messages.`);
+    console.error(`i18n.ts: Could not load messages for locale "${locale}". Error: ${error}. Using ultimate English fallback messages.`);
+    // If even the dynamic import fails, use the hardcoded ultimate fallback
     messages = i18nUltimateFallbackMessages;
   }
   
+  // If after all fallbacks, messages are still critically empty (e.g., i18nUltimateFallbackMessages was somehow corrupted)
+  if (!messages || typeof messages !== 'object' || Object.keys(messages).length === 0) {
+    console.error(`i18n.ts: CRITICAL - Messages for locale "${locale}" are still empty even after all fallbacks. This indicates a severe issue. Propagating notFound.`);
+    notFound();
+  }
+
   return {
     messages: messages as AbstractIntlMessages,
   };
