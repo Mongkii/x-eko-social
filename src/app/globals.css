@@ -4,7 +4,7 @@
 @tailwind utilities;
  
 :root {
-  /* Light Theme - Professional & Neutral for Ameenee */
+  /* Light Theme - Eko (Modern, Clean, Voice-centric) */
   --background: 0 0% 100%; /* White */
   --foreground: 224 71.4% 4.1%; /* Almost Black */
   
@@ -14,8 +14,9 @@
   --popover: 0 0% 100%;
   --popover-foreground: 224 71.4% 4.1%;
   
-  --primary: 217 91% 60%; /* Standard Blue - Can be Ameenee's primary branding color */
-  --primary-foreground: 0 0% 100%; /* White */
+  /* Eko Primary - A vibrant, modern blue or teal, good for voice/audio tech */
+  --primary: 200 85% 50%; /* Example: Vibrant Blue */
+  --primary-foreground: 0 0% 100%; /* White text on primary */
   
   --secondary: 215 28% 96%; /* Very Light Grey */
   --secondary-foreground: 224 71.4% 4.1%;
@@ -23,7 +24,8 @@
   --muted: 215 28% 92%; /* Light Grey */
   --muted-foreground: 215 20% 45%; /* Muted Text Grey */
   
-  --accent: 45 95% 53%; /* Gold/Orange - Ameenee Accent, adjust as needed */
+  /* Eko Accent - A contrasting color for highlights, CTAs */
+  --accent: 30 95% 55%; /* Example: Bright Orange or Yellow for energy */
   --accent-foreground: 224 71.4% 4.1%; /* Dark text on accent */
   
   --destructive: 0 84.2% 60.2%; /* Red */
@@ -31,9 +33,12 @@
   
   --border: 215 28% 88%; /* Border Grey */
   --input: 215 28% 88%;
-  --ring: 217 91% 60%; /* Focus Ring Blue */
+  --ring: 200 85% 55%; /* Focus Ring - matching primary */
   
   --radius: 0.5rem;
+
+  /* Default font size variable - Can be overridden by FontSizeProvider */
+  --default-font-size: 1rem; /* Corresponds to 'md' or 16px */
 }
  
 .dark {
@@ -46,7 +51,8 @@
   --popover: 224 71.4% 4.1%;
   --popover-foreground: 0 0% 98%;
 
-  --primary: 45 95% 58%; /* Brighter Gold/Orange for Dark Mode Primary */
+  /* Eko Dark Primary - A brighter version of the light theme primary or the accent */
+  --primary: 30 95% 60%;  /* Example: Brighter Orange/Yellow becomes primary in dark */
   --primary-foreground: 224 71.4% 4.1%; /* Dark text on primary */
 
   --secondary: 215 28% 15%; /* Dark Grey */
@@ -55,7 +61,8 @@
   --muted: 215 28% 15%;
   --muted-foreground: 215 20% 65%;
 
-  --accent: 210 40% 96.1%; /* Light Grey for Dark Mode Accent */
+  /* Eko Dark Accent - The light theme primary can be the accent here */
+  --accent: 200 80% 55%; /* Example: Brighter Blue as accent */
   --accent-foreground: 224 71.4% 4.1%;
 
   --destructive: 0 72% 51%; /* Darker Red */
@@ -63,7 +70,7 @@
 
   --border: 215 28% 20%; /* Darker Border Grey */
   --input: 215 28% 20%;
-  --ring: 45 95% 58%; /* Gold/Orange Ring for Dark Mode */
+  --ring: 30 95% 60%; /* Matching dark primary for focus ring */
 }
  
 @layer base {
@@ -73,10 +80,34 @@
   body {
     @apply bg-background text-foreground;
     font-family: var(--font-geist-sans);
+    /* Apply the default font size via CSS variable controlled by FontSizeProvider */
+    font-size: var(--default-font-size);
+  }
+
+  /* Classes for font size switching */
+  html.font-size-sm {
+    --default-font-size: 0.875rem; /* 14px for 'small' - Tailwind's text-sm */
+  }
+  html.font-size-md {
+    --default-font-size: 1rem;    /* 16px for 'medium' - Tailwind's text-base */
+  }
+  html.font-size-lg {
+    --default-font-size: 1.125rem; /* 18px for 'large' - Tailwind's text-lg */
   }
 }
 
 html, body, #__next {
   height: 100%;
-  overflow-x: hidden; /* Prevent horizontal scrollbars by default */
+  /* overflow-x: hidden; /* Prevent horizontal scrollbars by default - commented out for potential main content scroll */
+}
+
+/* Ensure body takes full height for gradient backgrounds etc. */
+body {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+main {
+  flex-grow: 1;
 }
