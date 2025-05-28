@@ -157,6 +157,7 @@
     "categoryUpdatedMsg": "Category updated successfully."
   },
   "AppHeader": {
+    "appName": "Ameenee",
     "marketplace": "Marketplace",
     "becomeProvider": "Become a Provider",
     "admin": "Admin Panel",
