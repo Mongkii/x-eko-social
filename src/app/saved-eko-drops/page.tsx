@@ -1,7 +1,2 @@
-
-import { redirect } from 'next/navigation';
-import { defaultLocale } from '@/i18n';
-
-export default function RootSavedEkoDropsPage() {
-  redirect(`/${defaultLocale}/saved-eko-drops`);
-}
+// This file is deleted for the new marketplace structure.
+// Placeholder for deletion.

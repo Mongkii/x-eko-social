@@ -1,16 +1,15 @@
-
 "use client";
 
-import { usePathname, useRouter, Link } from '@/navigation';
+import { usePathname, useRouter } from '@/navigation';
 import { useLocale, useTranslations } from 'next-intl';
 import { locales, type Locale } from '@/i18n';
+import { Button } from "@/components/ui/button"
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
 import { Languages } from 'lucide-react';
 
 export function LanguageSwitcher() {
@@ -33,26 +32,24 @@ export function LanguageSwitcher() {
     hi: t('hindi'),
     zh: t('chinese'),
     tl: t('tagalog'),
-    ru: t('russian'),
+    // ru: t('russian'), // Removed as per BRD
   };
 
   return (
-    <div className="px-2 py-1.5">
-      <Select value={locale} onValueChange={onSelectChange}>
-        <SelectTrigger className="w-full h-8 text-xs">
-          <div className="flex items-center gap-2">
-            <Languages size={14} />
-            <SelectValue placeholder={t('selectLanguagePlaceholder')} />
-          </div>
-        </SelectTrigger>
-        <SelectContent>
-          {locales.map((loc) => (
-            <SelectItem key={loc} value={loc} className="text-xs">
-              {languageNames[loc]}
-            </SelectItem>
-          ))}
-        </SelectContent>
-      </Select>
-    </div>
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <Button variant="ghost" size="sm" className="w-full justify-start text-sm">
+          <Languages className="h-[1.2rem] w-[1.2rem]" />
+          <span className="ml-2">{languageNames[locale]}</span>
+        </Button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="end">
+        {locales.map((loc) => (
+          <DropdownMenuItem key={loc} onClick={() => onSelectChange(loc)} disabled={loc === locale}>
+            {languageNames[loc]}
+          </DropdownMenuItem>
+        ))}
+      </DropdownMenuContent>
+    </DropdownMenu>
   );
 }

@@ -3,18 +3,11 @@
 
 import { AppLogoIcon } from '@/components/icons/app-logo-icon';
 import { Button } from '@/components/ui/button';
-import { ThemeToggleSwitch } from '@/components/theme-toggle-switch';
-import { Bookmark, Wand2, Settings } from 'lucide-react';
-import { useTranslations } from 'next-intl';
-import { Link } from '@/navigation';
+import { ThemeToggle } from '@/components/theme-toggle';
 import { LanguageSwitcher } from '@/components/language-switcher';
-import { FontSizeSwitcher } from '@/components/font-size-switcher';
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
+import { Briefcase, LayoutDashboard, LogIn, LogOut, UserCircle, Settings, ShieldCheck, UserPlus } from 'lucide-react';
+import { useTranslations } from 'next-intl';
+import { Link, usePathname } from '@/navigation';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -24,108 +17,170 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { useToast } from '@/hooks/use-toast'; // Import useToast
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { useState, useEffect } from 'react'; // For simulated auth state
+import type { User } from '@/lib/types';
+import { sampleUserData, sampleAdminUserData, sampleProviderUserData } from '@/lib/placeholder-data'; // For simulation
 
-interface AppHeaderProps {
-  onPersonalize: () => Promise<void> | void; // Keep this prop for flexibility if needed elsewhere
-}
+// Simulate auth context for demo purposes
+const useAuth = () => {
+  const [currentUser, setCurrentUser] = useState<User | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
 
-export function AppHeader({ onPersonalize }: AppHeaderProps) {
-  const t = useTranslations('AppHeader');
-  const tHomePage = useTranslations('HomePage'); // For AI personalization toast
-  const tGlobal = useTranslations('Global');
-  const { toast } = useToast(); // Initialize toast
+  useEffect(() => {
+    // Simulate fetching user data. In a real app, this would come from Firebase Auth.
+    // To test different roles, uncomment one of these:
+    // setCurrentUser(sampleUserData);
+    // setCurrentUser(sampleAdminUserData);
+    // setCurrentUser(sampleProviderUserData);
+    setCurrentUser(null); // Default to logged out
+    setIsLoading(false);
+  }, []);
 
-  const handlePersonalizeClick = async () => {
-    // As per BRD, AI personalization is backend. This is a UI placeholder.
-    toast({ 
-      title: tHomePage('aiMagicToastTitle'), 
-      description: tHomePage('aiMagicToastDescription') 
-    });
-    // Simulate some action if needed for UI feedback
-    await new Promise(resolve => setTimeout(resolve, 1000));
-    toast({
-      title: tHomePage('aiFeedPersonalizedToastTitle'),
-      description: tHomePage('aiFeedPersonalizedToastDescription')
-    });
+  const loginAs = (role: 'user' | 'admin' | 'provider') => {
+    if (role === 'user') setCurrentUser(sampleUserData);
+    else if (role === 'admin') setCurrentUser(sampleAdminUserData);
+    else if (role === 'provider') setCurrentUser(sampleProviderUserData);
   };
+  const logout = () => setCurrentUser(null);
+
+  return { currentUser, isLoading, loginAs, logout };
+};
+
+
+export function AppHeader() {
+  const t = useTranslations('AppHeader');
+  const tGlobal = useTranslations('Global');
+  const pathname = usePathname();
+  const { currentUser, isLoading, loginAs, logout } = useAuth();
+
+  if (isLoading) {
+    return (
+      <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+        <div className="container flex h-16 items-center animate-pulse">
+          <div className="h-8 w-24 bg-muted rounded"></div>
+          <div className="ml-auto flex items-center space-x-2">
+            <div className="h-8 w-24 bg-muted rounded"></div>
+            <div className="h-8 w-8 bg-muted rounded-full"></div>
+          </div>
+        </div>
+      </header>
+    );
+  }
+  
+  // Hide header for auth pages or specific simple pages if needed
+  if (pathname.startsWith('/auth')) { // Example: hide on auth pages
+      return null;
+  }
 
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-      <div className="container flex h-14 items-center">
-        <Link href="/" className="mr-auto flex items-center space-x-2">
-          <AppLogoIcon className="h-6 w-6 text-primary" />
-          <span className="font-bold sm:inline-block text-primary">
+      <div className="container flex h-16 items-center">
+        <Link href="/" className="mr-6 flex items-center space-x-2">
+          <AppLogoIcon className="h-7 w-7 text-primary" />
+          <span className="font-bold text-lg sm:inline-block text-primary">
             {tGlobal('appName')}
           </span>
         </Link>
-        <nav className="flex items-center space-x-1 sm:space-x-2">
-          <TooltipProvider>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button variant="ghost" size="icon" asChild className="h-9 w-9">
-                  <Link href="/saved-eko-drops">
-                    <Bookmark className="h-5 w-5" />
-                    <span className="sr-only">{t('savedEkoDropsTooltip')}</span>
+        
+        <nav className="hidden md:flex items-center space-x-6 text-sm font-medium">
+          <Link href="/services" className="text-muted-foreground transition-colors hover:text-foreground">
+            {t('marketplace')}
+          </Link>
+          {!currentUser?.isProvider && (
+            <Link href="/provider/onboarding" className="text-muted-foreground transition-colors hover:text-foreground">
+              {t('becomeProvider')}
+            </Link>
+          )}
+        </nav>
+
+        <div className="ml-auto flex items-center space-x-2 sm:space-x-4">
+          {currentUser ? (
+            <>
+              {currentUser.isProvider && (
+                <Button variant="outline" size="sm" asChild>
+                  <Link href="/provider/dashboard">
+                    <Briefcase className="mr-2 h-4 w-4" /> {t('providerDashboard')}
                   </Link>
                 </Button>
-              </TooltipTrigger>
-              <TooltipContent>
-                <p>{t('savedEkoDropsTooltip')}</p>
-              </TooltipContent>
-            </Tooltip>
-          </TooltipProvider>
-
-          <TooltipProvider>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button onClick={handlePersonalizeClick} variant="ghost" size="icon" className="h-9 w-9">
-                  <Wand2 className="h-5 w-5" />
-                  <span className="sr-only">{t('personalizeFeedTooltip')}</span>
+              )}
+              {currentUser.isAdmin && (
+                 <Button variant="outline" size="sm" asChild>
+                  <Link href="/admin">
+                    <ShieldCheck className="mr-2 h-4 w-4" /> {t('admin')}
+                  </Link>
                 </Button>
-              </TooltipTrigger>
-              <TooltipContent>
-                <p>{t('personalizeFeedTooltip')}</p>
-              </TooltipContent>
-            </Tooltip>
-          </TooltipProvider>
-          
+              )}
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" className="relative h-9 w-9 rounded-full">
+                    <Avatar className="h-9 w-9">
+                      <AvatarImage src={currentUser.avatarUrl || undefined} alt={currentUser.name || "User"} />
+                      <AvatarFallback>{currentUser.name ? currentUser.name.charAt(0).toUpperCase() : <UserCircle/>}</AvatarFallback>
+                    </Avatar>
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent className="w-56" align="end" forceMount>
+                  <DropdownMenuLabel className="font-normal">
+                    <div className="flex flex-col space-y-1">
+                      <p className="text-sm font-medium leading-none">{currentUser.name || "User"}</p>
+                      {currentUser.email && <p className="text-xs leading-none text-muted-foreground">{currentUser.email}</p>}
+                    </div>
+                  </DropdownMenuLabel>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuGroup>
+                    <DropdownMenuItem asChild>
+                      <Link href="/dashboard">
+                        <LayoutDashboard className="mr-2 h-4 w-4" />
+                        <span>{t('myDashboard')}</span>
+                      </Link>
+                    </DropdownMenuItem>
+                    {/* Add other user-specific links here */}
+                  </DropdownMenuGroup>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem onClick={() => logout()}>
+                    <LogOut className="mr-2 h-4 w-4" />
+                    <span>{tGlobal('logout')}</span>
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </>
+          ) : (
+            <>
+             {/* Demo login buttons */}
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild><Button variant="outline" size="sm">Login As...</Button></DropdownMenuTrigger>
+                <DropdownMenuContent>
+                  <DropdownMenuItem onClick={() => loginAs('user')}>User</DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => loginAs('provider')}>Provider</DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => loginAs('admin')}>Admin</DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </>
+          )}
+
           <DropdownMenu>
-            <TooltipProvider>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <DropdownMenuTrigger asChild>
-                    <Button variant="ghost" size="icon" className="h-9 w-9">
-                      <Settings className="h-5 w-5" />
-                       <span className="sr-only">{t('settingsTooltip')}</span>
-                    </Button>
-                  </DropdownMenuTrigger>
-                </TooltipTrigger>
-                <TooltipContent>
-                  <p>{t('settingsTooltip')}</p>
-                </TooltipContent>
-              </Tooltip>
-            </TooltipProvider>
+            <DropdownMenuTrigger asChild>
+              <Button variant="ghost" size="icon" className="h-9 w-9">
+                <Settings className="h-5 w-5" />
+                <span className="sr-only">{t('settingsTooltip')}</span>
+              </Button>
+            </DropdownMenuTrigger>
             <DropdownMenuContent className="w-56" align="end">
-              <DropdownMenuLabel>{t('languageLabel')}</DropdownMenuLabel>
+              <DropdownMenuLabel>{t('settingsTooltip')}</DropdownMenuLabel>
+              <DropdownMenuSeparator />
               <DropdownMenuGroup>
-                 <LanguageSwitcher />
+                <DropdownMenuItem asChild className="p-0">
+                  <ThemeToggle />
+                </DropdownMenuItem>
+                <DropdownMenuItem asChild className="p-0">
+                  <LanguageSwitcher />
+                </DropdownMenuItem>
+                {/* Add Font Size Switcher if re-enabled */}
               </DropdownMenuGroup>
-              <DropdownMenuSeparator />
-              <DropdownMenuLabel>{t('fontSizeLabel')}</DropdownMenuLabel>
-               <DropdownMenuGroup>
-                <FontSizeSwitcher />
-              </DropdownMenuGroup>
-              <DropdownMenuSeparator />
-              <DropdownMenuLabel>{t('themeLabel')}</DropdownMenuLabel>
-              <DropdownMenuItem className="focus:bg-transparent focus:text-current hover:bg-transparent">
-                <div className="w-full flex justify-center">
-                   <ThemeToggleSwitch />
-                </div>
-              </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
-        </nav>
+        </div>
       </div>
     </header>
   );

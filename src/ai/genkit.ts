@@ -1,4 +1,2 @@
-
-// This file is no longer needed as Genkit is removed.
-// Placeholder for deletion by the build system.
+// This file is no longer needed. Placeholder for deletion.
 export {};

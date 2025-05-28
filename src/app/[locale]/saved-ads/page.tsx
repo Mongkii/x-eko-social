@@ -1,3 +1,2 @@
-// This file will be deleted.
-// Placeholder to satisfy the XML change format if the file is to be deleted.
-// Its content is moved to src/app/saved-ads/page.tsx.
+// This file is deleted for the new marketplace structure.
+// Placeholder for deletion.

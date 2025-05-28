@@ -2,97 +2,69 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
-
+ 
 :root {
-  /* Font Size Variables */
-  --font-size-sm: 12px;
-  --font-size-md: 16px;
-  --font-size-lg: 20px;
+  /* Light Theme - Professional & Neutral for Ameenee */
+  --background: 0 0% 100%; /* White */
+  --foreground: 224 71.4% 4.1%; /* Almost Black */
   
-  --default-font-size: var(--font-size-md); /* Default to medium */
-
-  /* Light Theme - Blue/Yellow as per previous Eko request */
-  --background: 197 98% 94%; /* Light Blue - #E1F5FE */
-  --foreground: 224 71.4% 10.1%; /* Darker Blue/Grey for text */
-  --card: 0 0% 100%; /* White */
-  --card-foreground: 224 71.4% 10.1%;
+  --card: 0 0% 100%;
+  --card-foreground: 224 71.4% 4.1%;
+  
   --popover: 0 0% 100%;
-  --popover-foreground: 224 71.4% 10.1%;
-  --primary: 12 95% 52%; /* Firered */
+  --popover-foreground: 224 71.4% 4.1%;
+  
+  --primary: 217 91% 60%; /* Standard Blue - Can be Ameenee's primary branding color */
   --primary-foreground: 0 0% 100%; /* White */
-  --secondary: 197 80% 88%; /* Lighter Blue */
-  --secondary-foreground: 197 77% 30%; /* Darker Blue for text on secondary */
-  --muted: 197 30% 88%;
-  --muted-foreground: 197 30% 50%;
-  --accent: 50 100% 55%; /* Vibrant Yellow */
-  --accent-foreground: 28 50% 10%; /* Dark color for high contrast on yellow */
-  --destructive: 0 84.2% 60.2%;
-  --destructive-foreground: 0 0% 98%;
-  --border: 197 60% 85%;
-  --input: 197 70% 90%;
-  --ring: 12 95% 52%; /* Firered for rings */
-  --chart-1: 12 76% 61%;
-  --chart-2: 173 58% 39%;
-  --chart-3: 197 37% 24%;
-  --chart-4: 43 74% 66%;
-  --chart-5: 27 87% 67%;
+  
+  --secondary: 215 28% 96%; /* Very Light Grey */
+  --secondary-foreground: 224 71.4% 4.1%;
+  
+  --muted: 215 28% 92%; /* Light Grey */
+  --muted-foreground: 215 20% 45%; /* Muted Text Grey */
+  
+  --accent: 45 95% 53%; /* Gold/Orange - Ameenee Accent, adjust as needed */
+  --accent-foreground: 224 71.4% 4.1%; /* Dark text on accent */
+  
+  --destructive: 0 84.2% 60.2%; /* Red */
+  --destructive-foreground: 0 0% 100%;
+  
+  --border: 215 28% 88%; /* Border Grey */
+  --input: 215 28% 88%;
+  --ring: 217 91% 60%; /* Focus Ring Blue */
+  
   --radius: 0.5rem;
-
-  /* Sidebar specific colors (can be adjusted later if sidebar design is implemented) */
-  --sidebar-background: 0 0% 98%;
-  --sidebar-foreground: 240 5.3% 26.1%;
-  --sidebar-primary: 240 5.9% 10%;
-  --sidebar-primary-foreground: 0 0% 98%;
-  --sidebar-accent: 240 4.8% 95.9%;
-  --sidebar-accent-foreground: 240 5.9% 10%;
-  --sidebar-border: 220 13% 91%;
-  --sidebar-ring: 217.2 91.2% 59.8%;
 }
  
 .dark {
-  /* Dark Theme - Fire Red to Black Gradient */
-  --background-start-rgb: 200, 20, 20; /* Fire Red approx (adjust for desired intensity) */
-  --background-end-rgb: 0, 0, 0;     /* Black */
+  --background: 224 71.4% 4.1%; /* Almost Black */
+  --foreground: 0 0% 98%; /* Off-white */
 
-  --foreground: 0 0% 98%; /* Light grey/off-white for general text */
-  --card: 10 10% 8%; /* Very dark, slightly warm brown for cards */
-  --card-foreground: 0 0% 90%; /* Lighter text for cards */
-  --popover: 10 10% 6%; /* Even darker for popovers */
-  --popover-foreground: 0 0% 90%;
-  --primary: 12 95% 52%; /* Firered (Vibrant Reddish-Orange) */
-  --primary-foreground: 0 0% 100%; /* White for contrast on firered */
-  --secondary: 25 80% 30%; /* Dark, rich orange/brown as secondary */
-  --secondary-foreground: 35 100% 85%; /* Lighter, vibrant yellow for text on secondary */
-  --muted: 20 20% 12%; /* Dark, desaturated brown for muted elements */
-  --muted-foreground: 0 0% 65%; /* Muted grey for less important text */
-  --accent: 40 100% 55%; /* Vibrant yellow as accent */
-  --accent-foreground: 20 50% 10%; /* Very dark brown for text on yellow accent */
-  --destructive: 0 70% 50%; /* A clearer, more standard red for destructive actions */
-  --destructive-foreground: 0 0% 100%; /* White */
-  --border: 20 15% 20%; /* Dark, warm gray or very desaturated brown for borders */
-  --input: 20 10% 15%; /* Slightly darker than border for input backgrounds */
-  --ring: 12 95% 52%; /* Firered for focus rings */
-  --chart-1: 12 95% 52%; /* Firered */
-  --chart-2: 40 100% 55%; /* Vibrant Yellow */
-  --chart-3: 25 80% 50%; /* Rich Orange */
-  --chart-4: 20 50% 35%; /* Muted Dark Orange */
-  --chart-5: 30 90% 85%; /* Fiery Orange/Yellow Text Color (as a chart option) */
+  --card: 224 71% 9%; /* Darker card background */
+  --card-foreground: 0 0% 98%;
 
-  /* Sidebar specific colors for dark theme */
-  --sidebar-background: 0 0% 4%; 
-  --sidebar-foreground: 0 0% 80%; 
-  --sidebar-primary: 12 90% 50%; 
-  --sidebar-primary-foreground: 0 0% 100%;
-  --sidebar-accent: 20 30% 12%; 
-  --sidebar-accent-foreground: 35 100% 75%;
-  --sidebar-border: 15 15% 15%;
-  --sidebar-ring: 12 95% 52%;
+  --popover: 224 71.4% 4.1%;
+  --popover-foreground: 0 0% 98%;
+
+  --primary: 45 95% 58%; /* Brighter Gold/Orange for Dark Mode Primary */
+  --primary-foreground: 224 71.4% 4.1%; /* Dark text on primary */
+
+  --secondary: 215 28% 15%; /* Dark Grey */
+  --secondary-foreground: 0 0% 98%;
+
+  --muted: 215 28% 15%;
+  --muted-foreground: 215 20% 65%;
+
+  --accent: 210 40% 96.1%; /* Light Grey for Dark Mode Accent */
+  --accent-foreground: 224 71.4% 4.1%;
+
+  --destructive: 0 72% 51%; /* Darker Red */
+  --destructive-foreground: 0 0% 98%;
+
+  --border: 215 28% 20%; /* Darker Border Grey */
+  --input: 215 28% 20%;
+  --ring: 45 95% 58%; /* Gold/Orange Ring for Dark Mode */
 }
-
-/* Apply font size classes to the html element */
-.font-size-sm { --default-font-size: var(--font-size-sm); }
-.font-size-md { --default-font-size: var(--font-size-md); }
-.font-size-lg { --default-font-size: var(--font-size-lg); }
  
 @layer base {
   * {
@@ -100,22 +72,11 @@
   }
   body {
     @apply bg-background text-foreground;
-    font-family: var(--font-geist-sans), Arial, Helvetica, sans-serif; /* Add Geist Sans */
-    font-size: var(--default-font-size); /* Apply default font size */
-    overflow-y: auto; /* Ensure body can scroll if content overflows */
+    font-family: var(--font-geist-sans);
   }
-  
-  /* Apply gradient background for dark theme */
-  .dark body {
-    background: linear-gradient(to bottom, rgb(var(--background-start-rgb)), rgb(var(--background-end-rgb)));
-    background-attachment: fixed; /* For full-page gradient */
-  }
-}
-
-html {
-  overflow-x: hidden; /* Prevent horizontal scroll */
 }
 
 html, body, #__next {
-  height: 100%; /* Ensure full height for layout components */
+  height: 100%;
+  overflow-x: hidden; /* Prevent horizontal scrollbars by default */
 }
