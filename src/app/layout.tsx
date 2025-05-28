@@ -1,19 +1,16 @@
 
 import type { Metadata } from 'next';
-import { Inter as FontSans } from 'next/font/google'; // Using Inter as a professional default
+import { GeistSans } from 'geist/font/sans';
+import { GeistMono } from 'geist/font/mono';
 import './globals.css';
 import { Toaster } from "@/components/ui/toaster";
 import { ThemeProvider } from "@/components/theme-provider";
+import { FontSizeProvider } from '@/contexts/font-size-context';
 import { cn } from '@/lib/utils';
 
-const fontSans = FontSans({
-  subsets: ["latin"],
-  variable: "--font-sans",
-});
-
 export const metadata: Metadata = {
-  title: 'Ameenee Marketplace',
-  description: 'Legal Add-On Services Marketplace',
+  title: 'إيكو: شبكة التواصل الصوتي', // Arabic: Eko: Voice Social Network
+  description: 'إيكو - شبكتك الاجتماعية الصوتية الأولى.', // Arabic: Eko - Your voice-first social network.
 };
 
 export default function RootLayout({
@@ -22,8 +19,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    // The lang and dir attributes will be set by LocaleLayout
-    <html className={cn("h-full", fontSans.variable)} suppressHydrationWarning>
+    <html lang="ar" dir="rtl" className={cn("h-full", GeistSans.variable, GeistMono.variable)} suppressHydrationWarning>
       <body className="antialiased h-full flex flex-col bg-background text-foreground">
         <ThemeProvider
           attribute="class"
@@ -31,8 +27,10 @@ export default function RootLayout({
           enableSystem
           disableTransitionOnChange
         >
-          {children}
-          <Toaster />
+          <FontSizeProvider>
+            {children}
+            <Toaster />
+          </FontSizeProvider>
         </ThemeProvider>
       </body>
     </html>

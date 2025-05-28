@@ -1,2 +1,3 @@
-// This file is replaced by ThemeToggle. Placeholder for deletion.
+// This file is deleted. ThemeToggle component is used directly.
+// Placeholder for deletion.
 export {};

@@ -1,13 +1,11 @@
+// This file is no longer needed as next-intl middleware is removed.
+// If Next.js requires a middleware.ts for other reasons (e.g. due to path structure),
+// an empty or minimal no-op middleware can be placed here.
+// For now, marking for deletion by making it an empty export.
+export function middleware() {
+  // No-op
+}
 
-import createMiddleware from 'next-intl/middleware';
-import { locales, defaultLocale, Locale } from './i18n';
- 
-export default createMiddleware({
-  locales: locales as unknown as Locale[],
-  defaultLocale: defaultLocale,
-  localePrefix: 'as-needed', 
-});
- 
 export const config = {
-  matcher: ['/((?!api|_next/static|_next/image|favicon.ico|images|assets).*)']
+  matcher: [], // No routes matched by default
 };

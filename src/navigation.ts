@@ -1,6 +1,3 @@
-
-import {createSharedPathnamesNavigation} from 'next-intl/navigation';
-import {locales, defaultLocale, Locale} from './i18n';
- 
-export const {Link, redirect, usePathname, useRouter} =
-  createSharedPathnamesNavigation({locales: locales as unknown as Locale[], localePrefix: 'as-needed'});
+// This file is no longer needed as next-intl navigation is removed.
+// Placeholder for deletion.
+export {};
