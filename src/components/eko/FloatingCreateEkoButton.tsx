@@ -8,9 +8,9 @@ import { useAuth } from "@/contexts/auth-context";
 import { cn } from "@/lib/utils";
 import { useState, useRef, useEffect, useCallback } from "react";
 import { useToast } from "@/hooks/use-toast";
-import { quickPostEkoDrop } from "@/lib/actions/postActions"; // New server action
+import { quickPostEkoDrop } from "@/lib/actions/postActions"; 
 
-const LONG_PRESS_DURATION_MS = 500; // 0.5 seconds for long press
+const LONG_PRESS_DURATION_MS = 500; 
 
 export function FloatingCreateEkoButton() {
   const router = useRouter();
@@ -32,7 +32,6 @@ export function FloatingCreateEkoButton() {
       try {
         const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
         setHasPermission(true);
-        // Stop tracks immediately after permission check if not starting recording yet
         stream.getTracks().forEach(track => track.stop());
         return true;
       } catch (error) {
@@ -56,11 +55,20 @@ export function FloatingCreateEkoButton() {
     if (permissionGranted === null) {
       permissionGranted = await requestMicPermission();
     }
-    if (!permissionGranted) return;
+    if (!permissionGranted) {
+        setIsLongPressActive(false); 
+        return;
+    }
 
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      mediaRecorderRef.current = new MediaRecorder(stream);
+      // Try specific codecs for better quality/compression if available
+      const options = MediaRecorder.isTypeSupported('audio/webm;codecs=opus')
+        ? { mimeType: 'audio/webm;codecs=opus' }
+        : MediaRecorder.isTypeSupported('audio/ogg;codecs=opus')
+        ? { mimeType: 'audio/ogg;codecs=opus' }
+        : {}; // Fallback to default
+      mediaRecorderRef.current = new MediaRecorder(stream, options);
       audioChunksRef.current = [];
 
       mediaRecorderRef.current.ondataavailable = (event) => {
@@ -76,15 +84,22 @@ export function FloatingCreateEkoButton() {
       
       mediaRecorderRef.current.onstop = async () => {
         setIsRecording(false);
-        setIsLongPressActive(false); // Ensure long press state is reset
+        setIsLongPressActive(false); 
         
         const audioBlob = new Blob(audioChunksRef.current, { type: mediaRecorderRef.current?.mimeType || 'audio/webm' });
         audioChunksRef.current = [];
-        stream.getTracks().forEach(track => track.stop()); // Stop microphone access
+        stream.getTracks().forEach(track => track.stop()); 
 
         if (audioBlob.size === 0) {
           toast({ title: "Recording Error", description: "No audio data captured.", variant: "destructive"});
+          setIsSubmitting(false); // Ensure submitting state is reset
           return;
+        }
+
+        if (!user?.uid) {
+            toast({ title: "Authentication Error", description: "User ID not found. Cannot post.", variant: "destructive" });
+            setIsSubmitting(false);
+            return;
         }
 
         setIsSubmitting(true);
@@ -92,12 +107,12 @@ export function FloatingCreateEkoButton() {
 
         const formData = new FormData();
         formData.append('audioBlob', audioBlob);
+        formData.append('userId', user.uid); // Pass userId in FormData
 
         try {
           const result = await quickPostEkoDrop(formData);
           if (result.success) {
             toast({ title: "EkoDrop Posted!", description: result.message });
-            // Optionally navigate or refresh data here
           } else {
             toast({ title: "Post Failed", description: result.message, variant: "destructive" });
           }
@@ -121,9 +136,8 @@ export function FloatingCreateEkoButton() {
 
   const stopRecordingAndPost = () => {
     if (mediaRecorderRef.current && isRecording) {
-      mediaRecorderRef.current.stop(); // onstop handler will do the posting
+      mediaRecorderRef.current.stop(); 
     }
-    // Resetting states is handled in onstop or if stopping without recording
     setIsLongPressActive(false);
     if (longPressTimeoutRef.current) {
       clearTimeout(longPressTimeoutRef.current);
@@ -133,14 +147,14 @@ export function FloatingCreateEkoButton() {
 
   const handlePressStart = () => {
     if (authLoading || !user) {
-        router.push('/auth/login?redirect=/create-eko'); // Or current page if preferred
+        router.push('/auth/login?redirect=/create-eko');
         return;
     }
-    if (isSubmitting || isRecording) return; // Don't allow new actions if already submitting or recording
+    if (isSubmitting || isRecording) return;
 
-    setIsLongPressActive(true); // Assume long press might happen
+    setIsLongPressActive(true);
     longPressTimeoutRef.current = setTimeout(() => {
-      if (isLongPressActive) { // Check if button is still pressed
+      if (isLongPressActive) { 
         startRecording();
       }
     }, LONG_PRESS_DURATION_MS);
@@ -152,20 +166,18 @@ export function FloatingCreateEkoButton() {
       longPressTimeoutRef.current = null;
     }
 
-    if (isRecording) { // If recording was active, this means long press was successful
+    if (isRecording) { 
       stopRecordingAndPost();
-    } else if (isLongPressActive) { // If long press was active but recording didn't start (e.g. released before timer, or permission issue)
-      // This was a short click because recording didn't start
+    } else if (isLongPressActive) { 
       if (user) {
         router.push('/create-eko');
       } else {
         router.push('/auth/login?redirect=/create-eko');
       }
     }
-    setIsLongPressActive(false); // Always reset this
+    setIsLongPressActive(false); 
   };
 
-  // Clean up MediaRecorder and stream on unmount
   useEffect(() => {
     return () => {
       if (mediaRecorderRef.current && mediaRecorderRef.current.state === "recording") {
@@ -179,7 +191,7 @@ export function FloatingCreateEkoButton() {
   }, []);
   
   if (authLoading) {
-    return null; // Don't show button while auth state is resolving
+    return null; 
   }
 
   let buttonIcon = <Mic className="h-7 w-7" />;
@@ -197,9 +209,7 @@ export function FloatingCreateEkoButton() {
   } else if (hasPermission === false) {
     buttonIcon = <AlertTriangle className="h-7 w-7" />;
     buttonClass = "bg-yellow-500 hover:bg-yellow-600 text-white";
-    buttonTitle = "Microphone permission needed";
-    // Allow click to re-trigger permission request or go to settings.
-    // For now, a click will attempt permission again or go to create page if permission already given.
+    buttonTitle = "Microphone permission needed. Click to retry or go to settings.";
   }
 
 
@@ -215,7 +225,7 @@ export function FloatingCreateEkoButton() {
       onMouseUp={handlePressEnd}
       onTouchStart={handlePressStart}
       onTouchEnd={handlePressEnd}
-      onMouseLeave={() => { // If mouse leaves button while pressed and not recording, cancel long press intent
+      onMouseLeave={() => { 
         if (isLongPressActive && !isRecording && longPressTimeoutRef.current) {
             clearTimeout(longPressTimeoutRef.current);
             longPressTimeoutRef.current = null;
