@@ -11,13 +11,25 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
+  DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu";
-import { MessageCircle, Repeat, Heart, Share2, MoreHorizontal, AlertTriangle, Send, Loader2 } from "lucide-react";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog"
+import { MessageCircle, Repeat, Heart, Share2, MoreHorizontal, AlertTriangle, Send, Loader2, Trash2 } from "lucide-react";
 import Link from "next/link";
 import { formatTimestamp } from "@/lib/format-timestamp";
 import { useAuth } from "@/contexts/auth-context";
 import { useState, useEffect } from "react";
-import { firestore } from "@/lib/firebase";
+import { firestore, storage } from "@/lib/firebase"; // Added storage
 import {
   doc,
   getDoc,
@@ -33,15 +45,17 @@ import {
   runTransaction,
   Timestamp,
 } from "firebase/firestore";
+import { ref as storageRef, deleteObject } from "firebase/storage"; // Added Firebase Storage functions
 import { useToast } from "@/hooks/use-toast";
 import { processHashtags } from "@/lib/utils";
 
 
 interface EkoPostCardProps {
   post: EkoPost;
+  onPostDeleted?: (postId: string) => void; // Optional callback
 }
 
-export function EkoPostCard({ post: initialPost }: EkoPostCardProps) {
+export function EkoPostCard({ post: initialPost, onPostDeleted }: EkoPostCardProps) {
   const { user, userProfile, loading: authLoading } = useAuth();
   const { toast } = useToast();
 
@@ -57,6 +71,9 @@ export function EkoPostCard({ post: initialPost }: EkoPostCardProps) {
   const [showCommentInput, setShowCommentInput] = useState(false);
   const [commentText, setCommentText] = useState("");
   const [isCommenting, setIsCommenting] = useState(false);
+
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   useEffect(() => {
     setPost(initialPost);
@@ -211,6 +228,50 @@ export function EkoPostCard({ post: initialPost }: EkoPostCardProps) {
     toast({ title: "Report Action", description: "Reporting functionality coming soon!", variant: "default" });
   };
 
+  const handleDeletePost = async () => {
+    if (!user || user.uid !== post.userId || isDeleting) return;
+    setIsDeleting(true);
+
+    try {
+      // 1. Delete audio from Firebase Storage if it exists
+      if (post.audioURL) {
+        try {
+          const audioFileRef = storageRef(storage, post.audioURL);
+          await deleteObject(audioFileRef);
+        } catch (storageError: any) {
+          // Log storage error but proceed to delete Firestore doc if storage fails (e.g., file already deleted)
+          console.error("Error deleting audio from Firebase Storage:", storageError);
+          if (storageError.code !== 'storage/object-not-found') {
+             toast({ title: "Storage Deletion Error", description: "Could not delete associated audio file. Please try again or contact support if this persists.", variant: "destructive" });
+             // Optionally, you could decide to not proceed with Firestore deletion if storage deletion fails critically.
+             // setIsDeleting(false);
+             // return;
+          }
+        }
+      }
+
+      // 2. Delete post document from Firestore
+      const postRef = doc(firestore, "posts", post.id);
+      await deleteDoc(postRef);
+
+      toast({ title: "EkoDrop Deleted", description: "Your EkoDrop has been successfully deleted.", variant: "default" });
+      
+      if (onPostDeleted) {
+        onPostDeleted(post.id);
+      }
+      // Optionally, trigger a refresh or redirect, or let parent component handle UI update.
+      // For now, the post will remain visible until a page refresh or navigation.
+
+    } catch (error) {
+      console.error("Error deleting EkoDrop:", error);
+      toast({ title: "Deletion Failed", description: "Could not delete your EkoDrop. Please try again.", variant: "destructive" });
+    } finally {
+      setIsDeleting(false);
+      setShowDeleteConfirm(false);
+    }
+  };
+
+
   const handleAddComment = async () => {
     if (!user || authLoading || isCommenting || !commentText.trim()) return;
     if (!userProfile) {
@@ -251,6 +312,9 @@ export function EkoPostCard({ post: initialPost }: EkoPostCardProps) {
   const authorUsername = authorProfile?.username || post.username || "Unknown User";
   const authorAvatar = authorProfile?.avatarURL || post.userAvatarURL || `https://placehold.co/40x40.png?text=${authorUsername[0]?.toUpperCase() || 'U'}`;
   const processedContent = processHashtags(post.textContent);
+  const isCurrentUserPostAuthor = user && user.uid === post.userId;
+
+  if (!post) return null; // Or a loading/error state if post becomes undefined after deletion attempt
 
   return (
     <Card className="w-full max-w-xl mx-auto shadow-lg hover:shadow-xl transition-shadow duration-300">
@@ -282,6 +346,41 @@ export function EkoPostCard({ post: initialPost }: EkoPostCardProps) {
                 <DropdownMenuItem onClick={handleReport} className="text-yellow-600 hover:!text-yellow-700 focus:!text-yellow-700 focus:!bg-yellow-100 dark:text-yellow-400 dark:hover:!text-yellow-500 dark:focus:!text-yellow-500 dark:focus:!bg-yellow-700/20">
                     <AlertTriangle className="mr-2 h-4 w-4" /> Report EkoDrop
                 </DropdownMenuItem>
+                {isCurrentUserPostAuthor && (
+                  <>
+                    <DropdownMenuSeparator />
+                    <AlertDialog open={showDeleteConfirm} onOpenChange={setShowDeleteConfirm}>
+                      <AlertDialogTrigger asChild>
+                        <DropdownMenuItem 
+                          onSelect={(e) => e.preventDefault()} // Prevent menu from closing
+                          className="text-red-600 hover:!text-red-700 focus:!text-red-700 focus:!bg-red-100 dark:text-red-400 dark:hover:!text-red-500 dark:focus:!text-red-500 dark:focus:!bg-red-700/20"
+                        >
+                          <Trash2 className="mr-2 h-4 w-4" /> Delete EkoDrop
+                        </DropdownMenuItem>
+                      </AlertDialogTrigger>
+                      <AlertDialogContent>
+                        <AlertDialogHeader>
+                          <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+                          <AlertDialogDescription>
+                            This action cannot be undone. This will permanently delete your EkoDrop
+                            and remove its data from our servers.
+                          </AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter>
+                          <AlertDialogCancel disabled={isDeleting}>Cancel</AlertDialogCancel>
+                          <AlertDialogAction 
+                            onClick={handleDeletePost} 
+                            disabled={isDeleting}
+                            className={buttonVariants({ variant: "destructive" })}
+                          >
+                            {isDeleting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                            Delete
+                          </AlertDialogAction>
+                        </AlertDialogFooter>
+                      </AlertDialogContent>
+                    </AlertDialog>
+                  </>
+                )}
             </DropdownMenuContent>
         </DropdownMenu>
       </CardHeader>
