@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import {
   Form,
   FormControl,
+  FormDescription, // Added FormDescription here
   FormField,
   FormItem,
   FormLabel,
@@ -21,7 +22,7 @@ import {
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select"; // Assuming Select component is available
+} from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import { firestore, storage } from "@/lib/firebase";
 import { collection, addDoc, serverTimestamp, Timestamp } from "firebase/firestore";
@@ -38,10 +39,10 @@ const formSchema = z.object({
   visibility: z.enum(["public", "followers-only", "private"]),
   voiceEffect: z.string().optional(), // Added for voice effect
 }).refine(data => {
-  return true;
+  return data.textContent || data.voiceEffect !== undefined; // Validation if audio is also a factor
 }, {
   message: "An EkoDrop must have either text content or an audio recording.",
-  path: ["textContent"],
+  path: ["textContent"], // Path can be adjusted based on how audio presence is tracked in the form
 });
 
 type VoiceEffect = "none" | "chipmunk" | "deep" | "robot"; // Example effects
@@ -113,7 +114,6 @@ export function CreateEkoForm() {
     }
   };
   
-  // Placeholder for actual audio processing
   const applyVoiceEffect = async (inputBlob: Blob, effect: VoiceEffect): Promise<Blob> => {
     if (effect === "none") {
       return inputBlob;
@@ -121,16 +121,7 @@ export function CreateEkoForm() {
     toast({ title: "Applying Voice Effect...", description: `Applying ${effect} effect. This is a placeholder.` });
     // Actual Web Audio API logic would go here.
     // For demonstration, we'll just return the original blob after a delay.
-    await new Promise(resolve => setTimeout(resolve, 1000)); // Simulate processing time
-    
-    // Example: If 'chipmunk' effect was chosen, you would use Web Audio API:
-    // 1. Create AudioContext
-    // 2. Create AudioBufferSourceNode from inputBlob
-    // 3. Create BiquadFilterNode or PitchShifterNode
-    // 4. Connect source -> filter -> destination (OfflineAudioContext)
-    // 5. Start source, render offline context to get processed AudioBuffer
-    // 6. Convert processed AudioBuffer back to Blob
-    // This is highly complex and requires careful implementation.
+    await new Promise(resolve => setTimeout(resolve, 500)); // Simulate processing time
     
     console.warn(`Voice effect "${effect}" is a placeholder and not actually applied to the audio.`);
     return inputBlob; 
@@ -155,10 +146,9 @@ export function CreateEkoForm() {
         audioChunksRef.current.push(event.data);
       };
 
-      mediaRecorderRef.current.onstop = async () => { // Make onstop async
+      mediaRecorderRef.current.onstop = async () => {
         let completeAudioBlob = new Blob(audioChunksRef.current, { type: 'audio/webm' }); 
         
-        // Apply voice effect if selected
         if (selectedVoiceEffect !== "none") {
           completeAudioBlob = await applyVoiceEffect(completeAudioBlob, selectedVoiceEffect);
         }
@@ -181,7 +171,7 @@ export function CreateEkoForm() {
 
   const stopRecording = () => {
     if (mediaRecorderRef.current && isRecording) {
-      mediaRecorderRef.current.stop(); // This will trigger onstop and then applyVoiceEffect
+      mediaRecorderRef.current.stop();
       setIsRecording(false);
     }
   };
@@ -238,14 +228,11 @@ export function CreateEkoForm() {
 
     try {
       let finalAudioBlob = audioBlob;
-      // Note: Voice effect is now applied during onstop before setting audioBlob
-      // So, audioBlob should already be the processed version if an effect was chosen.
 
       if (finalAudioBlob) {
         audioDownloadURL = await uploadAudio(finalAudioBlob, user.uid);
       }
       
-      // Extract hashtags
       const hashtags = values.textContent ? values.textContent.match(/#\w+/g)?.map(h => h.toLowerCase()) : [];
 
 
@@ -261,7 +248,6 @@ export function CreateEkoForm() {
         createdAt: serverTimestamp() as Timestamp,
         ...(audioDownloadURL && { audioURL: audioDownloadURL }),
         ...(hashtags && hashtags.length > 0 && { hashtags }),
-        // voiceEffect: values.voiceEffect !== "none" ? values.voiceEffect : undefined, // Store applied effect
       };
 
       await addDoc(collection(firestore, "posts"), newPostData);
@@ -272,7 +258,7 @@ export function CreateEkoForm() {
       });
       clearAudio();
       form.reset({ textContent: "", visibility: userProfile.privacy.defaultPostVisibility || "public", voiceEffect: "none" });
-      setSelectedVoiceEffect("none"); // Reset selected effect
+      setSelectedVoiceEffect("none");
       router.push("/feed");
     } catch (error) {
       console.error("Error posting EkoDrop:", error);
@@ -363,11 +349,6 @@ export function CreateEkoForm() {
                   onValueChange={(value: VoiceEffect) => {
                     field.onChange(value);
                     setSelectedVoiceEffect(value);
-                    // If audio exists, user might want to re-apply effect.
-                    // This is complex as it requires re-processing.
-                    // For now, effect selection applies to *new* recordings or on final processing.
-                    // Ideally, changing effect here would re-process and update audioUrl.
-                    // For now, it's simpler to apply effect at time of recording stop.
                     if (audioBlob) {
                         toast({title: "Effect Selection", description: "Effect will be applied when you finalize the recording or if you re-record."})
                     }
@@ -450,3 +431,5 @@ export function CreateEkoForm() {
     </Form>
   );
 }
+
+
