@@ -10,6 +10,7 @@ export type SupportedLanguage = 'en' | 'ar' | 'es' | 'ur' | 'fr' | 'de' | 'hi' |
 export interface UserProfile {
   id: string; // document ID is userId (Firebase Auth UID)
   username: string;
+  username_lowercase: string; // For case-insensitive queries
   email: string; // Added for clarity, from Firebase Auth
   bio?: string;
   avatarURL?: string;
@@ -28,7 +29,10 @@ export interface UserProfile {
 export interface EkoPost {
   id: string; // document ID is postId
   userId: string; // Reference to users/{userId}
-  audioURL: string; // Firebase Storage reference
+  username: string; // Denormalized username for easier display
+  userAvatarURL?: string; // Denormalized avatar for easier display
+  audioURL?: string; // Firebase Storage reference - for future audio
+  textContent: string; // Main text content of the EkoDrop
   waveform?: number[]; // FFT data for visualization
   transcription?: string; // Optional: server-generated transcription
   durationSeconds?: number;

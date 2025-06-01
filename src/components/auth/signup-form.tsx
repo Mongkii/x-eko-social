@@ -53,10 +53,11 @@ export function SignupForm() {
         // Create user profile in Firestore
         const userProfileData: UserProfile = {
           id: user.uid,
-          username: values.username.toLowerCase(), // Store username in lowercase for consistency/querying
+          username: values.username, // Store username as entered
+          username_lowercase: values.username.toLowerCase(), // Store lowercase for querying
           email: values.email.toLowerCase(),
           bio: "",
-          avatarURL: "", // Placeholder or default avatar
+          avatarURL: `https://placehold.co/150x150.png?text=${values.username[0].toUpperCase()}`, // Default placeholder avatar
           privacy: {
             profile: "public", // Default as per BRD
             defaultPostVisibility: "public", // Default as per BRD
