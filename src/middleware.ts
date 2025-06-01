@@ -1,22 +1,17 @@
 
-import createMiddleware from 'next-intl/middleware';
-import { locales, defaultLocale } from './i18n';
+// This file is no longer used.
+// The next-intl middleware has been removed as part of simplifying to English-only.
+// If a general middleware is needed later for Eko, it can be created here.
+// This file can be deleted or kept as a placeholder.
+import type { NextRequest, NextResponse } from 'next/server';
 
-export default createMiddleware({
-  // A list of all locales that are supported
-  locales,
-
-  // Used when no locale matches
-  defaultLocale,
-
-  // Don't prefix the URL for the default locale (e.g. / instead of /en)
-  localePrefix: 'as-needed', 
-});
+export function middleware(request: NextRequest): NextResponse | undefined {
+  // Placeholder middleware, does nothing.
+  return undefined;
+}
 
 export const config = {
-  // Match only internationalized pathnames
-  // Adjust this to include all relevant paths if you have non-localized paths.
-  // Example: ['/', '/(ar|en)/:path*']
-  // For now, let's match all paths except for API, _next/static, _next/image, and favicon.ico
-  matcher: ['/((?!api|_next/static|_next/image|favicon.ico).*)']
+  // Matcher for all request paths except for API, Next.js internals, and static files.
+  // Adjust if a new middleware logic is added.
+  // matcher: ['/((?!api|_next/static|_next/image|favicon.ico).*)']
 };

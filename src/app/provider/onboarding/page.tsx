@@ -1,4 +1,7 @@
 
-// This file is deleted. Its content is moved to src/app/provider/onboarding/page.tsx.
-// Placeholder for deletion.
-export {};
+// This page is no longer used.
+// It was specific to the Ameenee Marketplace.
+// This file can be deleted.
+export default function OnboardingPage() {
+  return null;
+}

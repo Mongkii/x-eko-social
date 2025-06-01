@@ -1,123 +1,132 @@
 
 "use client";
 
-import { AppLogoIcon } from '@/components/icons/app-logo-icon';
-import { Button } from '@/components/ui/button';
+import Link from 'next/link';
+import { Button } from "@/components/ui/button";
+import { AppLogoIcon } from "@/components/icons/app-logo-icon";
 import { ThemeToggle } from '@/components/theme-toggle';
 import { FontSizeSwitcher } from '@/components/font-size-switcher';
-import { LanguageSwitcher } from '@/components/language-switcher';
-import { Settings, UserCircle, LogIn, Briefcase, LayoutDashboard } from 'lucide-react';
-import { Link } from '@/navigation';
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuGroup,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import { useTranslations } from 'next-intl';
-import * as React from 'react';
+import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
+import { Menu, Home, Search, Bell, UserCircle, Settings, LogIn, Mic } from 'lucide-react';
+import { usePathname } from 'next/navigation'; // Changed from next/navigation
+import { cn } from '@/lib/utils';
+
+const navLinks = [
+  { href: "/feed", label: "Feed", icon: Home },
+  { href: "/discover", label: "Discover", icon: Search },
+  { href: "/notifications", label: "Notifications", icon: Bell },
+  { href: "/profile/me", label: "Profile", icon: UserCircle },
+];
+
+// Placeholder for authentication status
+const isAuthenticated = false; // Replace with actual auth check
 
 export function AppHeader() {
-  const t = useTranslations('AppHeader');
-  const [isLoggedIn, setIsLoggedIn] = React.useState(false); // Simulate auth state
-
-  // Simulate login/logout for UI demonstration
-  const toggleLogin = () => setIsLoggedIn(!isLoggedIn);
+  const pathname = usePathname();
 
   return (
-    <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-      <div className="container flex h-16 items-center">
-        <Link href="/" className="mr-6 flex items-center space-x-2 rtl:space-x-reverse">
-          <AppLogoIcon className="h-8 w-8 text-primary" />
-          <span className="font-bold text-xl sm:inline-block text-primary">
-            {t('appName')}
-          </span>
+    <header className="sticky top-0 z-50 w-full border-b border-border/40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+      <div className="container flex h-16 max-w-screen-2xl items-center justify-between">
+        <Link href="/" className="flex items-center space-x-2">
+          <AppLogoIcon className="h-8 w-8 text-accent" />
+          <span className="font-bold text-xl">Eko</span>
         </Link>
-        
-        <nav className="hidden md:flex flex-grow items-center space-x-6 rtl:space-x-reverse text-sm font-medium">
-          <Link href="/services" className="text-muted-foreground hover:text-foreground transition-colors">
-            {t('services')}
-          </Link>
-          <Link href="/provider/onboarding" className="text-muted-foreground hover:text-foreground transition-colors">
-            {t('becomeAProvider')}
-          </Link>
-          {/* Add more nav links here as needed */}
+
+        <nav className="hidden md:flex items-center space-x-6 text-sm font-medium">
+          {navLinks.map((link) => (
+            <Link
+              key={link.href}
+              href={link.href}
+              className={cn(
+                "transition-colors hover:text-accent",
+                pathname === link.href ? "text-accent" : "text-muted-foreground"
+              )}
+            >
+              {link.label}
+            </Link>
+          ))}
         </nav>
 
-        <div className="flex items-center space-x-2 rtl:space-x-reverse ml-auto">
-          {isLoggedIn ? (
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="ghost" className="relative h-9 w-9 rounded-full">
-                  <UserCircle className="h-5 w-5" />
-                   <span className="sr-only">User menu</span>
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent className="w-56" align="end" forceMount>
-                <DropdownMenuLabel className="font-normal">
-                  <div className="flex flex-col space-y-1">
-                    <p className="text-sm font-medium leading-none">Ameenee User</p>
-                    <p className="text-xs leading-none text-muted-foreground">
-                      user@ameenee.com
-                    </p>
-                  </div>
-                </DropdownMenuLabel>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem asChild>
-                  <Link href="/dashboard"><LayoutDashboard className="rtl:ml-2 ltr:mr-2 h-4 w-4" />{t('dashboard')}</Link>
-                </DropdownMenuItem>
-                <DropdownMenuItem asChild>
-                  <Link href="/provider/dashboard"><Briefcase className="rtl:ml-2 ltr:mr-2 h-4 w-4" />{t('providerDashboard', {defaultValue: "Provider Area"})}</Link>
-                </DropdownMenuItem>
-                <DropdownMenuItem asChild>
-                  <Link href="/admin"><Settings className="rtl:ml-2 ltr:mr-2 h-4 w-4" />{t('admin')}</Link>
-                </DropdownMenuItem>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem onClick={toggleLogin}>
-                  {t('logout')}
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-          ) : (
-            <Button onClick={toggleLogin} variant="outline">
-              <LogIn className="rtl:ml-2 ltr:mr-2 h-4 w-4" />{t('login')}
-            </Button>
-          )}
-          
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="icon" aria-label={t('settings')}>
+        <div className="flex items-center space-x-2 md:space-x-4">
+          <Button variant="ghost" size="icon" className="md:hidden">
+             <Mic className="h-5 w-5" />
+             <span className="sr-only">Record EkoDrop</span>
+          </Button>
+          <Button variant="default" size="sm" className="hidden md:flex items-center">
+            <Mic className="mr-2 h-4 w-4" />
+            Record Eko
+          </Button>
+          <FontSizeSwitcher />
+          <ThemeToggle />
+          {isAuthenticated ? (
+            <Link href="/settings">
+              <Button variant="ghost" size="icon">
                 <Settings className="h-5 w-5" />
+                <span className="sr-only">Settings</span>
               </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent className="w-56" align="end">
-              <DropdownMenuLabel>{t('settings')}</DropdownMenuLabel>
-              <DropdownMenuSeparator />
-              <DropdownMenuGroup>
-                <DropdownMenuLabel className="text-xs text-muted-foreground px-2">{t('theme')}</DropdownMenuLabel>
-                <ThemeToggle /> 
-              </DropdownMenuGroup>
-              <DropdownMenuSeparator />
-              <DropdownMenuGroup>
-                 <DropdownMenuLabel className="text-xs text-muted-foreground px-2">{t('fontSize')}</DropdownMenuLabel>
-                 <FontSizeSwitcher />
-              </DropdownMenuGroup>
-              <DropdownMenuSeparator />
-               <DropdownMenuGroup>
-                 <DropdownMenuLabel className="text-xs text-muted-foreground px-2">{t('language')}</DropdownMenuLabel>
-                 <LanguageSwitcher />
-              </DropdownMenuGroup>
-            </DropdownMenuContent>
-          </DropdownMenu>
+            </Link>
+          ) : (
+            <Link href="/auth/login">
+              <Button variant="outline" size="sm">
+                <LogIn className="mr-2 h-4 w-4" />
+                Login
+              </Button>
+            </Link>
+          )}
+
+          <Sheet>
+            <SheetTrigger asChild className="md:hidden">
+              <Button variant="outline" size="icon">
+                <Menu className="h-6 w-6" />
+                <span className="sr-only">Open menu</span>
+              </Button>
+            </SheetTrigger>
+            <SheetContent side="right">
+              <div className="flex flex-col space-y-4 p-4">
+                <Link href="/" className="flex items-center space-x-2 mb-4">
+                  <AppLogoIcon className="h-8 w-8 text-accent" />
+                  <span className="font-bold text-lg">Eko</span>
+                </Link>
+                {navLinks.map((link) => (
+                  <Link
+                    key={link.href}
+                    href={link.href}
+                    className={cn(
+                      "flex items-center space-x-2 rounded-md p-2 hover:bg-accent hover:text-accent-foreground",
+                      pathname === link.href ? "bg-accent/20 text-accent" : "text-muted-foreground"
+                    )}
+                  >
+                    <link.icon className="h-5 w-5" />
+                    <span>{link.label}</span>
+                  </Link>
+                ))}
+                <hr />
+                 {isAuthenticated ? (
+                  <Link
+                    href="/settings"
+                    className={cn(
+                      "flex items-center space-x-2 rounded-md p-2 hover:bg-accent hover:text-accent-foreground",
+                      pathname === "/settings" ? "bg-accent/20 text-accent" : "text-muted-foreground"
+                    )}
+                  >
+                    <Settings className="h-5 w-5" />
+                    <span>Settings</span>
+                  </Link>
+                 ) : (
+                  <Link
+                    href="/auth/login"
+                    className={cn(
+                      "flex items-center space-x-2 rounded-md p-2 hover:bg-accent hover:text-accent-foreground",
+                       "text-muted-foreground"
+                    )}
+                  >
+                    <LogIn className="h-5 w-5" />
+                    <span>Login / Sign Up</span>
+                  </Link>
+                 )}
+              </div>
+            </SheetContent>
+          </Sheet>
         </div>
       </div>
     </header>

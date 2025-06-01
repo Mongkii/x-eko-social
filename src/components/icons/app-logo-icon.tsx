@@ -1,7 +1,9 @@
 
-import { Scale, type SVGProps } from "lucide-react"; // Using Scale icon for legal theme
+import type { SVGProps } from 'react';
+import { Mic } from 'lucide-react'; // Using Mic icon for Eko
 
 export function AppLogoIcon(props: SVGProps<SVGSVGElement>) {
-  // Ameenee might have its own logo or a more specific legal icon
-  return <Scale {...props} />;
+  // Using Lucide's Mic icon directly as a placeholder for Eko logo
+  // You can replace this with a custom SVG path for the Eko logo
+  return <Mic {...props} />;
 }

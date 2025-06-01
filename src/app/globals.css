@@ -2,78 +2,60 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
- 
-:root {
-  /* Ameenee Light Theme - Professional, Trustworthy, Modern */
-  --background: 0 0% 100%; /* White */
-  --foreground: 224 71.4% 4.1%; /* Dark Blue-Black for text */
-  
-  --card: 0 0% 100%;
-  --card-foreground: 224 71.4% 4.1%;
-  
-  --popover: 0 0% 100%;
-  --popover-foreground: 224 71.4% 4.1%;
-  
-  /* Ameenee Primary - A professional, trustworthy blue */
-  --primary: 210 70% 45%; /* Example: Medium Blue */
-  --primary-foreground: 0 0% 100%; /* White text on primary */
-  
-  --secondary: 215 28% 96.8%; /* Very Light Grey-Blue */
-  --secondary-foreground: 224 71.4% 4.1%;
-  
-  --muted: 215 28% 92.9%; /* Light Grey-Blue */
-  --muted-foreground: 215 20% 45.1%; /* Muted Text Grey-Blue */
-  
-  /* Ameenee Accent - A contrasting color for highlights, CTAs, e.g., a warm gold or orange */
-  --accent: 35 85% 55%; /* Example: Warm Gold/Orange */
-  --accent-foreground: 224 71.4% 4.1%; /* Dark text on accent for readability */
-  
-  --destructive: 0 84.2% 60.2%; /* Standard Red */
-  --destructive-foreground: 0 0% 100%;
-  
-  --border: 215 28% 89.8%; /* Border Grey-Blue */
-  --input: 215 28% 89.8%;
-  --ring: 210 70% 50%; /* Focus Ring - matching primary */
-  
-  --radius: 0.5rem;
 
-  /* Default font size variable - Can be overridden by FontSizeProvider */
-  --default-font-size: 1rem; /* Corresponds to 'md' or 16px */
+@layer base {
+  :root {
+    --background: 0 0% 100%;
+    --foreground: 224 71.4% 4.1%;
+    --card: 0 0% 100%;
+    --card-foreground: 224 71.4% 4.1%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 224 71.4% 4.1%;
+    --primary: 220.9 39.3% 11%; /* Eko Dark Blue/Black */
+    --primary-foreground: 210 20% 98%;
+    --secondary: 215 27.9% 16.9%; /* Eko Dark Grey */
+    --secondary-foreground: 210 20% 98%;
+    --muted: 215.4 16.3% 46.9%;
+    --muted-foreground: 215.4 16.3% 86.9%; /* Lighter text on muted */
+    --accent: 34.9 91.6% 57.1%; /* Eko Orange Accent */
+    --accent-foreground: 210 20% 98%;
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 210 20% 98%;
+    --border: 215 27.9% 16.9%; /* Eko Dark Grey for borders */
+    --input: 215 27.9% 16.9%; /* Eko Dark Grey for input backgrounds */
+    --ring: 34.9 91.6% 57.1%; /* Eko Orange Accent for focus rings */
+    --radius: 0.5rem;
+
+    /* Font sizes for accessibility */
+    --font-size-sm: 0.875rem; /* 14px */
+    --font-size-md: 1rem;    /* 16px */
+    --font-size-lg: 1.125rem; /* 18px */
+    --default-font-size: var(--font-size-md);
+  }
+
+  .dark {
+    --background: 224 71.4% 4.1%;
+    --foreground: 210 20% 98%;
+    --card: 224 71.4% 4.1%;
+    --card-foreground: 210 20% 98%;
+    --popover: 224 71.4% 4.1%;
+    --popover-foreground: 210 20% 98%;
+    --primary: 34.9 91.6% 57.1%; /* Eko Orange Accent for primary in dark */
+    --primary-foreground: 224 71.4% 4.1%;
+    --secondary: 215 27.9% 16.9%;
+    --secondary-foreground: 210 20% 98%;
+    --muted: 217.9 10.6% 20.8%;
+    --muted-foreground: 215.4 16.3% 56.9%;
+    --accent: 210 20% 98%;
+    --accent-foreground: 224 71.4% 4.1%;
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 210 20% 98%;
+    --border: 215 27.9% 16.9%;
+    --input: 215 27.9% 16.9%;
+    --ring: 34.9 91.6% 57.1%; /* Eko Orange Accent for focus rings */
+  }
 }
- 
-.dark {
-  /* Ameenee Dark Theme - Professional, Trustworthy, Modern */
-  --background: 224 71.4% 4.1%; /* Dark Blue-Black */
-  --foreground: 0 0% 98%; /* Off-white text */
 
-  --card: 224 71% 9%; /* Darker card background */
-  --card-foreground: 0 0% 98%;
-
-  --popover: 224 71.4% 4.1%;
-  --popover-foreground: 0 0% 98%;
-
-  /* Ameenee Dark Primary - Brighter version of light primary or the accent */
-  --primary: 210 75% 60%;  /* Brighter Blue for dark mode */
-  --primary-foreground: 224 71.4% 4.1%; /* Dark text on primary */
-
-  --secondary: 215 28% 15%; /* Dark Grey-Blue */
-  --secondary-foreground: 0 0% 98%;
-
-  --muted: 215 28% 15%;
-  --muted-foreground: 215 20% 65%;
-
-  /* Ameenee Dark Accent - The light theme accent can be brightened */
-  --accent: 35 90% 60%; /* Brighter Gold/Orange */
-  --accent-foreground: 224 71.4% 4.1%;
-
-  --destructive: 0 72% 51%; /* Darker Red */
-  --destructive-foreground: 0 0% 98%;
-
-  --border: 215 28% 20%; /* Darker Border Grey-Blue */
-  --input: 215 28% 20%;
-  --ring: 210 75% 65%; /* Matching dark primary for focus ring */
-}
- 
 @layer base {
   * {
     @apply border-border;
@@ -81,41 +63,37 @@
   body {
     @apply bg-background text-foreground;
     font-family: var(--font-geist-sans);
-    /* Apply the default font size via CSS variable controlled by FontSizeProvider */
-    font-size: var(--default-font-size);
-    line-height: 1.6;
+    font-size: var(--default-font-size); /* Applied default font size */
   }
-
-  /* Classes for font size switching */
+  /* Apply font size classes to html for global effect if needed */
   html.font-size-sm {
-    --default-font-size: 0.875rem; /* 14px */
+    --default-font-size: var(--font-size-sm);
   }
   html.font-size-md {
-    --default-font-size: 1rem;    /* 16px */
+    --default-font-size: var(--font-size-md);
   }
   html.font-size-lg {
-    --default-font-size: 1.125rem; /* 18px */
+    --default-font-size: var(--font-size-lg);
   }
 }
 
-html, body, #__next {
-  height: 100%;
+/* Additional global styles for Eko if needed */
+/* Example: Custom scrollbar for a more modern look */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
 }
 
-body {
-  min-height: 100vh;
-  display: flex;
-  flex-direction: column;
+::-webkit-scrollbar-track {
+  @apply bg-secondary/20;
+  border-radius: 10px;
 }
 
-main {
-  flex-grow: 1;
+::-webkit-scrollbar-thumb {
+  @apply bg-accent/70;
+  border-radius: 10px;
 }
 
-/* Add specific RTL adjustments if Tailwind's automatic handling isn't enough */
-/* For example:
-[dir="rtl"] .some-component {
-  margin-right: auto;
-  margin-left: theme('spacing.4');
+::-webkit-scrollbar-thumb:hover {
+  @apply bg-accent;
 }
-*/
