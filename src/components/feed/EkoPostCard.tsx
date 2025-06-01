@@ -3,7 +3,7 @@
 
 import type { EkoPost, UserProfile, EkoComment, Like } from "@/lib/types";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Button } from "@/components/ui/button";
+import { Button, buttonVariants } from "@/components/ui/button";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
 import {
@@ -448,3 +448,4 @@ export function EkoPostCard({ post: initialPost, onPostDeleted }: EkoPostCardPro
     </Card>
   );
 }
+
