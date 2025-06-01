@@ -41,6 +41,83 @@ export function AudioPlayerProvider({ children }: { children: ReactNode }) {
 
   const audioRef = useRef<HTMLAudioElement | null>(null);
 
+  // Define useCallback functions before the useEffect that depends on them
+
+  const playNewTrack = useCallback((post: TrackDetails, newQueue: TrackDetails[] = [], startIndex: number = 0) => {
+    const audio = audioRef.current;
+    if (!audio || !post.audioURL) return;
+
+    setIsLoading(true);
+    setCurrentTrackDetails(post);
+    setQueue(newQueue.length > 0 ? newQueue : [post]);
+    setCurrentIndexInQueue(newQueue.length > 0 ? startIndex : 0);
+    audio.src = post.audioURL;
+    audio.load(); // Important to load the new source
+    // Play will be triggered by 'loadedmetadata' or 'canplay' if isPlaying was true or becomes true.
+    // For explicit play, set isPlaying to true here.
+    setIsPlaying(true); 
+    audio.play().catch(e => {
+      console.error("Error initiating playback:", e);
+      setIsLoading(false);
+      setIsPlaying(false);
+    });
+  }, []); // audioRef is stable, state setters are stable
+
+  const togglePlayPause = useCallback(() => {
+    const audio = audioRef.current;
+    if (!audio || !currentTrackDetails) return;
+
+    if (isPlaying) {
+      audio.pause();
+    } else {
+      audio.play().catch(e => console.error("Error playing audio:", e));
+    }
+    setIsPlaying(!isPlaying);
+  }, [isPlaying, currentTrackDetails]);
+
+  const playNextTrack = useCallback(() => {
+    if (queue.length > 0 && currentIndexInQueue !== null && currentIndexInQueue < queue.length - 1) {
+      const nextIndex = currentIndexInQueue + 1;
+      playNewTrack(queue[nextIndex], queue, nextIndex);
+    } else {
+      // End of queue or no queue
+      setIsPlaying(false);
+      // Optionally clear player or loop current track/queue
+    }
+  }, [queue, currentIndexInQueue, playNewTrack]);
+
+  const playPreviousTrack = useCallback(() => {
+    if (queue.length > 0 && currentIndexInQueue !== null && currentIndexInQueue > 0) {
+      const prevIndex = currentIndexInQueue - 1;
+      playNewTrack(queue[prevIndex], queue, prevIndex);
+    }
+  }, [queue, currentIndexInQueue, playNewTrack]);
+
+  const handleSeek = useCallback((newProgress: number) => { // newProgress is 0-100
+    const audio = audioRef.current;
+    if (!audio || !audio.duration) return;
+    const newTime = (newProgress / 100) * audio.duration;
+    audio.currentTime = newTime;
+    setCurrentTime(newTime);
+    setProgress(newProgress);
+  }, []); // audioRef is stable, state setters are stable
+  
+  const clearPlayer = useCallback(() => {
+    const audio = audioRef.current;
+    if (audio) {
+        audio.pause();
+        audio.src = "";
+    }
+    setCurrentTrackDetails(null);
+    setIsPlaying(false);
+    setIsLoading(false);
+    setProgress(0);
+    setCurrentTime(0);
+    setDuration(0);
+    setQueue([]);
+    setCurrentIndexInQueue(null);
+  }, []); // audioRef is stable, state setters are stable
+
   useEffect(() => {
     // Create audio element on mount (client-side only)
     if (typeof window !== 'undefined' && !audioRef.current) {
@@ -93,82 +170,7 @@ export function AudioPlayerProvider({ children }: { children: ReactNode }) {
       audio.removeEventListener('error', handleError);
     };
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [playNextTrack]); // Add playNextTrack dependency
-
-  const playNewTrack = useCallback((post: TrackDetails, newQueue: TrackDetails[] = [], startIndex: number = 0) => {
-    const audio = audioRef.current;
-    if (!audio || !post.audioURL) return;
-
-    setIsLoading(true);
-    setCurrentTrackDetails(post);
-    setQueue(newQueue.length > 0 ? newQueue : [post]);
-    setCurrentIndexInQueue(newQueue.length > 0 ? startIndex : 0);
-    audio.src = post.audioURL;
-    audio.load(); // Important to load the new source
-    // Play will be triggered by 'loadedmetadata' or 'canplay' if isPlaying was true or becomes true.
-    // For explicit play, set isPlaying to true here.
-    setIsPlaying(true); 
-    audio.play().catch(e => {
-      console.error("Error initiating playback:", e);
-      setIsLoading(false);
-      setIsPlaying(false);
-    });
-  }, []);
-
-  const togglePlayPause = useCallback(() => {
-    const audio = audioRef.current;
-    if (!audio || !currentTrackDetails) return;
-
-    if (isPlaying) {
-      audio.pause();
-    } else {
-      audio.play().catch(e => console.error("Error playing audio:", e));
-    }
-    setIsPlaying(!isPlaying);
-  }, [isPlaying, currentTrackDetails]);
-
-  const playNextTrack = useCallback(() => {
-    if (queue.length > 0 && currentIndexInQueue !== null && currentIndexInQueue < queue.length - 1) {
-      const nextIndex = currentIndexInQueue + 1;
-      playNewTrack(queue[nextIndex], queue, nextIndex);
-    } else {
-      // End of queue or no queue
-      setIsPlaying(false);
-      // Optionally clear player or loop current track/queue
-    }
-  }, [queue, currentIndexInQueue, playNewTrack]);
-
-  const playPreviousTrack = useCallback(() => {
-    if (queue.length > 0 && currentIndexInQueue !== null && currentIndexInQueue > 0) {
-      const prevIndex = currentIndexInQueue - 1;
-      playNewTrack(queue[prevIndex], queue, prevIndex);
-    }
-  }, [queue, currentIndexInQueue, playNewTrack]);
-
-  const handleSeek = useCallback((newProgress: number) => { // newProgress is 0-100
-    const audio = audioRef.current;
-    if (!audio || !audio.duration) return;
-    const newTime = (newProgress / 100) * audio.duration;
-    audio.currentTime = newTime;
-    setCurrentTime(newTime);
-    setProgress(newProgress);
-  }, []);
-  
-  const clearPlayer = useCallback(() => {
-    const audio = audioRef.current;
-    if (audio) {
-        audio.pause();
-        audio.src = "";
-    }
-    setCurrentTrackDetails(null);
-    setIsPlaying(false);
-    setIsLoading(false);
-    setProgress(0);
-    setCurrentTime(0);
-    setDuration(0);
-    setQueue([]);
-    setCurrentIndexInQueue(null);
-  }, []);
+  }, [playNextTrack]); // playNextTrack is now defined before this useEffect
 
 
   return (
