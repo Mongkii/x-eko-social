@@ -42,9 +42,9 @@ const formSchema = z.object({
 
 export function CreateEkoForm() {
   const { toast } = useToast();
-  const { user, userProfile } = useAuth();
+  const { user, userProfile, loading: authLoading } = useAuth(); // Renamed loading to authLoading
   const router = useRouter();
-  const [isLoading, setIsLoading] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false); // Renamed isLoading to isSubmitting
 
   // Audio state
   const [isRecording, setIsRecording] = useState(false);
@@ -61,19 +61,20 @@ export function CreateEkoForm() {
     resolver: zodResolver(formSchema),
     defaultValues: {
       textContent: "",
-      visibility: userProfile?.privacy.defaultPostVisibility || "public",
+      visibility: "public", // Default, will be updated by useEffect
     },
   });
   
   useEffect(() => {
+    // Set default visibility based on userProfile once it loads
     if (userProfile) {
       form.reset({
-        textContent: "",
+        textContent: form.getValues("textContent") || "", // Preserve existing text content
         visibility: userProfile.privacy.defaultPostVisibility || "public",
       });
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [userProfile, form.reset]);
+  }, [userProfile, form.reset]); // Removed form from dependencies to avoid loop if form.reset changes form instance
 
   useEffect(() => {
     // Cleanup audio URL when component unmounts or audioBlob changes
@@ -85,46 +86,41 @@ export function CreateEkoForm() {
   }, [audioUrl]);
 
   const getMicrophonePermission = async () => {
-    if (hasMicrophonePermission === null) { // Only request if not determined yet
+    if (hasMicrophonePermission === null) { 
       try {
         const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
         setHasMicrophonePermission(true);
-        // We don't need to do anything with the stream here,
-        // MediaRecorder will handle it.
-        // Close the stream if it's not immediately used to free up the microphone
         stream.getTracks().forEach(track => track.stop());
         setMicrophoneError(null);
       } catch (error) {
         console.error('Error accessing microphone:', error);
         setHasMicrophonePermission(false);
-        if (error instanceof Error && error.name === 'NotAllowedError') {
-          setMicrophoneError('Microphone access denied. Please enable it in your browser settings.');
-        } else {
-          setMicrophoneError('Could not access microphone. Please ensure it is connected and enabled.');
-        }
+        const errorMessage = error instanceof Error && error.name === 'NotAllowedError' 
+          ? 'Microphone access denied. Please enable it in your browser settings.' 
+          : 'Could not access microphone. Please ensure it is connected and enabled.';
+        setMicrophoneError(errorMessage);
         toast({
           variant: 'destructive',
           title: 'Microphone Access Denied',
-          description: microphoneError || 'Please enable microphone permissions in your browser settings.',
+          description: errorMessage,
         });
       }
     }
   };
   
-  // Request permission on component mount or when user attempts to record
   useEffect(() => {
-    // Optionally, you can request permission on load, or wait for user interaction.
-    // For better UX, often good to wait for interaction.
+    // Optional: Request permission on load, or wait for user interaction.
     // getMicrophonePermission(); 
   }, []);
 
 
   const startRecording = async () => {
     if (hasMicrophonePermission === null) {
-      await getMicrophonePermission(); // Wait for permission check
+      await getMicrophonePermission(); 
     }
-    if (!hasMicrophonePermission) {
-       toast({ variant: "destructive", title: "Microphone Required", description: microphoneError || "Microphone permission is not granted."});
+    // Re-check permission after awaiting getMicrophonePermission
+    if (hasMicrophonePermission === false || !navigator.mediaDevices) { // Added !navigator.mediaDevices for safety
+       toast({ variant: "destructive", title: "Microphone Required", description: microphoneError || "Microphone permission is not granted or media devices are not available."});
        return;
     }
 
@@ -138,11 +134,10 @@ export function CreateEkoForm() {
       };
 
       mediaRecorderRef.current.onstop = () => {
-        const completeAudioBlob = new Blob(audioChunksRef.current, { type: 'audio/webm' }); // or audio/mp3, audio/wav depending on browser/encoder
+        const completeAudioBlob = new Blob(audioChunksRef.current, { type: 'audio/webm' }); 
         setAudioBlob(completeAudioBlob);
         const previewUrl = URL.createObjectURL(completeAudioBlob);
         setAudioUrl(previewUrl);
-        // Stop microphone tracks to turn off indicator
         stream.getTracks().forEach(track => track.stop());
       };
 
@@ -150,8 +145,9 @@ export function CreateEkoForm() {
       setIsRecording(true);
     } catch (err) {
         console.error("Failed to start recording: ", err);
-        setMicrophoneError("Failed to start recording. Please try again.");
-        toast({ variant: "destructive", title: "Recording Error", description: "Could not start recording."});
+        const errorMsg = "Failed to start recording. Please try again.";
+        setMicrophoneError(errorMsg);
+        toast({ variant: "destructive", title: "Recording Error", description: errorMsg});
     }
   };
 
@@ -176,19 +172,24 @@ export function CreateEkoForm() {
     const timestamp = Date.now();
     const randomSuffix = Math.random().toString(36).substring(2, 8);
     const audioFileName = `eko_${timestamp}_${randomSuffix}.webm`;
-    const storageRef = ref(storage, `ekoPostsAudio/${userId}/${audioFileName}`);
+    const storageRefPath = `ekoPostsAudio/${userId}/${audioFileName}`;
+    const audioStorageRef = ref(storage, storageRefPath); // Corrected ref usage
     
     toast({ title: "Uploading Audio...", description: "Please wait."});
-    await uploadBytes(storageRef, audioToUpload);
-    const downloadURL = await getDownloadURL(storageRef);
-    toast({ title: "Audio Uploaded!", variant: "default"});
+    await uploadBytes(audioStorageRef, audioToUpload);
+    const downloadURL = await getDownloadURL(audioStorageRef);
+    toast({ title: "Audio Uploaded!", variant: "default"}); // "success" variant not standard
     return downloadURL;
   };
 
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
-    if (!user || !userProfile) {
-      toast({ title: "Error", description: "You must be logged in to post.", variant: "destructive" });
+    if (!user) {
+      toast({ title: "Authentication Error", description: "You must be logged in to post.", variant: "destructive" });
+      return;
+    }
+    if (!userProfile) {
+      toast({ title: "Profile Error", description: "Your user profile could not be loaded. Please try again or ensure your profile is complete.", variant: "destructive" });
       return;
     }
 
@@ -204,7 +205,7 @@ export function CreateEkoForm() {
     form.clearErrors("textContent");
 
 
-    setIsLoading(true);
+    setIsSubmitting(true);
     let audioDownloadURL: string | undefined = undefined;
 
     try {
@@ -216,15 +217,13 @@ export function CreateEkoForm() {
         userId: user.uid,
         username: userProfile.username,
         userAvatarURL: userProfile.avatarURL || '',
-        textContent: values.textContent || "", // Ensure textContent is string even if empty
+        textContent: values.textContent || "", 
         visibility: values.visibility as PostVisibility,
         commentCount: 0,
         likeCount: 0,
         reEkoCount: 0,
         createdAt: serverTimestamp() as Timestamp,
         ...(audioDownloadURL && { audioURL: audioDownloadURL }),
-        // waveform: [], // Could generate waveform data here or server-side
-        // durationSeconds: 0, // Could get duration here
       };
 
       await addDoc(collection(firestore, "posts"), newPostData);
@@ -244,9 +243,11 @@ export function CreateEkoForm() {
         variant: "destructive",
       });
     } finally {
-      setIsLoading(false);
+      setIsSubmitting(false);
     }
   }
+  
+  const canSubmit = !isSubmitting && !authLoading && user && userProfile && !isRecording;
 
   return (
     <Form {...form}>
@@ -297,15 +298,19 @@ export function CreateEkoForm() {
                   <StopCircle className="mr-2 h-5 w-5" /> Stop Recording
                 </Button>
               ) : (
-                <Button type="button" variant="outline" onClick={hasMicrophonePermission === null ? getMicrophonePermission : startRecording} className="flex-1" disabled={hasMicrophonePermission === false}>
+                <Button 
+                  type="button" 
+                  variant="outline" 
+                  onClick={hasMicrophonePermission === null ? getMicrophonePermission : startRecording} 
+                  className="flex-1" 
+                  disabled={hasMicrophonePermission === false || authLoading}
+                >
                   <Mic className="mr-2 h-5 w-5" /> 
                   {hasMicrophonePermission === null ? "Enable Mic & Record" : "Record Audio"}
                 </Button>
               )}
             </div>
           )}
-          {/* TODO: Add file upload option later */}
-           {/* <Input type="file" accept="audio/*" onChange={handleFileUpload} disabled={isRecording || !!audioBlob} /> */}
         </div>
 
 
@@ -319,6 +324,7 @@ export function CreateEkoForm() {
                 <RadioGroup
                   onValueChange={field.onChange}
                   defaultValue={field.value}
+                  value={field.value} // Ensure RadioGroup is controlled
                   className="flex flex-col space-y-1 sm:flex-row sm:space-y-0 sm:space-x-4"
                 >
                   <FormItem className="flex items-center space-x-3 space-y-0">
@@ -346,15 +352,19 @@ export function CreateEkoForm() {
           )}
         />
         
-        <Button type="submit" className="w-full" disabled={isLoading || !user || isRecording}>
-          {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+        <Button type="submit" className="w-full" disabled={!canSubmit}>
+          {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
           Post EkoDrop
         </Button>
-        {!user && <p className="text-sm text-center text-muted-foreground">Please log in to post.</p>}
-        {isRecording && <p className="text-sm text-center text-yellow-500">Please stop recording before posting.</p>}
+        
+        <div className="text-sm text-center text-muted-foreground min-h-[20px]">
+            {authLoading && <p>Checking authentication...</p>}
+            {!authLoading && !user && <p>Please log in to post.</p>}
+            {!authLoading && user && !userProfile && <p>User profile is not available. Posting disabled.</p>}
+            {isRecording && <p className="text-yellow-500">Please stop recording before posting.</p>}
+        </div>
+
       </form>
     </Form>
   );
 }
-
-    
