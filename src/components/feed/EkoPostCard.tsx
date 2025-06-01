@@ -1,12 +1,19 @@
 
 "use client";
 
-import type { EkoPost, UserProfile, EkoComment, Like } from "@/lib/types";
-import type { TrackDetails } from "@/contexts/AudioPlayerContext"; // Added
+import type { EkoPost, UserProfile, EkoComment, Like, VoiceEffect } from "@/lib/types"; // Added VoiceEffect
+import type { TrackDetails } from "@/contexts/AudioPlayerContext";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -23,14 +30,15 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-  AlertDialogTrigger, // Added AlertDialogTrigger
+  AlertDialogTrigger,
 } from "@/components/ui/alert-dialog"
-import { MessageCircle, Repeat, Heart, Share2, MoreHorizontal, AlertTriangle, Send, Loader2, Trash2, Play, Pause, Music2 } from "lucide-react"; // Added Play, Pause
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { MessageCircle, Repeat, Heart, Share2, MoreHorizontal, AlertTriangle, Send, Loader2, Trash2, Play, Pause, Music2, Mic, StopCircle, Wand2 } from "lucide-react";
 import Link from "next/link";
 import { formatTimestamp } from "@/lib/format-timestamp";
 import { useAuth } from "@/contexts/auth-context";
-import { useAudioPlayer } from "@/contexts/AudioPlayerContext"; // Added
-import { useState, useEffect } from "react";
+import { useAudioPlayer } from "@/contexts/AudioPlayerContext";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { firestore, storage } from "@/lib/firebase"; 
 import {
   doc,
@@ -47,7 +55,7 @@ import {
   runTransaction,
   Timestamp,
 } from "firebase/firestore";
-import { ref as storageRef, deleteObject } from "firebase/storage"; 
+import { ref as storageRef, deleteObject, uploadBytes, getDownloadURL } from "firebase/storage"; 
 import { useToast } from "@/hooks/use-toast";
 import { processHashtags } from "@/lib/utils";
 
@@ -55,9 +63,89 @@ import { processHashtags } from "@/lib/utils";
 interface EkoPostCardProps {
   post: EkoPost;
   onPostDeleted?: (postId: string) => void;
-  queue: EkoPost[]; // Added for audio player queue
-  postIndex: number; // Added for audio player queue
+  queue: EkoPost[];
+  postIndex: number;
 }
+
+// Helper function to create a distortion curve for WaveShaperNode
+function makeDistortionCurve(amount: number): Float32Array {
+  const k = typeof amount === 'number' ? amount : 50;
+  const n_samples = 44100;
+  const curve = new Float32Array(n_samples);
+  const deg = Math.PI / 180;
+  for (let i = 0; i < n_samples; ++i) {
+    const x = (i * 2) / n_samples - 1;
+    curve[i] = ((3 + k) * x * 20 * deg) / (Math.PI + k * Math.abs(x));
+  }
+  return curve;
+}
+
+// Helper function to convert AudioBuffer to WAV Blob
+function audioBufferToWav(buffer: AudioBuffer): Blob {
+  const numChannels = buffer.numberOfChannels;
+  const sampleRate = buffer.sampleRate;
+  const format = 1; // PCM
+  const bitDepth = 16;
+
+  let result: Int16Array;
+  const channelData = [];
+  for (let i = 0; i < numChannels; i++) {
+    channelData.push(buffer.getChannelData(i));
+  }
+
+  if (numChannels === 2) {
+    const inputL = channelData[0];
+    const inputR = channelData[1];
+    const length = inputL.length + inputR.length;
+    result = new Int16Array(length);
+    let index = 0;
+    let inputIndex = 0;
+    while (index < length) {
+      result[index++] = Math.max(-32768, Math.min(32767, inputL[inputIndex] * 32767));
+      result[index++] = Math.max(-32768, Math.min(32767, inputR[inputIndex] * 32767));
+      inputIndex++;
+    }
+  } else { 
+    const monoChannel = channelData[0];
+    result = new Int16Array(monoChannel.length);
+    for (let i = 0; i < monoChannel.length; i++) {
+      result[i] = Math.max(-32768, Math.min(32767, monoChannel[i] * 32767));
+    }
+  }
+  
+  const dataLength = result.length * (bitDepth / 8);
+  const bufferLength = 44 + dataLength;
+  const wavBuffer = new ArrayBuffer(bufferLength);
+  const view = new DataView(wavBuffer);
+
+  function writeString(view: DataView, offset: number, string: string) {
+    for (let i = 0; i < string.length; i++) {
+      view.setUint8(offset + i, string.charCodeAt(i));
+    }
+  }
+
+  let offset = 0;
+  writeString(view, offset, 'RIFF'); offset += 4;
+  view.setUint32(offset, bufferLength - 8, true); offset += 4;
+  writeString(view, offset, 'WAVE'); offset += 4;
+  writeString(view, offset, 'fmt '); offset += 4;
+  view.setUint32(offset, 16, true); offset += 4; 
+  view.setUint16(offset, format, true); offset += 2;
+  view.setUint16(offset, numChannels, true); offset += 2;
+  view.setUint32(offset, sampleRate, true); offset += 4;
+  view.setUint32(offset, sampleRate * numChannels * (bitDepth / 8), true); offset += 4; 
+  view.setUint16(offset, numChannels * (bitDepth / 8), true); offset += 2; 
+  view.setUint16(offset, bitDepth, true); offset += 2;
+  writeString(view, offset, 'data'); offset += 4;
+  view.setUint32(offset, dataLength, true); offset += 4;
+
+  for (let i = 0; i < result.length; i++, offset += 2) {
+    view.setInt16(offset, result[i], true);
+  }
+
+  return new Blob([view], { type: 'audio/wav' });
+}
+
 
 export function EkoPostCard({ post: initialPost, onPostDeleted, queue, postIndex }: EkoPostCardProps) {
   const { user, userProfile, loading: authLoading } = useAuth();
@@ -68,7 +156,7 @@ export function EkoPostCard({ post: initialPost, onPostDeleted, queue, postIndex
     currentTrackDetails, 
     isPlaying: isGlobalPlayerPlaying, 
     isLoading: isGlobalPlayerLoading 
-  } = useAudioPlayer(); // Audio player context
+  } = useAudioPlayer(); 
 
   const [post, setPost] = useState<EkoPost>(initialPost);
   const [authorProfile, setAuthorProfile] = useState<UserProfile | null>(null);
@@ -87,6 +175,38 @@ export function EkoPostCard({ post: initialPost, onPostDeleted, queue, postIndex
   const [isDeleting, setIsDeleting] = useState(false);
   
   const isCurrentTrackInGlobalPlayer = currentTrackDetails?.id === post.id;
+
+  // State for comment audio
+  const [isRecordingComment, setIsRecordingComment] = useState(false);
+  const [initialCommentAudioBlob, setInitialCommentAudioBlob] = useState<Blob | null>(null);
+  const [processedCommentAudioBlob, setProcessedCommentAudioBlob] = useState<Blob | null>(null);
+  const [commentAudioUrl, setCommentAudioUrl] = useState<string | null>(null);
+  const commentMediaRecorderRef = useRef<MediaRecorder | null>(null);
+  const commentAudioChunksRef = useRef<Blob[]>([]);
+  const commentAudioPreviewRef = useRef<HTMLAudioElement>(null);
+  const [hasCommentMicPermission, setHasCommentMicPermission] = useState<boolean | null>(null);
+  const [commentMicError, setCommentMicError] = useState<string | null>(null);
+  const [selectedCommentVoiceEffect, setSelectedCommentVoiceEffect] = useState<VoiceEffect>("none");
+  const [isProcessingCommentEffect, setIsProcessingCommentEffect] = useState(false);
+  const commentAudioContextRef = useRef<AudioContext | null>(null);
+
+
+  useEffect(() => {
+    if (typeof window !== 'undefined' && !commentAudioContextRef.current) {
+        try {
+            commentAudioContextRef.current = new (window.AudioContext || (window as any).webkitAudioContext)();
+        } catch (e) {
+            console.error("Web Audio API is not supported in this browser for comments.", e);
+            setCommentMicError("Web Audio API is not supported. Voice effects for comments will not work.");
+        }
+    }
+    return () => {
+      if (commentAudioUrl) {
+        URL.revokeObjectURL(commentAudioUrl);
+      }
+    };
+  }, [commentAudioUrl]);
+
 
   useEffect(() => {
     setPost(initialPost);
@@ -133,6 +253,192 @@ export function EkoPostCard({ post: initialPost, onPostDeleted, queue, postIndex
     }
   }, [user, post.id]);
 
+  const applyCommentVoiceEffect = useCallback(async (inputBlob: Blob | null, effect: VoiceEffect): Promise<Blob | null> => {
+    if (!inputBlob || !commentAudioContextRef.current) return inputBlob; 
+
+    setIsProcessingCommentEffect(true);
+    // toast({ title: "Applying Voice Effect to Comment...", description: `Processing audio with ${effect} effect.` });
+
+    try {
+      const arrayBuffer = await inputBlob.arrayBuffer();
+      const decodedAudioBuffer = await commentAudioContextRef.current.decodeAudioData(arrayBuffer);
+      
+      const offlineCtx = new OfflineAudioContext(
+        decodedAudioBuffer.numberOfChannels,
+        decodedAudioBuffer.length,
+        decodedAudioBuffer.sampleRate
+      );
+      
+      const source = offlineCtx.createBufferSource();
+      source.buffer = decodedAudioBuffer;
+
+      switch (effect) {
+        case "chipmunk": source.playbackRate.value = 1.8; source.connect(offlineCtx.destination); break;
+        case "deep": source.playbackRate.value = 0.6; source.connect(offlineCtx.destination); break;
+        case "robot":
+          source.playbackRate.value = 0.9; 
+          const robotFilter = offlineCtx.createBiquadFilter();
+          robotFilter.type = 'peaking'; robotFilter.frequency.value = 1200; robotFilter.Q.value = 6; robotFilter.gain.value = 15;   
+          source.connect(robotFilter); robotFilter.connect(offlineCtx.destination); break;
+        case "echo":
+          const delayNode = offlineCtx.createDelay(1.0); delayNode.delayTime.value = 0.25; 
+          const feedbackNode = offlineCtx.createGain(); feedbackNode.gain.value = 0.4; 
+          const dryGainNode = offlineCtx.createGain(); dryGainNode.gain.value = 1.0; 
+          const wetGainNode = offlineCtx.createGain(); wetGainNode.gain.value = 0.5; 
+          source.connect(dryGainNode); dryGainNode.connect(offlineCtx.destination);
+          source.connect(delayNode); delayNode.connect(feedbackNode); feedbackNode.connect(delayNode); 
+          delayNode.connect(wetGainNode); wetGainNode.connect(offlineCtx.destination); break;
+        case "alien":
+          source.playbackRate.value = 1.4;
+          const lfo = offlineCtx.createOscillator(); lfo.type = 'sine'; lfo.frequency.value = 15;
+          const lfoGain = offlineCtx.createGain(); lfoGain.gain.value = 0.05;
+          const alienBiquad = offlineCtx.createBiquadFilter(); alienBiquad.type = 'bandpass'; alienBiquad.frequency.value = 2000; alienBiquad.Q.value = 1.5;
+          lfo.connect(lfoGain.gain); source.connect(alienBiquad); alienBiquad.connect(lfoGain); lfoGain.connect(offlineCtx.destination); lfo.start(0); break;
+        case "monster":
+          source.playbackRate.value = 0.45;
+          const distortion = offlineCtx.createWaveShaper(); distortion.curve = makeDistortionCurve(150); distortion.oversample = '4x';
+          const monsterLowPass = offlineCtx.createBiquadFilter(); monsterLowPass.type = "lowpass"; monsterLowPass.frequency.value = 800;
+          source.connect(distortion); distortion.connect(monsterLowPass); monsterLowPass.connect(offlineCtx.destination); break;
+        case "radio":
+          const bandpass = offlineCtx.createBiquadFilter(); bandpass.type = 'bandpass'; bandpass.frequency.value = 1500; bandpass.Q.value = 4;
+          const radioDistortion = offlineCtx.createWaveShaper(); radioDistortion.curve = makeDistortionCurve(30); radioDistortion.oversample = '2x';
+          source.connect(radioDistortion); radioDistortion.connect(bandpass); bandpass.connect(offlineCtx.destination); break;
+        case "none": default: source.connect(offlineCtx.destination); break;
+      }
+      
+      source.start(0);
+      const renderedBuffer = await offlineCtx.startRendering();
+      const wavBlob = audioBufferToWav(renderedBuffer);
+
+      setIsProcessingCommentEffect(false);
+      // const effectDisplayName = effect.charAt(0).toUpperCase() + effect.slice(1);
+      // toast({ title: "Comment Effect Applied!", description: `Audio processed with ${effectDisplayName} effect.`});
+      return wavBlob;
+
+    } catch (error) {
+      console.error("Error applying voice effect to comment:", error);
+      setIsProcessingCommentEffect(false);
+      toast({ variant: "destructive", title: "Comment Effect Error", description: "Could not apply voice effect." });
+      return inputBlob;
+    }
+  }, [toast]);
+
+  const processAndSetCommentAudio = useCallback(async (baseBlob: Blob | null, effect: VoiceEffect) => {
+    if (!baseBlob) {
+      if (commentAudioUrl) URL.revokeObjectURL(commentAudioUrl);
+      setCommentAudioUrl(null);
+      setProcessedCommentAudioBlob(null);
+      return;
+    }
+    const PAblob = await applyCommentVoiceEffect(baseBlob, effect);
+    setProcessedCommentAudioBlob(PAblob); 
+    
+    if (commentAudioUrl) URL.revokeObjectURL(commentAudioUrl); 
+    if (PAblob) {
+        const newPreviewUrl = URL.createObjectURL(PAblob);
+        setCommentAudioUrl(newPreviewUrl); 
+    } else {
+        setCommentAudioUrl(null);
+    }
+  }, [applyCommentVoiceEffect, commentAudioUrl]); 
+
+  useEffect(() => {
+    if (initialCommentAudioBlob) {
+      processAndSetCommentAudio(initialCommentAudioBlob, selectedCommentVoiceEffect);
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedCommentVoiceEffect, initialCommentAudioBlob]); 
+  
+
+  const getCommentMicrophonePermission = async () => {
+    if (hasCommentMicPermission === null) { 
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        setHasCommentMicPermission(true);
+        stream.getTracks().forEach(track => track.stop());
+        setCommentMicError(null);
+      } catch (error) {
+        console.error('Error accessing microphone for comment:', error);
+        setHasCommentMicPermission(false);
+        const errorMessage = error instanceof Error && error.name === 'NotAllowedError' 
+          ? 'Microphone access denied. Please enable it in your browser settings.' 
+          : 'Could not access microphone. Please ensure it is connected and enabled.';
+        setCommentMicError(errorMessage);
+      }
+    }
+  };
+
+  const startCommentRecording = async () => {
+    clearCommentAudio(); 
+    if (hasCommentMicPermission === null) await getCommentMicrophonePermission(); 
+    
+    if (hasCommentMicPermission === false || !navigator.mediaDevices || !commentAudioContextRef.current) { 
+       const errorMsg = !commentAudioContextRef.current ? "Web Audio API not ready." : commentMicError;
+       toast({ variant: "destructive", title: "Mic/Audio Error", description: errorMsg || "Mic permission not granted."});
+       return;
+    }
+
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      const options = { mimeType: 'audio/webm;codecs=opus' };
+      try {
+        commentMediaRecorderRef.current = new MediaRecorder(stream, options);
+      } catch (e) {
+        commentMediaRecorderRef.current = new MediaRecorder(stream); 
+      }
+      
+      commentAudioChunksRef.current = [];
+      commentMediaRecorderRef.current.ondataavailable = (event) => {
+        if (event.data.size > 0) commentAudioChunksRef.current.push(event.data);
+      };
+      commentMediaRecorderRef.current.onstop = async () => {
+        const completeAudioBlob = new Blob(commentAudioChunksRef.current, { type: commentMediaRecorderRef.current?.mimeType || 'audio/webm' }); 
+        setInitialCommentAudioBlob(completeAudioBlob); 
+        await processAndSetCommentAudio(completeAudioBlob, selectedCommentVoiceEffect); 
+        stream.getTracks().forEach(track => track.stop()); 
+      };
+      commentMediaRecorderRef.current.start();
+      setIsRecordingComment(true);
+    } catch (err) {
+        const errorMsg = "Failed to start comment recording.";
+        setCommentMicError(errorMsg);
+        toast({ variant: "destructive", title: "Recording Error", description: errorMsg});
+    }
+  };
+
+  const stopCommentRecording = () => {
+    if (commentMediaRecorderRef.current && isRecordingComment) {
+      commentMediaRecorderRef.current.stop();
+      setIsRecordingComment(false);
+    }
+  };
+
+  const clearCommentAudio = (keepInitial: boolean = false) => {
+    if (commentAudioUrl) URL.revokeObjectURL(commentAudioUrl);
+    setCommentAudioUrl(null);
+    setProcessedCommentAudioBlob(null);
+    if (!keepInitial) setInitialCommentAudioBlob(null);
+    commentAudioChunksRef.current = [];
+    if (commentAudioPreviewRef.current) commentAudioPreviewRef.current.src = ''; 
+    if (!keepInitial) {
+        setSelectedCommentVoiceEffect("none"); 
+    }
+  };
+
+  const uploadCommentAudio = async (audioToUpload: Blob, userId: string, postId: string): Promise<string> => {
+    const timestamp = Date.now();
+    const randomSuffix = Math.random().toString(36).substring(2, 8);
+    const audioFileName = `comment_${userId}_${postId}_${timestamp}_${randomSuffix}.wav`; 
+    const storageRefPath = `commentAudio/${userId}/${postId}/${audioFileName}`;
+    const audioStorageRef = storageRef(storage, storageRefPath);
+    
+    // toast({ title: "Uploading Comment Audio...", description: "Please wait."}); // Can be noisy
+    await uploadBytes(audioStorageRef, audioToUpload);
+    const downloadURL = await getDownloadURL(audioStorageRef);
+    // toast({ title: "Comment Audio Uploaded!", variant: "default"});
+    return downloadURL;
+  };
+
 
   const handleLike = async () => {
     if (!user || authLoading || isLiking) return;
@@ -141,39 +447,27 @@ export function EkoPostCard({ post: initialPost, onPostDeleted, queue, postIndex
         return;
     }
     setIsLiking(true);
-
     const postRef = doc(firestore, "posts", post.id);
-
     try {
       await runTransaction(firestore, async (transaction) => {
         const postDoc = await transaction.get(postRef);
-        if (!postDoc.exists()) {
-          throw new Error("Post does not exist!");
-        }
-
+        if (!postDoc.exists()) throw new Error("Post does not exist!");
         if (isLiked && likeDocId) {
           const likeRef = doc(firestore, "likes", likeDocId);
           transaction.delete(likeRef);
           transaction.update(postRef, { likeCount: increment(-1) });
           setPost(p => ({ ...p, likeCount: Math.max(0, p.likeCount - 1) })); 
-          setIsLiked(false);
-          setLikeDocId(null);
+          setIsLiked(false); setLikeDocId(null);
         } else {
           const newLikeRef = doc(collection(firestore, "likes"));
-          transaction.set(newLikeRef, {
-            userId: user.uid,
-            postId: post.id,
-            createdAt: serverTimestamp(),
-          });
+          transaction.set(newLikeRef, { userId: user.uid, postId: post.id, createdAt: serverTimestamp() });
           transaction.update(postRef, { likeCount: increment(1) });
           setPost(p => ({ ...p, likeCount: p.likeCount + 1 }));
-          setIsLiked(true);
-          setLikeDocId(newLikeRef.id);
+          setIsLiked(true); setLikeDocId(newLikeRef.id);
         }
       });
     } catch (error) {
-      console.error("Error liking/unliking post:", error);
-      toast({ title: "Like Error", description: "Could not update like. Please try again.", variant: "destructive" });
+      toast({ title: "Like Error", variant: "destructive" });
     } finally {
       setIsLiking(false);
     }
@@ -182,32 +476,25 @@ export function EkoPostCard({ post: initialPost, onPostDeleted, queue, postIndex
   const handleReEko = async () => {
     if (!user || authLoading || isReEkoing) return;
      if (!userProfile) {
-        toast({ title: "Profile Error", description: "Your user profile is not loaded. Cannot re-eko.", variant: "destructive" });
+        toast({ title: "Profile Error", variant: "destructive" });
         return;
     }
     setIsReEkoing(true);
-
     const postRef = doc(firestore, "posts", post.id);
     const reEkosRef = collection(firestore, "reEkos");
-
     try {
       const batch = writeBatch(firestore);
       const newReEkoRef = doc(reEkosRef);
       batch.set(newReEkoRef, {
-        originalPostId: post.id,
-        userId: user.uid,
-        username: userProfile.username,
-        userAvatarURL: userProfile.avatarURL || '',
-        createdAt: serverTimestamp(),
+        originalPostId: post.id, userId: user.uid, username: userProfile.username,
+        userAvatarURL: userProfile.avatarURL || '', createdAt: serverTimestamp(),
       });
       batch.update(postRef, { reEkoCount: increment(1) });
       await batch.commit();
-
       setPost(p => ({ ...p, reEkoCount: p.reEkoCount + 1 }));
-      toast({ title: "Re-Ekoed!", variant: "default" });
+      toast({ title: "Re-Ekoed!" });
     } catch (error) {
-      console.error("Error re-ekoing post:", error);
-      toast({ title: "Re-Eko Error", description: "Could not re-eko. Please try again.", variant: "destructive" });
+      toast({ title: "Re-Eko Error", variant: "destructive" });
     } finally {
       setIsReEkoing(false);
     }
@@ -224,52 +511,42 @@ export function EkoPostCard({ post: initialPost, onPostDeleted, queue, postIndex
         });
       } catch (error) {
         navigator.clipboard.writeText(postUrl);
-        toast({ title: "Link Copied!", description: "Share link copied to clipboard.", variant: "default" });
+        toast({ title: "Link Copied!"});
       }
     } else {
       navigator.clipboard.writeText(postUrl);
-      toast({ title: "Link Copied!", description: "Share link copied to clipboard.", variant: "default" });
+      toast({ title: "Link Copied!"});
     }
   };
 
   const handleReport = () => {
     if (!user) {
-      toast({ title: "Login Required", description: "Please login to report content.", variant: "destructive" });
+      toast({ title: "Login Required", variant: "destructive" });
       return;
     }
-    console.log(`Report post ${post.id} by user ${user.uid}`);
-    toast({ title: "Report Action", description: "Reporting functionality coming soon!", variant: "default" });
+    toast({ title: "Report Action", description: "Reporting functionality coming soon!"});
   };
 
   const handleDeletePost = async () => {
     if (!user || user.uid !== post.userId || isDeleting) return;
     setIsDeleting(true);
-
     try {
       if (post.audioURL) {
         try {
           const audioFileRef = storageRef(storage, post.audioURL);
           await deleteObject(audioFileRef);
         } catch (storageError: any) {
-          console.error("Error deleting audio from Firebase Storage:", storageError);
           if (storageError.code !== 'storage/object-not-found') {
-             toast({ title: "Storage Deletion Error", description: "Could not delete associated audio file.", variant: "destructive" });
+             toast({ title: "Storage Deletion Error", variant: "destructive" });
           }
         }
       }
-
       const postRef = doc(firestore, "posts", post.id);
       await deleteDoc(postRef);
-
-      toast({ title: "EkoDrop Deleted", description: "Your EkoDrop has been successfully deleted.", variant: "default" });
-      
-      if (onPostDeleted) {
-        onPostDeleted(post.id);
-      }
-
+      toast({ title: "EkoDrop Deleted"});
+      if (onPostDeleted) onPostDeleted(post.id);
     } catch (error) {
-      console.error("Error deleting EkoDrop:", error);
-      toast({ title: "Deletion Failed", description: "Could not delete your EkoDrop. Please try again.", variant: "destructive" });
+      toast({ title: "Deletion Failed", variant: "destructive" });
     } finally {
       setIsDeleting(false);
       setShowDeleteConfirm(false);
@@ -278,37 +555,59 @@ export function EkoPostCard({ post: initialPost, onPostDeleted, queue, postIndex
 
 
   const handleAddComment = async () => {
-    if (!user || authLoading || isCommenting || !commentText.trim()) return;
+    if (!user || authLoading || isCommenting ) return;
     if (!userProfile) {
-        toast({ title: "Profile Error", description: "Your user profile is not loaded. Cannot comment.", variant: "destructive" });
+        toast({ title: "Profile Error", variant: "destructive" });
         return;
     }
-    setIsCommenting(true);
+    if (!commentText.trim() && !processedCommentAudioBlob) {
+      toast({ title: "Empty Comment", description: "Please add text or record audio for your comment.", variant: "destructive" });
+      return;
+    }
 
-    const postRef = doc(firestore, "posts", post.id);
-    const commentsRef = collection(firestore, "comments");
+    setIsCommenting(true);
+    let commentAudioDownloadURL: string | undefined = undefined;
 
     try {
-      const batch = writeBatch(firestore);
-      const newCommentRef = doc(commentsRef);
-      batch.set(newCommentRef, {
+      if (processedCommentAudioBlob) {
+        commentAudioDownloadURL = await uploadCommentAudio(processedCommentAudioBlob, user.uid, post.id);
+      }
+      
+      const newCommentData: Partial<EkoComment> = {
         postId: post.id,
         userId: user.uid,
         username: userProfile.username,
         userAvatarURL: userProfile.avatarURL || '',
-        textContent: commentText.trim(),
-        createdAt: serverTimestamp(),
-      } as Omit<EkoComment, 'id' | 'createdAt'> & { createdAt: Timestamp });
+        createdAt: serverTimestamp() as Timestamp,
+      };
+
+      if (commentText.trim()) {
+        newCommentData.textContent = commentText.trim();
+      }
+      if (commentAudioDownloadURL) {
+        newCommentData.audioURL = commentAudioDownloadURL;
+        if (selectedCommentVoiceEffect !== "none") {
+          newCommentData.appliedVoiceEffect = selectedCommentVoiceEffect;
+        }
+        // newCommentData.durationSeconds = ... // if calculated
+      }
+
+      const postRef = doc(firestore, "posts", post.id);
+      const commentsRef = collection(firestore, "comments");
+      const batch = writeBatch(firestore);
+      const newCommentRef = doc(commentsRef);
+      batch.set(newCommentRef, newCommentData);
       batch.update(postRef, { commentCount: increment(1) });
       await batch.commit();
 
       setPost(p => ({ ...p, commentCount: p.commentCount + 1 }));
       setCommentText("");
-      setShowCommentInput(false);
-      toast({ title: "Comment Posted!", variant: "default" });
+      clearCommentAudio();
+      setShowCommentInput(false); // Optionally keep open or close
+      toast({ title: "Comment Posted!"});
     } catch (error) {
       console.error("Error posting comment:", error);
-      toast({ title: "Comment Error", description: "Could not post comment. Please try again.", variant: "destructive" });
+      toast({ title: "Comment Error", variant: "destructive" });
     } finally {
       setIsCommenting(false);
     }
@@ -316,31 +615,22 @@ export function EkoPostCard({ post: initialPost, onPostDeleted, queue, postIndex
   
   const handlePlayPauseAudio = () => {
     if (!post.audioURL) return;
-
     const trackToPlay: TrackDetails = {
-      id: post.id,
-      audioURL: post.audioURL,
+      id: post.id, audioURL: post.audioURL,
       username: authorProfile?.username || post.username || "Unknown",
       userAvatarURL: authorProfile?.avatarURL || post.userAvatarURL,
       textContent: post.textContent,
     };
-    
     const queueAsTrackDetails: TrackDetails[] = queue.map(p => ({
-        id: p.id,
-        audioURL: p.audioURL,
-        username: p.username, // Assuming EkoPost has username directly or fetch author if needed
-        userAvatarURL: p.userAvatarURL,
-        textContent: p.textContent,
+        id: p.id, audioURL: p.audioURL, username: p.username,
+        userAvatarURL: p.userAvatarURL, textContent: p.textContent,
     }));
-
-
     if (isCurrentTrackInGlobalPlayer) {
       togglePlayPause();
     } else {
       playNewTrack(trackToPlay, queueAsTrackDetails, postIndex);
     }
   };
-
 
   const authorUsername = authorProfile?.username || post.username || "Unknown User";
   const authorAvatar = authorProfile?.avatarURL || post.userAvatarURL || `https://placehold.co/40x40.png?text=${authorUsername[0]?.toUpperCase() || 'U'}`;
@@ -354,9 +644,7 @@ export function EkoPostCard({ post: initialPost, onPostDeleted, queue, postIndex
       <CardHeader className="flex flex-row items-start space-x-4 p-4">
         {post.audioURL && (
           <Button 
-            variant="ghost" 
-            size="icon" 
-            onClick={handlePlayPauseAudio} 
+            variant="ghost" size="icon" onClick={handlePlayPauseAudio} 
             className="flex-shrink-0 h-10 w-10 text-accent hover:bg-accent/10"
             disabled={isGlobalPlayerLoading && isCurrentTrackInGlobalPlayer}
             aria-label={isCurrentTrackInGlobalPlayer && isGlobalPlayerPlaying ? "Pause EkoDrop" : "Play EkoDrop"}
@@ -370,7 +658,7 @@ export function EkoPostCard({ post: initialPost, onPostDeleted, queue, postIndex
             )}
           </Button>
         )}
-        {!post.audioURL && ( // Placeholder if no audio, to maintain layout
+        {!post.audioURL && (
             <div className="h-10 w-10 flex-shrink-0 flex items-center justify-center">
                 <Music2 className="h-6 w-6 text-muted-foreground/50"/>
             </div>
@@ -388,7 +676,7 @@ export function EkoPostCard({ post: initialPost, onPostDeleted, queue, postIndex
             </CardTitle>
           </Link>
           <p className="text-xs text-muted-foreground">
-            {formatTimestamp(post.createdAt)}
+            {formatTimestamp(post.createdAt)} {post.appliedVoiceEffect && post.appliedVoiceEffect !== "none" && (<span className="text-xs italic text-muted-foreground/80">&bull; {post.appliedVoiceEffect.charAt(0).toUpperCase() + post.appliedVoiceEffect.slice(1)} effect</span>)}
           </p>
         </div>
         <DropdownMenu>
@@ -439,7 +727,7 @@ export function EkoPostCard({ post: initialPost, onPostDeleted, queue, postIndex
             </DropdownMenuContent>
         </DropdownMenu>
       </CardHeader>
-      <CardContent className="p-4 pt-0 pl-20"> {/* Adjusted pl for play button */}
+      <CardContent className="p-4 pt-0 pl-20"> 
         <p className="text-sm whitespace-pre-wrap">
             {processedContent.map((part, index) =>
               part.type === 'hashtag' ? (
@@ -451,7 +739,6 @@ export function EkoPostCard({ post: initialPost, onPostDeleted, queue, postIndex
               )
             )}
         </p>
-        {/* Removed individual audio player from here */}
       </CardContent>
       <CardFooter className="flex justify-around p-2 border-t">
         <Button variant="ghost" size="sm" className="text-muted-foreground hover:text-blue-500" onClick={() => setShowCommentInput(!showCommentInput)}>
@@ -471,25 +758,95 @@ export function EkoPostCard({ post: initialPost, onPostDeleted, queue, postIndex
       </CardFooter>
 
       {showCommentInput && (
-        <div className="p-4 border-t">
+        <div className="p-4 border-t space-y-4">
           <div className="flex items-start space-x-3">
             <Avatar className="h-8 w-8 mt-1" data-ai-hint="user avatar">
               <AvatarImage src={userProfile?.avatarURL || `https://placehold.co/32x32.png?text=${userProfile?.username[0]?.toUpperCase() || 'U'}`} alt={userProfile?.username || "You"} />
               <AvatarFallback>{userProfile?.username[0]?.toUpperCase() || (user?.email && user.email[0].toUpperCase()) || "U"}</AvatarFallback>
             </Avatar>
-            <div className="flex-1">
-              <Textarea
-                placeholder="Add your voice (text for now)..."
-                value={commentText}
-                onChange={(e) => setCommentText(e.target.value)}
-                className="mb-2 min-h-[60px]"
-                disabled={!user || authLoading || isCommenting}
-              />
-              <Button onClick={handleAddComment} size="sm" disabled={!user || authLoading || isCommenting || !commentText.trim()}>
-                {isCommenting ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Send className="h-4 w-4 mr-2" />}
-                Post Comment
-              </Button>
-            </div>
+            <Textarea
+              placeholder="Add your thoughts (optional with voice)..."
+              value={commentText}
+              onChange={(e) => setCommentText(e.target.value)}
+              className="flex-1 min-h-[60px]"
+              disabled={!user || authLoading || isCommenting || isRecordingComment}
+            />
+          </div>
+
+          {/* Voice Commenting UI */}
+          <div className="pl-11 space-y-3"> {/* Aligns with textarea content */}
+            {hasCommentMicPermission === false && commentMicError && (
+              <Alert variant="destructive" className="text-xs">
+                <AlertTriangle className="h-3 w-3" />
+                <AlertTitle className="text-xs">Mic Error</AlertTitle>
+                <AlertDescription className="text-xs">{commentMicError}</AlertDescription>
+              </Alert>
+            )}
+            {commentAudioUrl && processedCommentAudioBlob && (
+              <div className="space-y-2 p-2 border rounded-md">
+                <p className="text-xs font-medium">
+                  Preview: {selectedCommentVoiceEffect !== "none" ? 
+                    `${selectedCommentVoiceEffect.charAt(0).toUpperCase() + selectedCommentVoiceEffect.slice(1)}` 
+                    : "Normal"}
+                  {isProcessingCommentEffect && <Loader2 className="h-3 w-3 inline animate-spin ml-1" />}
+                </p>
+                <audio ref={commentAudioPreviewRef} src={commentAudioUrl} controls className="w-full h-10" />
+                <Button type="button" variant="outline" size="xs" onClick={() => clearCommentAudio()} className="w-full text-red-500 hover:text-red-600">
+                  <Trash2 className="mr-1 h-3 w-3" /> Delete Recording
+                </Button>
+              </div>
+            )}
+
+            {!initialCommentAudioBlob && (
+              <div className="flex items-center space-x-2">
+                {isRecordingComment ? (
+                  <Button type="button" variant="destructive" onClick={stopCommentRecording} className="flex-1" size="sm">
+                    <StopCircle className="mr-2 h-4 w-4" /> Stop 
+                  </Button>
+                ) : (
+                  <Button 
+                    type="button" variant="outline" 
+                    onClick={hasCommentMicPermission === null ? getCommentMicrophonePermission : startCommentRecording} 
+                    className="flex-1" size="sm"
+                    disabled={hasCommentMicPermission === false || authLoading || !commentAudioContextRef.current || isCommenting}
+                  >
+                    <Mic className="mr-2 h-4 w-4" /> 
+                    {hasCommentMicPermission === null ? "Enable Mic & Record" : "Record Voice Comment"}
+                  </Button>
+                )}
+              </div>
+            )}
+             {initialCommentAudioBlob && !isRecordingComment && ( 
+                <div className="space-y-2">
+                    <label htmlFor={`comment-voice-effect-${post.id}`} className="text-xs font-medium flex items-center"><Wand2 className="mr-1 h-3 w-3 text-accent" />Voice Changer</label>
+                    <Select 
+                    onValueChange={(value: VoiceEffect) => setSelectedCommentVoiceEffect(value)} 
+                    value={selectedCommentVoiceEffect} 
+                    disabled={isProcessingCommentEffect || isCommenting}
+                    >
+                    <SelectTrigger id={`comment-voice-effect-${post.id}`} className="h-9 text-xs">
+                        <SelectValue placeholder="Effect" />
+                    </SelectTrigger>
+                    <SelectContent>
+                        <SelectItem value="none" className="text-xs">Normal</SelectItem>
+                        <SelectItem value="chipmunk" className="text-xs">Chipmunk</SelectItem>
+                        <SelectItem value="deep" className="text-xs">Deep</SelectItem>
+                        <SelectItem value="robot" className="text-xs">Robot</SelectItem>
+                        <SelectItem value="echo" className="text-xs">Echo</SelectItem>
+                        <SelectItem value="alien" className="text-xs">Alien</SelectItem>
+                        <SelectItem value="monster" className="text-xs">Monster</SelectItem>
+                        <SelectItem value="radio" className="text-xs">Radio</SelectItem>
+                    </SelectContent>
+                    </Select>
+                </div>
+            )}
+          </div>
+          
+          <div className="flex justify-end pt-2">
+            <Button onClick={handleAddComment} size="sm" disabled={!user || authLoading || isCommenting || isRecordingComment || isProcessingCommentEffect || (!commentText.trim() && !processedCommentAudioBlob)}>
+              {isCommenting ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Send className="h-4 w-4 mr-2" />}
+              Post Comment
+            </Button>
           </div>
           {!user && !authLoading && <p className="text-xs text-muted-foreground mt-2 text-center">Please login to comment.</p>}
         </div>

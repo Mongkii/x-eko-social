@@ -45,6 +45,7 @@ export interface EkoPost {
   likeCount: number;
   createdAt: Timestamp;
   updatedAt?: Timestamp;
+  appliedVoiceEffect?: string; // Added from CreateEkoForm
 }
 
 export interface Like {
@@ -73,6 +74,7 @@ export interface EkoComment {
   audioURL?: string;
   durationSeconds?: number;
   waveform?: number[];
+  appliedVoiceEffect?: string; // Added for voice comments
   createdAt: Timestamp;
 }
 
@@ -119,3 +121,13 @@ export interface ListItem {
   description?: string;
   imageUrl?: string;
 }
+
+export type VoiceEffect = 
+  | "none" 
+  | "chipmunk" 
+  | "deep" 
+  | "robot" 
+  | "echo" 
+  | "alien" 
+  | "monster"
+  | "radio";
