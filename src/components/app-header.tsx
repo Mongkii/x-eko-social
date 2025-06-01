@@ -6,8 +6,9 @@ import { Button } from "@/components/ui/button";
 import { AppLogoIcon } from "@/components/icons/app-logo-icon";
 import { ThemeToggle } from '@/components/theme-toggle';
 import { FontSizeSwitcher } from '@/components/font-size-switcher';
+import { LanguageSwitcher } from '@/components/language-switcher'; // Import LanguageSwitcher
 import { Sheet, SheetContent, SheetTrigger, SheetClose, SheetHeader, SheetTitle } from "@/components/ui/sheet";
-import { Menu, Home, Search, UserCircle, Settings, LogIn, LogOut, Users, ListMusic, SlidersHorizontal } from 'lucide-react'; // Added ListMusic, SlidersHorizontal
+import { Menu, Home, Search, UserCircle, Settings, LogIn, LogOut, Users, ListMusic, SlidersHorizontal } from 'lucide-react';
 import { usePathname, useRouter } from 'next/navigation';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/contexts/auth-context';
@@ -24,10 +25,8 @@ import {
 
 const navLinks = [
   { href: "/feed", label: "Feed", icon: Home, protected: false },
-  { href: "/discover", label: "Discover", icon: SlidersHorizontal, protected: false }, // Changed icon for Discover
-  { href: "/playlists", label: "Playlists", icon: ListMusic, protected: true }, // Added Playlists
-  // { href: "/notifications", label: "Notifications", icon: Bell, protected: true }, // Placeholder
-  // Adding settings to main nav for now as per request to build it out as a scope
+  { href: "/discover", label: "Discover", icon: SlidersHorizontal, protected: false },
+  { href: "/playlists", label: "Playlists", icon: ListMusic, protected: true },
   { href: "/settings", label: "Settings", icon: Settings, protected: true } 
 ];
 
@@ -83,6 +82,7 @@ export function AppHeader() {
         </nav>
 
         <div className="flex items-center space-x-2 md:space-x-4">
+          <LanguageSwitcher /> {/* Add LanguageSwitcher here */}
           <FontSizeSwitcher />
           <ThemeToggle />
 
