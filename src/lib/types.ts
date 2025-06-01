@@ -39,39 +39,60 @@ export interface EkoPost {
   visibility: PostVisibility;
   hashtags?: string[];
   mentions?: string[]; // Array of userIds (usernames or UIDs)
-  reEkoCount?: number; // Initialize to 0
-  commentCount?: number; // Initialize to 0
-  likeCount?: number; // Initialize to 0
+  reEkoCount: number; // Initialize to 0
+  commentCount: number; // Initialize to 0
+  likeCount: number; // Initialize to 0
   // Timestamps
   createdAt: Timestamp;
   updatedAt?: Timestamp;
 }
 
-export interface ReEko {
-  id: string; // document ID
-  originalPostId: string; // Reference to posts/{postId}
-  userId: string; // User who re-ekoed, Reference to users/{userId}
+export interface Like {
+  id?: string; // Firestore document ID
+  userId: string; // User who liked
+  postId: string; // Post that was liked
   createdAt: Timestamp;
 }
 
-export interface VoiceComment {
-  id: string; // document ID
+export interface ReEko {
+  id?: string; // Firestore document ID
+  originalPostId: string; // Reference to posts/{postId}
+  userId: string; // User who re-ekoed, Reference to users/{userId}
+  username: string; // Denormalized username of re-ekoer
+  userAvatarURL?: string; // Denormalized avatar of re-ekoer
+  createdAt: Timestamp;
+  // Optional: A re-eko could also have its own textContent if users can quote-tweet/re-eko with comment
+  // textContent?: string;
+}
+
+export interface EkoComment {
+  id?: string; // Firestore document ID
   postId: string; // Reference to posts/{postId}
   userId: string; // User who commented, Reference to users/{userId}
-  audioURL: string; // Firebase Storage reference
+  username: string; // Denormalized username of commenter
+  userAvatarURL?: string; // Denormalized avatar of commenter
+  textContent?: string; // Text of the comment
+  audioURL?: string; // Firebase Storage reference for voice comment
   durationSeconds?: number;
   waveform?: number[];
   createdAt: Timestamp;
+  // Future: Add likeCount for comments, replies (parentId)
 }
 
+// Kept VoiceComment for potential future distinction, but EkoComment can serve both
+export interface VoiceComment extends EkoComment {
+  audioURL: string; // Firebase Storage reference
+}
+
+
 export interface Report {
-  id: string; // document ID
+  id?: string; // document ID
   reportedContentType: 'post' | 'comment' | 'user';
   reportedContentId: string; // ID of the post, comment, or user being reported
   reportingUserId: string; // User who submitted the report
   reason: 'spam' | 'abuse' | 'illegal_content' | 'hate_speech' | 'misinformation' | 'other'; // Extended reasons
   additionalComments?: string;
-  status?: 'pending' | 'reviewed_action_taken' | 'reviewed_no_action';
+  status: 'pending' | 'reviewed_action_taken' | 'reviewed_no_action'; // Default to 'pending'
   createdAt: Timestamp;
   reviewedAt?: Timestamp;
   reviewerId?: string; // Admin who reviewed

@@ -1,25 +1,68 @@
 
 "use client";
 
-import type { EkoPost, UserProfile } from "@/lib/types";
+import type { EkoPost, UserProfile, EkoComment, Like } from "@/lib/types";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { MessageCircle, Repeat, Heart, Share2, MoreHorizontal } from "lucide-react";
+import { Textarea } from "@/components/ui/textarea";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { MessageCircle, Repeat, Heart, Share2, MoreHorizontal, AlertTriangle, Send, Loader2 } from "lucide-react";
 import Link from "next/link";
 import { formatTimestamp } from "@/lib/format-timestamp";
 import { useAuth } from "@/contexts/auth-context";
 import { useState, useEffect } from "react";
-import { doc, getDoc } from "firebase/firestore";
 import { firestore } from "@/lib/firebase";
+import {
+  doc,
+  getDoc,
+  writeBatch,
+  collection,
+  query,
+  where,
+  getDocs,
+  serverTimestamp,
+  increment,
+  deleteDoc,
+  addDoc,
+  runTransaction,
+  Timestamp,
+} from "firebase/firestore";
+import { useToast } from "@/hooks/use-toast";
+
 
 interface EkoPostCardProps {
   post: EkoPost;
 }
 
-export function EkoPostCard({ post }: EkoPostCardProps) {
-  const { user } = useAuth();
+export function EkoPostCard({ post: initialPost }: EkoPostCardProps) {
+  const { user, userProfile, loading: authLoading } = useAuth();
+  const { toast } = useToast();
+
+  const [post, setPost] = useState<EkoPost>(initialPost);
   const [authorProfile, setAuthorProfile] = useState<UserProfile | null>(null);
+
+  const [isLiked, setIsLiked] = useState(false);
+  const [likeDocId, setLikeDocId] = useState<string | null>(null);
+  const [isLiking, setIsLiking] = useState(false);
+
+  const [isReEkoing, setIsReEkoing] = useState(false);
+  // const [isReEkoed, setIsReEkoed] = useState(false); // For future UI changes if re-ekoed
+
+  const [showCommentInput, setShowCommentInput] = useState(false);
+  const [commentText, setCommentText] = useState("");
+  const [isCommenting, setIsCommenting] = useState(false);
+  // const [comments, setComments] = useState<EkoComment[]>([]); // For displaying comments later
+
+  useEffect(() => {
+    setPost(initialPost); // Update local post state if initialPost prop changes
+  }, [initialPost]);
+
 
   useEffect(() => {
     const fetchAuthorProfile = async () => {
@@ -35,26 +78,193 @@ export function EkoPostCard({ post }: EkoPostCardProps) {
         }
       }
     };
-    // Use denormalized data if available, otherwise fetch
+
     if (post.username && post.userAvatarURL) {
         setAuthorProfile({ username: post.username, avatarURL: post.userAvatarURL } as UserProfile);
     } else if(post.username && !post.userAvatarURL) {
         setAuthorProfile({ username: post.username, avatarURL: `https://placehold.co/100x100.png?text=${post.username[0].toUpperCase()}` } as UserProfile);
-    }
-    else {
+    } else {
         fetchAuthorProfile();
     }
   }, [post.userId, post.username, post.userAvatarURL]);
 
+  useEffect(() => {
+    if (user && post.id) {
+      const likesRef = collection(firestore, "likes");
+      const q = query(likesRef, where("userId", "==", user.uid), where("postId", "==", post.id));
+      getDocs(q).then((snapshot) => {
+        if (!snapshot.empty) {
+          setIsLiked(true);
+          setLikeDocId(snapshot.docs[0].id);
+        } else {
+          setIsLiked(false);
+          setLikeDocId(null);
+        }
+      });
+    }
+  }, [user, post.id]);
 
-  const handleInteraction = (action: string) => {
+
+  const handleLike = async () => {
+    if (!user || authLoading || isLiking) return;
+    if (!userProfile) {
+        toast({ title: "Profile Error", description: "Your user profile is not loaded. Cannot like.", variant: "destructive" });
+        return;
+    }
+    setIsLiking(true);
+
+    const postRef = doc(firestore, "posts", post.id);
+
+    try {
+      await runTransaction(firestore, async (transaction) => {
+        const postDoc = await transaction.get(postRef);
+        if (!postDoc.exists()) {
+          throw "Post does not exist!";
+        }
+
+        if (isLiked && likeDocId) {
+          const likeRef = doc(firestore, "likes", likeDocId);
+          transaction.delete(likeRef);
+          transaction.update(postRef, { likeCount: increment(-1) });
+          setIsLiked(false);
+          setPost(p => ({ ...p, likeCount: p.likeCount - 1 }));
+          setLikeDocId(null);
+        } else {
+          const newLikeRef = doc(collection(firestore, "likes"));
+          transaction.set(newLikeRef, {
+            userId: user.uid,
+            postId: post.id,
+            createdAt: serverTimestamp(),
+          });
+          transaction.update(postRef, { likeCount: increment(1) });
+          setIsLiked(true);
+          setPost(p => ({ ...p, likeCount: p.likeCount + 1 }));
+          setLikeDocId(newLikeRef.id); // Store new like doc id
+        }
+      });
+      // toast({ title: isLiked ? "Liked!" : "Unliked", variant: "default" }); // Toast can be annoying for likes
+    } catch (error) {
+      console.error("Error liking/unliking post:", error);
+      toast({ title: "Like Error", description: "Could not update like. Please try again.", variant: "destructive" });
+      // Revert optimistic UI update if needed or re-fetch state
+    } finally {
+      setIsLiking(false);
+    }
+  };
+
+  const handleReEko = async () => {
+    if (!user || authLoading || isReEkoing) return;
+     if (!userProfile) {
+        toast({ title: "Profile Error", description: "Your user profile is not loaded. Cannot re-eko.", variant: "destructive" });
+        return;
+    }
+    setIsReEkoing(true);
+
+    const postRef = doc(firestore, "posts", post.id);
+    const reEkosRef = collection(firestore, "reEkos");
+
+    // Optional: Check if user already re-ekoed this post to prevent duplicates
+    // const q = query(reEkosRef, where("userId", "==", user.uid), where("originalPostId", "==", post.id));
+    // const existingReEko = await getDocs(q);
+    // if (!existingReEko.empty) {
+    //   toast({ title: "Already Re-Ekoed", description: "You have already re-ekoed this post.", variant: "default" });
+    //   setIsReEkoing(false);
+    //   return;
+    // }
+
+    try {
+      const batch = writeBatch(firestore);
+      const newReEkoRef = doc(reEkosRef); // Auto-generate ID
+      batch.set(newReEkoRef, {
+        originalPostId: post.id,
+        userId: user.uid,
+        username: userProfile.username,
+        userAvatarURL: userProfile.avatarURL || '',
+        createdAt: serverTimestamp(),
+      });
+      batch.update(postRef, { reEkoCount: increment(1) });
+      await batch.commit();
+
+      setPost(p => ({ ...p, reEkoCount: p.reEkoCount + 1 }));
+      // setIsReEkoed(true); // For UI changes later
+      toast({ title: "Re-Ekoed!", description: "Shared to your followers (conceptually).", variant: "default" });
+    } catch (error) {
+      console.error("Error re-ekoing post:", error);
+      toast({ title: "Re-Eko Error", description: "Could not re-eko. Please try again.", variant: "destructive" });
+    } finally {
+      setIsReEkoing(false);
+    }
+  };
+
+  const handleShare = async () => {
+    const postUrl = `${window.location.origin}/post/${post.id}`; // Assuming a route like /post/:id exists or will exist
+    if (navigator.share) {
+      try {
+        await navigator.share({
+          title: `EkoDrop by ${authorProfile?.username || post.username}`,
+          text: post.textContent.substring(0, 100) + (post.textContent.length > 100 ? "..." : ""),
+          url: postUrl,
+        });
+        toast({ title: "Shared!", variant: "default" });
+      } catch (error) {
+        console.error("Error sharing:", error);
+        // Fallback to copy link if user cancels share dialog or error occurs
+        navigator.clipboard.writeText(postUrl);
+        toast({ title: "Link Copied!", description: "Share link copied to clipboard.", variant: "default" });
+      }
+    } else {
+      // Fallback for browsers that don't support navigator.share
+      navigator.clipboard.writeText(postUrl);
+      toast({ title: "Link Copied!", description: "Share link copied to clipboard.", variant: "default" });
+    }
+  };
+
+  const handleReport = () => {
     if (!user) {
-      // redirect to login or show login modal
-      alert("Please login to " + action);
+      toast({ title: "Login Required", description: "Please login to report content.", variant: "destructive" });
       return;
     }
-    // Implement interaction logic (like, comment, re-eko)
-    console.log(`${action} post ${post.id}`);
+    console.log(`Report post ${post.id} by user ${user.uid}`);
+    // TODO: Open Report Dialog/Modal
+    toast({ title: "Report Action", description: "Reporting functionality coming soon! Logged to console for now.", variant: "default" });
+  };
+
+  const handleAddComment = async () => {
+    if (!user || authLoading || isCommenting || !commentText.trim()) return;
+    if (!userProfile) {
+        toast({ title: "Profile Error", description: "Your user profile is not loaded. Cannot comment.", variant: "destructive" });
+        return;
+    }
+    setIsCommenting(true);
+
+    const postRef = doc(firestore, "posts", post.id);
+    const commentsRef = collection(firestore, "comments");
+
+    try {
+      const batch = writeBatch(firestore);
+      const newCommentRef = doc(commentsRef); // Auto-generate ID
+      batch.set(newCommentRef, {
+        postId: post.id,
+        userId: user.uid,
+        username: userProfile.username,
+        userAvatarURL: userProfile.avatarURL || '',
+        textContent: commentText.trim(),
+        createdAt: serverTimestamp(),
+      } as Omit<EkoComment, 'id' | 'createdAt'> & { createdAt: Timestamp });
+      batch.update(postRef, { commentCount: increment(1) });
+      await batch.commit();
+
+      setPost(p => ({ ...p, commentCount: p.commentCount + 1 }));
+      setCommentText("");
+      setShowCommentInput(false); // Optionally close input after commenting
+      toast({ title: "Comment Posted!", variant: "default" });
+      // TODO: Optionally refresh displayed comments list
+    } catch (error) {
+      console.error("Error posting comment:", error);
+      toast({ title: "Comment Error", description: "Could not post comment. Please try again.", variant: "destructive" });
+    } finally {
+      setIsCommenting(false);
+    }
   };
 
   const authorUsername = authorProfile?.username || post.username || "Unknown User";
@@ -80,14 +290,22 @@ export function EkoPostCard({ post }: EkoPostCardProps) {
             {formatTimestamp(post.createdAt)}
           </p>
         </div>
-        <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-primary">
-            <MoreHorizontal className="h-5 w-5" />
-            <span className="sr-only">More options</span>
-        </Button>
+        <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+                <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-primary">
+                    <MoreHorizontal className="h-5 w-5" />
+                    <span className="sr-only">More options</span>
+                </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+                {/* Add other options like Edit/Delete if user is author */}
+                <DropdownMenuItem onClick={handleReport} className="text-yellow-600 hover:!text-yellow-700 focus:!text-yellow-700 focus:!bg-yellow-100 dark:text-yellow-400 dark:hover:!text-yellow-500 dark:focus:!text-yellow-500 dark:focus:!bg-yellow-700/20">
+                    <AlertTriangle className="mr-2 h-4 w-4" /> Report EkoDrop
+                </DropdownMenuItem>
+            </DropdownMenuContent>
+        </DropdownMenu>
       </CardHeader>
       <CardContent className="p-4 pt-0">
-        {/* Placeholder for audio player if post.audioURL exists */}
-        {/* For now, just display textContent */}
         <p className="text-sm whitespace-pre-wrap">{post.textContent}</p>
         {post.audioURL && (
             <div className="mt-3">
@@ -98,19 +316,46 @@ export function EkoPostCard({ post }: EkoPostCardProps) {
         )}
       </CardContent>
       <CardFooter className="flex justify-around p-2 border-t">
-        <Button variant="ghost" size="sm" className="text-muted-foreground hover:text-blue-500" onClick={() => handleInteraction("comment")}>
-          <MessageCircle className="h-5 w-5 mr-1" /> {post.commentCount || 0}
+        <Button variant="ghost" size="sm" className="text-muted-foreground hover:text-blue-500" onClick={() => setShowCommentInput(!showCommentInput)}>
+          <MessageCircle className="h-5 w-5 mr-1" /> {post.commentCount}
         </Button>
-        <Button variant="ghost" size="sm" className="text-muted-foreground hover:text-green-500" onClick={() => handleInteraction("re-eko")}>
-          <Repeat className="h-5 w-5 mr-1" /> {post.reEkoCount || 0}
+        <Button variant="ghost" size="sm" className="text-muted-foreground hover:text-green-500" onClick={handleReEko} disabled={isReEkoing}>
+          {isReEkoing ? <Loader2 className="h-5 w-5 mr-1 animate-spin" /> : <Repeat className="h-5 w-5 mr-1" />}
+          {post.reEkoCount}
         </Button>
-        <Button variant="ghost" size="sm" className="text-muted-foreground hover:text-red-500" onClick={() => handleInteraction("like")}>
-          <Heart className="h-5 w-5 mr-1" /> {post.likeCount || 0}
+        <Button variant="ghost" size="sm" className={`hover:text-red-500 ${isLiked ? "text-red-500" : "text-muted-foreground"}`} onClick={handleLike} disabled={isLiking}>
+          {isLiking ? <Loader2 className="h-5 w-5 mr-1 animate-spin" /> : <Heart className={`h-5 w-5 mr-1 ${isLiked ? "fill-current" : ""}`} />}
+          {post.likeCount}
         </Button>
-        <Button variant="ghost" size="sm" className="text-muted-foreground hover:text-primary" onClick={() => handleInteraction("share")}>
+        <Button variant="ghost" size="sm" className="text-muted-foreground hover:text-primary" onClick={handleShare}>
           <Share2 className="h-5 w-5" />
         </Button>
       </CardFooter>
+
+      {showCommentInput && (
+        <div className="p-4 border-t">
+          <div className="flex items-start space-x-3">
+            <Avatar className="h-8 w-8 mt-1" data-ai-hint="user avatar">
+              <AvatarImage src={userProfile?.avatarURL || `https://placehold.co/32x32.png?text=${userProfile?.username[0]?.toUpperCase() || 'U'}`} alt={userProfile?.username || "You"} />
+              <AvatarFallback>{userProfile?.username[0]?.toUpperCase() || (user?.email && user.email[0].toUpperCase()) || "U"}</AvatarFallback>
+            </Avatar>
+            <div className="flex-1">
+              <Textarea
+                placeholder="Add your voice (text for now)..."
+                value={commentText}
+                onChange={(e) => setCommentText(e.target.value)}
+                className="mb-2 min-h-[60px]"
+                disabled={!user || authLoading || isCommenting}
+              />
+              <Button onClick={handleAddComment} size="sm" disabled={!user || authLoading || isCommenting || !commentText.trim()}>
+                {isCommenting ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Send className="h-4 w-4 mr-2" />}
+                Post Comment
+              </Button>
+            </div>
+          </div>
+          {!user && !authLoading && <p className="text-xs text-muted-foreground mt-2 text-center">Please login to comment.</p>}
+        </div>
+      )}
     </Card>
   );
 }
