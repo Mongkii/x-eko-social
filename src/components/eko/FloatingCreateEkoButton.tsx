@@ -9,9 +9,7 @@ import { cn } from "@/lib/utils";
 import { useState, useRef, useEffect, useCallback } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { quickPostEkoDrop } from "@/lib/actions/postActions";
-import { formatTimestampSimple } from "@/lib/format-timestamp"; // Import for duration formatting
-
-const LONG_PRESS_DURATION_MS = 500;
+import { formatTimestampSimple } from "@/lib/format-timestamp";
 
 export function FloatingCreateEkoButton() {
   const router = useRouter();
@@ -20,13 +18,11 @@ export function FloatingCreateEkoButton() {
 
   const [isRecording, setIsRecording] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [isLongPressActive, setIsLongPressActive] = useState(false);
-  const [recordingDuration, setRecordingDuration] = useState(0); // State for recording duration
+  const [recordingDuration, setRecordingDuration] = useState(0);
 
-  const longPressTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const audioChunksRef = useRef<Blob[]>([]);
-  const durationIntervalRef = useRef<NodeJS.Timeout | null>(null); // Ref for duration interval
+  const durationIntervalRef = useRef<NodeJS.Timeout | null>(null);
 
   const [hasPermission, setHasPermission] = useState<boolean | null>(null);
 
@@ -35,7 +31,7 @@ export function FloatingCreateEkoButton() {
       try {
         const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
         setHasPermission(true);
-        stream.getTracks().forEach(track => track.stop());
+        stream.getTracks().forEach(track => track.stop()); // Stop tracks immediately after permission check
         return true;
       } catch (error) {
         console.error("Microphone permission denied:", error);
@@ -52,16 +48,13 @@ export function FloatingCreateEkoButton() {
   }, [toast]);
 
   const startRecording = async () => {
-    if (isRecording) return;
+    if (isRecording || isSubmitting) return;
 
     let permissionGranted = hasPermission;
-    if (permissionGranted === null) {
+    if (permissionGranted === null) { // First time asking or if permission state unknown
       permissionGranted = await requestMicPermission();
     }
-    if (!permissionGranted) {
-        setIsLongPressActive(false);
-        return;
-    }
+    if (!permissionGranted) return;
 
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
@@ -81,146 +74,135 @@ export function FloatingCreateEkoButton() {
 
       mediaRecorderRef.current.onstart = () => {
         setIsRecording(true);
-        setRecordingDuration(0); // Reset duration
+        setRecordingDuration(0);
         if (durationIntervalRef.current) clearInterval(durationIntervalRef.current);
         durationIntervalRef.current = setInterval(() => {
           setRecordingDuration(prev => prev + 1);
         }, 1000);
-        toast({ title: "Recording started...", duration: 2000 });
+        // toast({ title: "Recording started...", duration: 1500 });
       };
 
       mediaRecorderRef.current.onstop = async () => {
-        setIsRecording(false);
-        setIsLongPressActive(false);
-        if (durationIntervalRef.current) {
-          clearInterval(durationIntervalRef.current);
-          durationIntervalRef.current = null;
-        }
-        // setRecordingDuration(0); // Duration is reset on next start
-
-        const audioBlob = new Blob(audioChunksRef.current, { type: mediaRecorderRef.current?.mimeType || 'audio/webm' });
-        audioChunksRef.current = [];
+        // This logic is moved primarily to handlePressEnd to ensure it runs on button release
+        // Stop stream tracks here when recording truly stops
         stream.getTracks().forEach(track => track.stop());
-
-        if (audioBlob.size === 0) {
-          toast({ title: "Recording Error", description: "No audio data captured.", variant: "destructive"});
-          setIsSubmitting(false);
-          return;
-        }
-
-        if (!user?.uid) {
-            toast({ title: "Authentication Error", description: "User ID not found. Cannot post.", variant: "destructive" });
-            setIsSubmitting(false);
-            return;
-        }
-
-        setIsSubmitting(true);
-        toast({ title: "Posting EkoDrop...", description: "Please wait." });
-
-        const formData = new FormData();
-        formData.append('audioBlob', audioBlob);
-        formData.append('userId', user.uid);
-
-        try {
-          const result = await quickPostEkoDrop(formData);
-          if (result.success) {
-            toast({ title: "EkoDrop Posted!", description: result.message });
-          } else {
-            toast({ title: "Post Failed", description: result.message, variant: "destructive" });
-          }
-        } catch (error) {
-          console.error("Error quick posting:", error);
-          toast({ title: "Post Error", description: "An unexpected error occurred.", variant: "destructive" });
-        } finally {
-          setIsSubmitting(false);
-        }
+      };
+      
+      mediaRecorderRef.current.onerror = (event) => {
+        console.error("MediaRecorder error:", event);
+        toast({ title: "Recording Error", description: "An error occurred during recording.", variant: "destructive" });
+        setIsRecording(false);
+        if (durationIntervalRef.current) clearInterval(durationIntervalRef.current);
+         stream.getTracks().forEach(track => track.stop());
       };
 
       mediaRecorderRef.current.start();
 
     } catch (error) {
       console.error("Error starting recording:", error);
-      toast({ title: "Recording Error", description: "Could not start recording.", variant: "destructive" });
+      toast({ title: "Recording Error", description: "Could not start recording. Please check microphone permissions.", variant: "destructive" });
       setIsRecording(false);
-      setIsLongPressActive(false);
-      if (durationIntervalRef.current) {
-        clearInterval(durationIntervalRef.current);
-        durationIntervalRef.current = null;
-      }
+      if (durationIntervalRef.current) clearInterval(durationIntervalRef.current);
     }
   };
 
-  const stopRecordingAndPost = () => {
-    if (mediaRecorderRef.current && isRecording) {
-      mediaRecorderRef.current.stop();
+  const stopRecordingAndPost = async () => {
+    if (mediaRecorderRef.current && mediaRecorderRef.current.state === "recording") {
+      mediaRecorderRef.current.stop(); // This will trigger onstop
     }
-    setIsLongPressActive(false);
-    if (longPressTimeoutRef.current) {
-      clearTimeout(longPressTimeoutRef.current);
-      longPressTimeoutRef.current = null;
-    }
-    if (durationIntervalRef.current) { // Ensure timer stops if manually stopped
+    // onstop handler will deal with stream tracks already
+
+    setIsRecording(false); // UI update immediately
+    if (durationIntervalRef.current) {
       clearInterval(durationIntervalRef.current);
       durationIntervalRef.current = null;
+    }
+    
+    // Give a moment for ondataavailable and onstop to fire and populate audioChunksRef
+    await new Promise(resolve => setTimeout(resolve, 100));
+
+
+    if (audioChunksRef.current.length === 0) {
+      // toast({ title: "No audio recorded", description: "Try recording for a bit longer.", variant: "default" });
+      setIsSubmitting(false);
+      return;
+    }
+
+    const audioBlob = new Blob(audioChunksRef.current, { type: mediaRecorderRef.current?.mimeType || 'audio/webm' });
+    audioChunksRef.current = []; // Clear chunks for next recording
+
+    if (audioBlob.size === 0) {
+      toast({ title: "Recording Error", description: "No audio data captured.", variant: "destructive"});
+      setIsSubmitting(false);
+      return;
+    }
+
+    if (!user?.uid) {
+        toast({ title: "Authentication Error", description: "You need to be logged in to post.", variant: "destructive" });
+        setIsSubmitting(false);
+        return;
+    }
+
+    setIsSubmitting(true);
+    toast({ title: "Posting EkoDrop...", description: "Please wait." });
+
+    const formData = new FormData();
+    formData.append('audioBlob', audioBlob);
+    formData.append('userId', user.uid);
+
+    try {
+      const result = await quickPostEkoDrop(formData);
+      if (result.success) {
+        toast({ title: "EkoDrop Posted!", description: result.message });
+      } else {
+        toast({ title: "Post Failed", description: result.message, variant: "destructive" });
+      }
+    } catch (error) {
+      console.error("Error quick posting:", error);
+      toast({ title: "Post Error", description: "An unexpected error occurred.", variant: "destructive" });
+    } finally {
+      setIsSubmitting(false);
+      setRecordingDuration(0); // Reset duration for next potential recording
     }
   };
 
   const handlePressStart = () => {
-    if (authLoading || !user) {
-        router.push('/auth/login?redirect=/create-eko');
+    if (authLoading || isSubmitting) return;
+    if (!user) {
+        router.push('/auth/login?redirect=/feed'); // Redirect to feed, as create page is not the primary flow here
         return;
     }
-    if (isSubmitting || isRecording) return;
-
-    setIsLongPressActive(true);
-    longPressTimeoutRef.current = setTimeout(() => {
-      if (isLongPressActive) {
-        startRecording();
-      }
-    }, LONG_PRESS_DURATION_MS);
+    startRecording();
   };
 
   const handlePressEnd = () => {
-    if (longPressTimeoutRef.current) {
-      clearTimeout(longPressTimeoutRef.current);
-      longPressTimeoutRef.current = null;
-    }
-
     if (isRecording) {
       stopRecordingAndPost();
-    } else if (isLongPressActive) {
-      if (user) {
-        router.push('/create-eko');
-      } else {
-        router.push('/auth/login?redirect=/create-eko');
-      }
     }
-    setIsLongPressActive(false);
   };
 
+  // Cleanup effect for component unmount
   useEffect(() => {
     return () => {
       if (mediaRecorderRef.current && mediaRecorderRef.current.state === "recording") {
         mediaRecorderRef.current.stop();
       }
       mediaRecorderRef.current?.stream?.getTracks().forEach(track => track.stop());
-      if (longPressTimeoutRef.current) {
-        clearTimeout(longPressTimeoutRef.current);
-      }
       if (durationIntervalRef.current) {
         clearInterval(durationIntervalRef.current);
       }
     };
   }, []);
 
+
   if (authLoading) {
-    return null;
+    return null; // Don't render if auth state is still loading
   }
 
   let buttonIcon = <Mic className="h-7 w-7" />;
   let buttonBaseClass = "bg-accent hover:bg-accent/90 text-accent-foreground";
-  let buttonTitle = user ? "Create EkoDrop (Hold to record)" : "Login to Create EkoDrop";
-  let isDisabled = isSubmitting;
+  let buttonTitle = user ? "Press and hold to record EkoDrop" : "Login to record EkoDrop";
+  let isDisabled = isSubmitting || authLoading; // Disable if submitting or auth is still loading
   let animationClass = "";
 
   if (isSubmitting) {
@@ -229,19 +211,20 @@ export function FloatingCreateEkoButton() {
   } else if (isRecording) {
     buttonIcon = <StopCircle className="h-7 w-7" />;
     buttonBaseClass = "bg-red-500 hover:bg-red-600 text-white";
-    buttonTitle = "Stop Recording & Post";
-    animationClass = "animate-pulse scale-110"; // Animation for recording
-  } else if (hasPermission === false) {
+    buttonTitle = "Release to stop recording & post";
+    animationClass = "animate-pulse scale-110 ring-4 ring-red-500/50";
+  } else if (hasPermission === false && user) { // Only show mic error if user is logged in
     buttonIcon = <AlertTriangle className="h-7 w-7" />;
     buttonBaseClass = "bg-yellow-500 hover:bg-yellow-600 text-white";
-    buttonTitle = "Microphone permission needed. Click to retry or go to settings.";
+    buttonTitle = "Microphone permission needed. Click to retry or check settings.";
+    // onClick for this state could re-trigger requestMicPermission
   }
 
 
   return (
     <div className="fixed bottom-6 right-6 z-[101]">
       {isRecording && (
-        <div className="absolute -top-8 left-1/2 -translate-x-1/2 bg-black/70 text-white px-2 py-1 rounded-md text-xs whitespace-nowrap">
+        <div className="absolute -top-10 left-1/2 -translate-x-1/2 bg-black/70 text-white px-3 py-1.5 rounded-lg text-sm shadow-md whitespace-nowrap">
           {formatTimestampSimple(recordingDuration)}
         </div>
       )}
@@ -249,7 +232,7 @@ export function FloatingCreateEkoButton() {
         variant="default"
         size="icon"
         className={cn(
-          "h-16 w-16 rounded-full shadow-xl transition-all duration-150 ease-in-out",
+          "h-16 w-16 rounded-full shadow-xl transition-all duration-150 ease-in-out focus-visible:ring-4 focus-visible:ring-ring/70",
           buttonBaseClass,
           animationClass
         )}
@@ -257,19 +240,23 @@ export function FloatingCreateEkoButton() {
         onMouseUp={handlePressEnd}
         onTouchStart={handlePressStart}
         onTouchEnd={handlePressEnd}
-        onMouseLeave={() => {
-          if (isLongPressActive && !isRecording && longPressTimeoutRef.current) {
-              clearTimeout(longPressTimeoutRef.current);
-              longPressTimeoutRef.current = null;
-              setIsLongPressActive(false);
-          }
+        onMouseLeave={() => { // Handle mouse leaving button while pressed
+            if (isRecording) {
+                handlePressEnd();
+            }
         }}
-        disabled={isDisabled || authLoading}
+        disabled={isDisabled}
         aria-label={buttonTitle}
         title={buttonTitle}
+        onClick={() => { // Handle click for retrying permission if needed
+            if (hasPermission === false && user && !isRecording && !isSubmitting) {
+                requestMicPermission();
+            }
+        }}
       >
         {buttonIcon}
       </Button>
     </div>
   );
 }
+
