@@ -5,7 +5,6 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { ListMusic, PlusCircle, Music2 } from "lucide-react";
 
-// Mock data for playlists
 const mockPlaylists = [
   { id: "1", name: "My Favorite Talks", ekoCount: 12, privacy: "public" , coverImage: "https://placehold.co/300x200.png?text=Talks" },
   { id: "2", name: "Morning Motivation", ekoCount: 7, privacy: "private", coverImage: "https://placehold.co/300x200.png?text=Motivation" },
@@ -17,7 +16,7 @@ export default function PlaylistsPage() {
   return (
     <div className="flex flex-col min-h-screen">
       <AppHeader />
-      <main className="flex-grow container mx-auto px-4 py-8">
+      <main className="flex-grow container mx-auto px-4 py-8 pb-24"> {/* Added pb-24 for player */}
         <header className="mb-10 flex flex-col sm:flex-row justify-between items-center">
           <div>
             <h1 className="text-4xl font-bold tracking-tight mb-1">My Eko Playlists</h1>

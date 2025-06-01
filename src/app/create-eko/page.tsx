@@ -9,7 +9,7 @@ export default function CreateEkoPage() {
   return (
     <div className="flex flex-col min-h-screen">
       <AppHeader />
-      <main className="flex-grow container mx-auto px-4 py-12 flex items-center justify-center">
+      <main className="flex-grow container mx-auto px-4 py-12 flex items-center justify-center pb-24"> {/* Added pb-24 for player */}
         <Card className="w-full max-w-lg shadow-xl">
           <CardHeader className="text-center">
             <Mic className="mx-auto h-12 w-12 text-accent mb-4" />

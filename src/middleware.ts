@@ -3,8 +3,7 @@ import { type NextRequest, NextResponse } from 'next/server';
 
 // This is a minimal middleware function.
 // It currently does nothing and just passes the request to the next handler.
-// The original comments indicated next-intl was used here, which has been removed.
-// If middleware functionality is needed in the future, it can be added here.
+// The original i18n middleware logic has been removed.
 export function middleware(request: NextRequest) {
   return NextResponse.next();
 }

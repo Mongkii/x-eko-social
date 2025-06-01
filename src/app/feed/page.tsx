@@ -1,5 +1,5 @@
 
-"use client"; // Needs to be client for hooks like useState, useEffect, useAuth
+"use client"; 
 
 import { AppHeader } from "@/components/app-header";
 import { AppFooter } from "@/components/app-footer";
@@ -23,16 +23,15 @@ export default function FeedPage() {
       try {
         const postsQuery = query(
           collection(firestore, "posts"),
-          where("visibility", "==", "public"), // Only public posts for now
+          where("visibility", "==", "public"), 
           orderBy("createdAt", "desc"),
-          limit(20) // Paginate later
+          limit(20) 
         );
         const querySnapshot = await getDocs(postsQuery);
-        const fetchedPosts = querySnapshot.docs.map(doc => ({
+        const fetchedPosts = querySnapshot.docs.map((doc, index) => ({ // Added index
           id: doc.id,
           ...doc.data(),
-          // Ensure createdAt is a Firestore Timestamp for EkoPostCard or convert as needed
-          createdAt: doc.data().createdAt instanceof Timestamp ? doc.data().createdAt : Timestamp.fromDate(new Date()), 
+          createdAt: doc.data().createdAt instanceof Timestamp ? doc.data().createdAt : Timestamp.fromDate(new Date()),
         })) as EkoPost[];
         setPosts(fetchedPosts);
       } catch (err) {
@@ -49,7 +48,7 @@ export default function FeedPage() {
   return (
     <div className="flex flex-col min-h-screen">
       <AppHeader />
-      <main className="flex-grow container mx-auto px-4 py-8">
+      <main className="flex-grow container mx-auto px-4 py-8 pb-24"> {/* Added pb-24 for player */}
         <h1 className="text-3xl font-bold mb-8 text-center md:text-left">Eko Feed</h1>
         
         {isLoading && (
@@ -75,8 +74,8 @@ export default function FeedPage() {
 
         {!isLoading && !error && posts.length > 0 && (
           <div className="space-y-6">
-            {posts.map(post => (
-              <EkoPostCard key={post.id} post={post} />
+            {posts.map((post, index) => (
+              <EkoPostCard key={post.id} post={post} queue={posts} postIndex={index} />
             ))}
           </div>
         )}

@@ -11,14 +11,13 @@ interface ProfilePageProps {
   };
 }
 
-// This page will be a Server Component, UserProfileClient will handle client-side data fetching
 export default function ProfilePage({ params }: ProfilePageProps) {
   const { username } = params;
 
   return (
     <div className="flex flex-col min-h-screen">
       <AppHeader />
-      <main className="flex-grow container mx-auto px-4 py-8">
+      <main className="flex-grow container mx-auto px-4 py-8 pb-24"> {/* Added pb-24 for player */}
         <Suspense fallback={
           <div className="flex justify-center items-center min-h-[60vh]">
             <Loader2 className="h-16 w-16 animate-spin text-accent" />
@@ -31,13 +30,3 @@ export default function ProfilePage({ params }: ProfilePageProps) {
     </div>
   );
 }
-
-// Optional: Generate static paths if you have a known list of users
-// export async function generateStaticParams() {
-//   // Fetch some users to pre-render, e.g., popular users
-//   // const users = await fetchUsers(); // Replace with actual data fetching
-//   // return users.map((user) => ({
-//   //   username: user.username_lowercase,
-//   // }));
-//   return [];
-// }

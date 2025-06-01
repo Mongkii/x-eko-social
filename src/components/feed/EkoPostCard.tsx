@@ -2,6 +2,7 @@
 "use client";
 
 import type { EkoPost, UserProfile, EkoComment, Like } from "@/lib/types";
+import type { TrackDetails } from "@/contexts/AudioPlayerContext"; // Added
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
@@ -22,14 +23,14 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-  AlertDialogTrigger,
 } from "@/components/ui/alert-dialog"
-import { MessageCircle, Repeat, Heart, Share2, MoreHorizontal, AlertTriangle, Send, Loader2, Trash2 } from "lucide-react";
+import { MessageCircle, Repeat, Heart, Share2, MoreHorizontal, AlertTriangle, Send, Loader2, Trash2, Play, Pause, Music2 } from "lucide-react"; // Added Play, Pause
 import Link from "next/link";
 import { formatTimestamp } from "@/lib/format-timestamp";
 import { useAuth } from "@/contexts/auth-context";
+import { useAudioPlayer } from "@/contexts/AudioPlayerContext"; // Added
 import { useState, useEffect } from "react";
-import { firestore, storage } from "@/lib/firebase"; // Added storage
+import { firestore, storage } from "@/lib/firebase"; 
 import {
   doc,
   getDoc,
@@ -45,19 +46,28 @@ import {
   runTransaction,
   Timestamp,
 } from "firebase/firestore";
-import { ref as storageRef, deleteObject } from "firebase/storage"; // Added Firebase Storage functions
+import { ref as storageRef, deleteObject } from "firebase/storage"; 
 import { useToast } from "@/hooks/use-toast";
 import { processHashtags } from "@/lib/utils";
 
 
 interface EkoPostCardProps {
   post: EkoPost;
-  onPostDeleted?: (postId: string) => void; // Optional callback
+  onPostDeleted?: (postId: string) => void;
+  queue: EkoPost[]; // Added for audio player queue
+  postIndex: number; // Added for audio player queue
 }
 
-export function EkoPostCard({ post: initialPost, onPostDeleted }: EkoPostCardProps) {
+export function EkoPostCard({ post: initialPost, onPostDeleted, queue, postIndex }: EkoPostCardProps) {
   const { user, userProfile, loading: authLoading } = useAuth();
   const { toast } = useToast();
+  const { 
+    playNewTrack, 
+    togglePlayPause, 
+    currentTrackDetails, 
+    isPlaying: isGlobalPlayerPlaying, 
+    isLoading: isGlobalPlayerLoading 
+  } = useAudioPlayer(); // Audio player context
 
   const [post, setPost] = useState<EkoPost>(initialPost);
   const [authorProfile, setAuthorProfile] = useState<UserProfile | null>(null);
@@ -74,6 +84,8 @@ export function EkoPostCard({ post: initialPost, onPostDeleted }: EkoPostCardPro
 
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
+  
+  const isCurrentTrackInGlobalPlayer = currentTrackDetails?.id === post.id;
 
   useEffect(() => {
     setPost(initialPost);
@@ -142,7 +154,7 @@ export function EkoPostCard({ post: initialPost, onPostDeleted }: EkoPostCardPro
           const likeRef = doc(firestore, "likes", likeDocId);
           transaction.delete(likeRef);
           transaction.update(postRef, { likeCount: increment(-1) });
-          setPost(p => ({ ...p, likeCount: Math.max(0, p.likeCount - 1) })); // Ensure count doesn't go below 0
+          setPost(p => ({ ...p, likeCount: Math.max(0, p.likeCount - 1) })); 
           setIsLiked(false);
           setLikeDocId(null);
         } else {
@@ -233,24 +245,18 @@ export function EkoPostCard({ post: initialPost, onPostDeleted }: EkoPostCardPro
     setIsDeleting(true);
 
     try {
-      // 1. Delete audio from Firebase Storage if it exists
       if (post.audioURL) {
         try {
           const audioFileRef = storageRef(storage, post.audioURL);
           await deleteObject(audioFileRef);
         } catch (storageError: any) {
-          // Log storage error but proceed to delete Firestore doc if storage fails (e.g., file already deleted)
           console.error("Error deleting audio from Firebase Storage:", storageError);
           if (storageError.code !== 'storage/object-not-found') {
-             toast({ title: "Storage Deletion Error", description: "Could not delete associated audio file. Please try again or contact support if this persists.", variant: "destructive" });
-             // Optionally, you could decide to not proceed with Firestore deletion if storage deletion fails critically.
-             // setIsDeleting(false);
-             // return;
+             toast({ title: "Storage Deletion Error", description: "Could not delete associated audio file.", variant: "destructive" });
           }
         }
       }
 
-      // 2. Delete post document from Firestore
       const postRef = doc(firestore, "posts", post.id);
       await deleteDoc(postRef);
 
@@ -259,8 +265,6 @@ export function EkoPostCard({ post: initialPost, onPostDeleted }: EkoPostCardPro
       if (onPostDeleted) {
         onPostDeleted(post.id);
       }
-      // Optionally, trigger a refresh or redirect, or let parent component handle UI update.
-      // For now, the post will remain visible until a page refresh or navigation.
 
     } catch (error) {
       console.error("Error deleting EkoDrop:", error);
@@ -308,17 +312,68 @@ export function EkoPostCard({ post: initialPost, onPostDeleted }: EkoPostCardPro
       setIsCommenting(false);
     }
   };
+  
+  const handlePlayPauseAudio = () => {
+    if (!post.audioURL) return;
+
+    const trackToPlay: TrackDetails = {
+      id: post.id,
+      audioURL: post.audioURL,
+      username: authorProfile?.username || post.username || "Unknown",
+      userAvatarURL: authorProfile?.avatarURL || post.userAvatarURL,
+      textContent: post.textContent,
+    };
+    
+    const queueAsTrackDetails: TrackDetails[] = queue.map(p => ({
+        id: p.id,
+        audioURL: p.audioURL,
+        username: p.username, // Assuming EkoPost has username directly or fetch author if needed
+        userAvatarURL: p.userAvatarURL,
+        textContent: p.textContent,
+    }));
+
+
+    if (isCurrentTrackInGlobalPlayer) {
+      togglePlayPause();
+    } else {
+      playNewTrack(trackToPlay, queueAsTrackDetails, postIndex);
+    }
+  };
+
 
   const authorUsername = authorProfile?.username || post.username || "Unknown User";
   const authorAvatar = authorProfile?.avatarURL || post.userAvatarURL || `https://placehold.co/40x40.png?text=${authorUsername[0]?.toUpperCase() || 'U'}`;
   const processedContent = processHashtags(post.textContent);
   const isCurrentUserPostAuthor = user && user.uid === post.userId;
 
-  if (!post) return null; // Or a loading/error state if post becomes undefined after deletion attempt
+  if (!post) return null; 
 
   return (
     <Card className="w-full max-w-xl mx-auto shadow-lg hover:shadow-xl transition-shadow duration-300">
       <CardHeader className="flex flex-row items-start space-x-4 p-4">
+        {post.audioURL && (
+          <Button 
+            variant="ghost" 
+            size="icon" 
+            onClick={handlePlayPauseAudio} 
+            className="flex-shrink-0 h-10 w-10 text-accent hover:bg-accent/10"
+            disabled={isGlobalPlayerLoading && isCurrentTrackInGlobalPlayer}
+            aria-label={isCurrentTrackInGlobalPlayer && isGlobalPlayerPlaying ? "Pause EkoDrop" : "Play EkoDrop"}
+          >
+            {isGlobalPlayerLoading && isCurrentTrackInGlobalPlayer ? (
+              <Loader2 className="h-6 w-6 animate-spin" />
+            ) : isCurrentTrackInGlobalPlayer && isGlobalPlayerPlaying ? (
+              <Pause className="h-6 w-6" />
+            ) : (
+              <Play className="h-6 w-6" />
+            )}
+          </Button>
+        )}
+        {!post.audioURL && ( // Placeholder if no audio, to maintain layout
+            <div className="h-10 w-10 flex-shrink-0 flex items-center justify-center">
+                <Music2 className="h-6 w-6 text-muted-foreground/50"/>
+            </div>
+        )}
         <Link href={`/profile/${authorUsername.toLowerCase()}`} passHref>
           <Avatar className="h-10 w-10 cursor-pointer" data-ai-hint="user avatar">
             <AvatarImage src={authorAvatar} alt={authorUsername} />
@@ -352,7 +407,7 @@ export function EkoPostCard({ post: initialPost, onPostDeleted }: EkoPostCardPro
                     <AlertDialog open={showDeleteConfirm} onOpenChange={setShowDeleteConfirm}>
                       <AlertDialogTrigger asChild>
                         <DropdownMenuItem 
-                          onSelect={(e) => e.preventDefault()} // Prevent menu from closing
+                          onSelect={(e) => e.preventDefault()} 
                           className="text-red-600 hover:!text-red-700 focus:!text-red-700 focus:!bg-red-100 dark:text-red-400 dark:hover:!text-red-500 dark:focus:!text-red-500 dark:focus:!bg-red-700/20"
                         >
                           <Trash2 className="mr-2 h-4 w-4" /> Delete EkoDrop
@@ -362,8 +417,7 @@ export function EkoPostCard({ post: initialPost, onPostDeleted }: EkoPostCardPro
                         <AlertDialogHeader>
                           <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
                           <AlertDialogDescription>
-                            This action cannot be undone. This will permanently delete your EkoDrop
-                            and remove its data from our servers.
+                            This action cannot be undone. This will permanently delete your EkoDrop.
                           </AlertDialogDescription>
                         </AlertDialogHeader>
                         <AlertDialogFooter>
@@ -384,7 +438,7 @@ export function EkoPostCard({ post: initialPost, onPostDeleted }: EkoPostCardPro
             </DropdownMenuContent>
         </DropdownMenu>
       </CardHeader>
-      <CardContent className="p-4 pt-0">
+      <CardContent className="p-4 pt-0 pl-20"> {/* Adjusted pl for play button */}
         <p className="text-sm whitespace-pre-wrap">
             {processedContent.map((part, index) =>
               part.type === 'hashtag' ? (
@@ -396,13 +450,7 @@ export function EkoPostCard({ post: initialPost, onPostDeleted }: EkoPostCardPro
               )
             )}
         </p>
-        {post.audioURL && (
-            <div className="mt-3">
-                <audio controls src={post.audioURL} className="w-full">
-                    Your browser does not support the audio element.
-                </audio>
-            </div>
-        )}
+        {/* Removed individual audio player from here */}
       </CardContent>
       <CardFooter className="flex justify-around p-2 border-t">
         <Button variant="ghost" size="sm" className="text-muted-foreground hover:text-blue-500" onClick={() => setShowCommentInput(!showCommentInput)}>
@@ -448,4 +496,3 @@ export function EkoPostCard({ post: initialPost, onPostDeleted }: EkoPostCardPro
     </Card>
   );
 }
-

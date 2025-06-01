@@ -23,7 +23,7 @@ import type { UserProfile, EkoPost, Follow } from '@/lib/types';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
-import { Loader2, CalendarDays, Edit3, UserPlus, UserMinus, MessageSquare, Check } from 'lucide-react';
+import { Loader2, CalendarDays, Edit3, UserPlus, UserMinus, MessageSquare } from 'lucide-react';
 import { EkoPostCard } from '@/components/feed/EkoPostCard';
 import { formatTimestamp } from '@/lib/format-timestamp';
 import { useAuth } from '@/contexts/auth-context';
@@ -67,7 +67,6 @@ export function UserProfileClient({ username }: UserProfileClientProps) {
           setProfile({ ...userData, id: userDoc.id });
           fetchUserPosts(userDoc.id);
 
-          // Check follow status if a user is logged in and it's not their own profile
           if (currentUser && currentUser.uid !== userDoc.id) {
             const followsRef = collection(firestore, 'follows');
             const followQuery = query(
@@ -123,7 +122,7 @@ export function UserProfileClient({ username }: UserProfileClientProps) {
 
   const handleFollowToggle = async () => {
     if (!currentUser || !currentUserProfile || !profile || authLoading || isProcessingFollow) return;
-    if (currentUser.uid === profile.id) return; // Cannot follow self
+    if (currentUser.uid === profile.id) return; 
 
     setIsProcessingFollow(true);
     const targetUserRef = doc(firestore, 'users', profile.id);
@@ -131,16 +130,15 @@ export function UserProfileClient({ username }: UserProfileClientProps) {
 
     try {
       await runTransaction(firestore, async (transaction) => {
-        if (isFollowing && followDocId) { // Unfollow
+        if (isFollowing && followDocId) { 
           const followRef = doc(firestore, 'follows', followDocId);
           transaction.delete(followRef);
           transaction.update(targetUserRef, { followersCount: increment(-1) });
           transaction.update(currentUserRef, { followingCount: increment(-1) });
           setIsFollowing(false);
-          setProfile(p => p ? { ...p, followersCount: p.followersCount - 1 } : null);
-          // Note: currentUserProfile update needs context refresh or manual state update if displayed directly on this page
+          setProfile(p => p ? { ...p, followersCount: Math.max(0, p.followersCount - 1) } : null);
           toast({ title: `Unfollowed ${profile.username}` });
-        } else { // Follow
+        } else { 
           const newFollowRef = doc(collection(firestore, 'follows'));
           const followData: Follow = {
             followerId: currentUser.uid,
@@ -159,7 +157,6 @@ export function UserProfileClient({ username }: UserProfileClientProps) {
     } catch (e) {
       console.error("Error processing follow/unfollow:", e);
       toast({ title: "Error", description: "Could not process follow/unfollow. Please try again.", variant: "destructive" });
-      // Re-fetch follow status to ensure consistency
         if (currentUser && profile.id && currentUser.uid !== profile.id) {
             const followsRef = collection(firestore, 'follows');
             const followQuery = query(
@@ -194,7 +191,7 @@ export function UserProfileClient({ username }: UserProfileClientProps) {
     return (
       <div className="text-center py-10">
         <p className="text-destructive text-xl">{error}</p>
-        <Link href="/feed" passHref>
+        <Link href="/feed">
           <Button variant="link" className="mt-4">Go to Feed</Button>
         </Link>
       </div>
@@ -297,8 +294,8 @@ export function UserProfileClient({ username }: UserProfileClientProps) {
           </div>
         ) : userPosts.length > 0 ? (
           <div className="space-y-6">
-            {userPosts.map(post => (
-              <EkoPostCard key={post.id} post={post} />
+            {userPosts.map((post, index) => ( // Added index
+              <EkoPostCard key={post.id} post={post} queue={userPosts} postIndex={index} />
             ))}
           </div>
         ) : (

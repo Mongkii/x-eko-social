@@ -25,11 +25,10 @@ export default function ProfileEditPage() {
 
   useEffect(() => {
     if (authLoading) {
-      return; // Wait for authentication to complete
+      return; 
     }
 
     if (!user || !authUserProfile) {
-      // Not logged in, or profile hasn't loaded yet
       router.push(`/auth/login?redirect=/profile/${usernameFromUrl}/edit`);
       return;
     }
@@ -38,7 +37,6 @@ export default function ProfileEditPage() {
       setProfileDataForEdit(authUserProfile);
       setIsAuthorized(true);
     } else if (usernameFromUrl) {
-      // Logged in, but trying to edit someone else's profile
       setIsAuthorized(false);
     }
     setIsLoadingPage(false);
@@ -80,7 +78,6 @@ export default function ProfileEditPage() {
   }
   
   if (!profileDataForEdit) {
-     // Should be covered by loading or unauthorized, but as a fallback
     return (
       <div className="flex flex-col min-h-screen">
         <AppHeader />
@@ -95,7 +92,7 @@ export default function ProfileEditPage() {
   return (
     <div className="flex flex-col min-h-screen">
       <AppHeader />
-      <main className="flex-grow container mx-auto px-4 py-12">
+      <main className="flex-grow container mx-auto px-4 py-12 pb-24"> {/* Added pb-24 for player */}
         <Card className="w-full max-w-2xl mx-auto shadow-xl">
           <CardHeader>
             <CardTitle className="text-3xl font-bold">Edit Your Profile</CardTitle>

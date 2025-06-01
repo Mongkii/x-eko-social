@@ -1,5 +1,5 @@
 
-"use client"; // Make this a client component to use useAuth
+"use client"; 
 
 import { AppHeader } from "@/components/app-header";
 import { AppFooter } from "@/components/app-footer";
@@ -11,18 +11,19 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Switch } from "@/components/ui/switch";
 import { User, Bell, Shield, Palette, Languages, Edit3, KeyRound, Loader2 } from "lucide-react";
 import Link from "next/link";
-import { useAuth } from "@/contexts/auth-context"; // Import useAuth
+import { useAuth } from "@/contexts/auth-context"; 
 import { useEffect, useState } from "react";
-import type { UserProfile } from "@/lib/types"; // Assuming UserProfile is needed
+import type { UserProfile } from "@/lib/types"; 
+import { Textarea } from "@/components/ui/textarea";
+
 
 export default function SettingsPage() {
-  const { user, userProfile, loading: authLoading } = useAuth(); // Get userProfile and loading state
+  const { user, userProfile, loading: authLoading } = useAuth(); 
 
-  // Local state for settings, could be initialized from userProfile
   const [settings, setSettings] = useState({
     profileVisibility: userProfile?.privacy?.profile || "public",
     defaultPostVisibility: userProfile?.privacy?.defaultPostVisibility || "public",
-    enableNotifications: true, // Example, fetch from user preferences
+    enableNotifications: true, 
     language: userProfile?.language || "en",
   });
 
@@ -31,7 +32,7 @@ export default function SettingsPage() {
       setSettings({
         profileVisibility: userProfile.privacy?.profile || "public",
         defaultPostVisibility: userProfile.privacy?.defaultPostVisibility || "public",
-        enableNotifications: true, // Replace with actual preference
+        enableNotifications: true, 
         language: userProfile.language || "en",
       });
     }
@@ -51,7 +52,6 @@ export default function SettingsPage() {
   }
 
   if (!user || !userProfile) {
-    // Optionally redirect to login or show a message
     return (
       <div className="flex flex-col min-h-screen">
         <AppHeader />
@@ -71,21 +71,18 @@ export default function SettingsPage() {
     );
   }
 
-  // Placeholder for actual save logic
   const handleSavePrivacySettings = () => {
     console.log("Saving privacy settings:", settings.profileVisibility, settings.defaultPostVisibility);
-    // TODO: Implement actual Firestore update for userProfile.privacy
   };
   const handleSaveNotificationSettings = () => {
     console.log("Saving notification settings:", settings.enableNotifications);
-    // TODO: Implement actual save logic
   };
 
 
   return (
     <div className="flex flex-col min-h-screen">
       <AppHeader />
-      <main className="flex-grow container mx-auto px-4 py-12">
+      <main className="flex-grow container mx-auto px-4 py-12 pb-24"> {/* Added pb-24 for player */}
         <header className="mb-10">
           <h1 className="text-4xl font-bold tracking-tight">Settings</h1>
           <p className="text-lg text-muted-foreground">Manage your account, profile, and preferences.</p>

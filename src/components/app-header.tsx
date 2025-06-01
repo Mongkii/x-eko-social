@@ -6,9 +6,8 @@ import { Button } from "@/components/ui/button";
 import { AppLogoIcon } from "@/components/icons/app-logo-icon";
 import { ThemeToggle } from '@/components/theme-toggle';
 import { FontSizeSwitcher } from '@/components/font-size-switcher';
-import { LanguageSwitcher } from '@/components/language-switcher'; // Import LanguageSwitcher
 import { Sheet, SheetContent, SheetTrigger, SheetClose, SheetHeader, SheetTitle } from "@/components/ui/sheet";
-import { Menu, Home, Search, UserCircle, Settings, LogIn, LogOut, Users, ListMusic, SlidersHorizontal } from 'lucide-react';
+import { Menu, Home, Settings, LogIn, LogOut, Users, ListMusic, SlidersHorizontal } from 'lucide-react';
 import { usePathname, useRouter } from 'next/navigation';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/contexts/auth-context';
@@ -82,7 +81,6 @@ export function AppHeader() {
         </nav>
 
         <div className="flex items-center space-x-2 md:space-x-4">
-          <LanguageSwitcher /> {/* Add LanguageSwitcher here */}
           <FontSizeSwitcher />
           <ThemeToggle />
 
@@ -110,7 +108,8 @@ export function AppHeader() {
                 <DropdownMenuSeparator />
                 <DropdownMenuGroup>
                   <DropdownMenuItem onClick={() => router.push(`/profile/${userProfile?.username_lowercase || user.uid}`)}>
-                    <UserCircle className="mr-2 h-4 w-4" />
+                     {/* Use userProfile.username_lowercase for profile links */}
+                    <Users className="mr-2 h-4 w-4" /> {/* Changed icon to Users for profile */}
                     <span>Profile</span>
                   </DropdownMenuItem>
                   <DropdownMenuItem onClick={() => router.push('/settings')}>
@@ -196,7 +195,7 @@ export function AppHeader() {
                         className="flex items-center space-x-2 rounded-md p-2 hover:bg-accent hover:text-accent-foreground text-muted-foreground w-full justify-start"
                       >
                         <Link href={`/profile/${userProfile?.username_lowercase || user.uid}`}>
-                          <UserCircle className="h-5 w-5" />
+                          <Users className="h-5 w-5" /> {/* Changed icon to Users for profile */}
                           <span>Profile</span>
                         </Link>
                       </Button>

@@ -10,7 +10,7 @@ export default function DiscoverPage() {
   return (
     <div className="flex flex-col min-h-screen">
       <AppHeader />
-      <main className="flex-grow container mx-auto px-4 py-8">
+      <main className="flex-grow container mx-auto px-4 py-8 pb-24"> {/* Added pb-24 for player */}
         <header className="mb-12 text-center">
           <h1 className="text-4xl font-bold tracking-tight mb-2">Discover EkoDrops</h1>
           <p className="text-lg text-muted-foreground">
@@ -35,7 +35,6 @@ export default function DiscoverPage() {
             Trending Now
           </h2>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {/* Placeholder for Trending EkoDrop Cards */}
             {[1, 2, 3].map((i) => (
               <Card key={i} className="hover:shadow-lg transition-shadow">
                 <CardHeader>
@@ -58,7 +57,6 @@ export default function DiscoverPage() {
             Suggested For You
           </h2>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-            {/* Placeholder for Suggested User/Content Cards */}
             {[1, 2, 3, 4].map((i) => (
               <Card key={i} className="text-center p-4 hover:shadow-lg transition-shadow">
                 <img

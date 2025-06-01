@@ -6,9 +6,11 @@ import './globals.css';
 import { Toaster } from "@/components/ui/toaster";
 import { ThemeProvider } from "@/components/theme-provider";
 import { FontSizeProvider } from '@/contexts/font-size-context';
-import { AuthProvider } from '@/contexts/auth-context'; // Import AuthProvider
+import { AuthProvider } from '@/contexts/auth-context';
 import { cn } from '@/lib/utils';
-import { FloatingCreateEkoButton } from '@/components/eko/FloatingCreateEkoButton'; // Import the new FAB
+import { FloatingCreateEkoButton } from '@/components/eko/FloatingCreateEkoButton';
+import { AudioPlayerProvider } from '@/contexts/AudioPlayerContext'; // Added
+import { GlobalAudioPlayer } from '@/components/audio/GlobalAudioPlayer'; // Added
 
 export const metadata: Metadata = {
   title: 'Eko - Voice Social Network',
@@ -36,11 +38,16 @@ export default function RootLayout({
           enableSystem
           disableTransitionOnChange
         >
-          <AuthProvider> {/* Wrap with AuthProvider */}
+          <AuthProvider>
             <FontSizeProvider>
-              {children}
-              <FloatingCreateEkoButton /> {/* Add FAB here */}
-              <Toaster />
+              <AudioPlayerProvider> {/* Added AudioPlayerProvider */}
+                <div className="relative flex min-h-screen flex-col">
+                  {children}
+                  <GlobalAudioPlayer /> {/* Added GlobalAudioPlayer */}
+                </div>
+                <FloatingCreateEkoButton />
+                <Toaster />
+              </AudioPlayerProvider>
             </FontSizeProvider>
           </AuthProvider>
         </ThemeProvider>
