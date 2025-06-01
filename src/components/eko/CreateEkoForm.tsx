@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import {
   Form,
   FormControl,
-  FormDescription, // Added FormDescription here
+  FormDescription,
   FormField,
   FormItem,
   FormLabel,
@@ -29,23 +29,23 @@ import { collection, addDoc, serverTimestamp, Timestamp } from "firebase/firesto
 import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import { useAuth } from "@/contexts/auth-context";
 import { useRouter } from "next/navigation";
-import { useState, useEffect, useRef } from "react";
-import { Loader2, Mic, StopCircle, Play, Trash2, AlertTriangle, Wand2 } from "lucide-react";
+import { useState, useEffect, useRef, useCallback } from "react";
+import { Loader2, Mic, StopCircle, Trash2, AlertTriangle, Wand2 } from "lucide-react";
 import type { EkoPost, PostVisibility } from "@/lib/types";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
 const formSchema = z.object({
   textContent: z.string().max(280, "EkoDrop text too long.").optional(),
   visibility: z.enum(["public", "followers-only", "private"]),
-  voiceEffect: z.string().optional(), // Added for voice effect
+  voiceEffect: z.string().optional(),
 }).refine(data => {
-  return data.textContent || data.voiceEffect !== undefined; // Validation if audio is also a factor
+  return data.textContent || data.voiceEffect !== undefined;
 }, {
   message: "An EkoDrop must have either text content or an audio recording.",
-  path: ["textContent"], // Path can be adjusted based on how audio presence is tracked in the form
+  path: ["textContent"],
 });
 
-type VoiceEffect = "none" | "chipmunk" | "deep" | "robot"; // Example effects
+type VoiceEffect = "none" | "chipmunk" | "deep" | "robot";
 
 export function CreateEkoForm() {
   const { toast } = useToast();
@@ -54,14 +54,17 @@ export function CreateEkoForm() {
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const [isRecording, setIsRecording] = useState(false);
-  const [audioBlob, setAudioBlob] = useState<Blob | null>(null);
-  const [audioUrl, setAudioUrl] = useState<string | null>(null);
+  const [initialAudioBlob, setInitialAudioBlob] = useState<Blob | null>(null); // Stores the original raw recording
+  const [processedAudioBlob, setProcessedAudioBlob] = useState<Blob | null>(null); // Stores the blob after effect application
+  const [audioUrl, setAudioUrl] = useState<string | null>(null); // URL for previewing processedAudioBlob
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const audioChunksRef = useRef<Blob[]>([]);
   const audioPreviewRef = useRef<HTMLAudioElement>(null);
   const [hasMicrophonePermission, setHasMicrophonePermission] = useState<boolean | null>(null);
   const [microphoneError, setMicrophoneError] = useState<string | null>(null);
   const [selectedVoiceEffect, setSelectedVoiceEffect] = useState<VoiceEffect>("none");
+  const [isProcessingEffect, setIsProcessingEffect] = useState(false);
+
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -77,8 +80,9 @@ export function CreateEkoForm() {
       form.reset({
         textContent: form.getValues("textContent") || "",
         visibility: userProfile.privacy.defaultPostVisibility || "public",
-        voiceEffect: form.getValues("voiceEffect") || "none",
+        voiceEffect: "none", // Start with no effect selected
       });
+      setSelectedVoiceEffect("none");
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [userProfile, form.reset]);
@@ -114,21 +118,52 @@ export function CreateEkoForm() {
     }
   };
   
-  const applyVoiceEffect = async (inputBlob: Blob, effect: VoiceEffect): Promise<Blob> => {
+  // SIMULATED voice effect application
+  const applyVoiceEffect = useCallback(async (inputBlob: Blob, effect: VoiceEffect): Promise<Blob> => {
+    if (!inputBlob) return inputBlob;
     if (effect === "none") {
       return inputBlob;
     }
-    toast({ title: "Applying Voice Effect...", description: `Applying ${effect} effect. This is a placeholder.` });
-    // Actual Web Audio API logic would go here.
-    // For demonstration, we'll just return the original blob after a delay.
-    await new Promise(resolve => setTimeout(resolve, 500)); // Simulate processing time
-    
-    console.warn(`Voice effect "${effect}" is a placeholder and not actually applied to the audio.`);
-    return inputBlob; 
-  };
 
+    setIsProcessingEffect(true);
+    toast({ title: "Applying Voice Effect...", description: `Applying ${effect} effect. This is a simulation.` });
+    
+    // Simulate asynchronous processing
+    await new Promise(resolve => setTimeout(resolve, 1000 + Math.random() * 1000)); 
+    
+    // In a real scenario, Web Audio API would be used here to transform inputBlob
+    // For now, we return the original blob for demonstration of the workflow.
+    console.warn(`Voice effect "${effect}" is currently simulated and not actually applied to the audio data.`);
+    
+    setIsProcessingEffect(false);
+    return inputBlob; // Return original blob after simulated processing
+  }, [toast]);
+
+
+  const processAndSetAudio = useCallback(async (baseBlob: Blob | null, effect: VoiceEffect) => {
+    if (!baseBlob) {
+      clearAudio(true); // Clear everything if baseBlob is null
+      return;
+    }
+    const PAblob = await applyVoiceEffect(baseBlob, effect);
+    setProcessedAudioBlob(PAblob);
+    if (audioUrl) URL.revokeObjectURL(audioUrl); // Revoke old URL
+    const newPreviewUrl = URL.createObjectURL(PAblob);
+    setAudioUrl(newPreviewUrl);
+  }, [applyVoiceEffect, audioUrl]);
+
+
+  useEffect(() => {
+    // When selectedVoiceEffect changes, and there's an initial recording, reprocess and update preview
+    if (initialAudioBlob) {
+      processAndSetAudio(initialAudioBlob, selectedVoiceEffect);
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedVoiceEffect]); // processAndSetAudio and initialAudioBlob are dependencies but processAndSetAudio is memoized
+                           // initialAudioBlob changes only on new recording, which is handled by onstop.
 
   const startRecording = async () => {
+    clearAudio(); // Clear previous recording and effects
     if (hasMicrophonePermission === null) {
       await getMicrophonePermission(); 
     }
@@ -147,15 +182,9 @@ export function CreateEkoForm() {
       };
 
       mediaRecorderRef.current.onstop = async () => {
-        let completeAudioBlob = new Blob(audioChunksRef.current, { type: 'audio/webm' }); 
-        
-        if (selectedVoiceEffect !== "none") {
-          completeAudioBlob = await applyVoiceEffect(completeAudioBlob, selectedVoiceEffect);
-        }
-
-        setAudioBlob(completeAudioBlob);
-        const previewUrl = URL.createObjectURL(completeAudioBlob);
-        setAudioUrl(previewUrl);
+        const completeAudioBlob = new Blob(audioChunksRef.current, { type: 'audio/webm' }); 
+        setInitialAudioBlob(completeAudioBlob); // Save the raw recording
+        await processAndSetAudio(completeAudioBlob, selectedVoiceEffect); // Process with current effect for initial preview
         stream.getTracks().forEach(track => track.stop());
       };
 
@@ -176,13 +205,21 @@ export function CreateEkoForm() {
     }
   };
 
-  const clearAudio = () => {
+  const clearAudio = (keepInitial: boolean = false) => {
     if (audioUrl) URL.revokeObjectURL(audioUrl);
-    setAudioBlob(null);
     setAudioUrl(null);
+    setProcessedAudioBlob(null);
+    if (!keepInitial) {
+        setInitialAudioBlob(null);
+    }
     audioChunksRef.current = [];
     if (audioPreviewRef.current) {
         audioPreviewRef.current.src = '';
+    }
+    // Reset selected effect to none if clearing everything
+    if (!keepInitial) {
+        setSelectedVoiceEffect("none");
+        form.setValue("voiceEffect", "none");
     }
   };
 
@@ -211,7 +248,7 @@ export function CreateEkoForm() {
       return;
     }
 
-    if (!values.textContent && !audioBlob) {
+    if (!values.textContent && !processedAudioBlob) {
         toast({
             title: "Empty EkoDrop",
             description: "Please add some text or record audio for your EkoDrop.",
@@ -227,10 +264,8 @@ export function CreateEkoForm() {
     let audioDownloadURL: string | undefined = undefined;
 
     try {
-      let finalAudioBlob = audioBlob;
-
-      if (finalAudioBlob) {
-        audioDownloadURL = await uploadAudio(finalAudioBlob, user.uid);
+      if (processedAudioBlob) { // Upload the processed blob
+        audioDownloadURL = await uploadAudio(processedAudioBlob, user.uid);
       }
       
       const hashtags = values.textContent ? values.textContent.match(/#\w+/g)?.map(h => h.toLowerCase()) : [];
@@ -247,6 +282,7 @@ export function CreateEkoForm() {
         reEkoCount: 0,
         createdAt: serverTimestamp() as Timestamp,
         ...(audioDownloadURL && { audioURL: audioDownloadURL }),
+        ...(values.voiceEffect && values.voiceEffect !== "none" && { appliedVoiceEffect: values.voiceEffect }), // Store applied effect
         ...(hashtags && hashtags.length > 0 && { hashtags }),
       };
 
@@ -272,7 +308,7 @@ export function CreateEkoForm() {
     }
   }
   
-  const canSubmit = !isSubmitting && !authLoading && user && userProfile && !isRecording;
+  const canSubmit = !isSubmitting && !authLoading && user && userProfile && !isRecording && !isProcessingEffect;
 
   return (
     <Form {...form}>
@@ -306,17 +342,20 @@ export function CreateEkoForm() {
               </AlertDescription>
             </Alert>
           )}
-          {audioUrl && audioBlob && (
+          {audioUrl && processedAudioBlob && (
             <div className="space-y-2 p-3 border rounded-md">
-              <p className="text-sm font-medium">Your Recording:</p>
+              <p className="text-sm font-medium">
+                Previewing: {selectedVoiceEffect !== "none" ? selectedVoiceEffect + " effect" : "Normal voice"}
+                {isProcessingEffect && <Loader2 className="h-4 w-4 inline animate-spin ml-2" />}
+              </p>
               <audio ref={audioPreviewRef} src={audioUrl} controls className="w-full" />
-              <Button type="button" variant="outline" size="sm" onClick={clearAudio} className="w-full text-red-500 hover:text-red-600">
-                <Trash2 className="mr-2 h-4 w-4" /> Delete Recording
+              <Button type="button" variant="outline" size="sm" onClick={() => clearAudio()} className="w-full text-red-500 hover:text-red-600">
+                <Trash2 className="mr-2 h-4 w-4" /> Delete Recording & Effects
               </Button>
             </div>
           )}
 
-          {!audioBlob && (
+          {!initialAudioBlob && ( // Show record button only if no initial recording exists
             <div className="flex items-center space-x-2">
               {isRecording ? (
                 <Button type="button" variant="destructive" onClick={stopRecording} className="flex-1">
@@ -338,7 +377,7 @@ export function CreateEkoForm() {
           )}
         </div>
 
-        {audioBlob && !isRecording && (
+        {initialAudioBlob && !isRecording && ( // Show effects dropdown if there's an initial recording and not currently recording
            <FormField
             control={form.control}
             name="voiceEffect"
@@ -348,14 +387,10 @@ export function CreateEkoForm() {
                 <Select 
                   onValueChange={(value: VoiceEffect) => {
                     field.onChange(value);
-                    setSelectedVoiceEffect(value);
-                    if (audioBlob) {
-                        toast({title: "Effect Selection", description: "Effect will be applied when you finalize the recording or if you re-record."})
-                    }
-
+                    setSelectedVoiceEffect(value); // This will trigger the useEffect to re-process
                   }} 
-                  defaultValue={field.value}
-                  value={selectedVoiceEffect}
+                  value={selectedVoiceEffect} // Controlled by selectedVoiceEffect state
+                  disabled={isProcessingEffect}
                 >
                   <FormControl>
                     <SelectTrigger>
@@ -364,12 +399,12 @@ export function CreateEkoForm() {
                   </FormControl>
                   <SelectContent>
                     <SelectItem value="none">Normal</SelectItem>
-                    <SelectItem value="chipmunk">Chipmunk</SelectItem>
-                    <SelectItem value="deep">Deep Voice</SelectItem>
-                    <SelectItem value="robot">Robot (Placeholder)</SelectItem>
+                    <SelectItem value="chipmunk">Chipmunk (Simulated)</SelectItem>
+                    <SelectItem value="deep">Deep Voice (Simulated)</SelectItem>
+                    <SelectItem value="robot">Robot (Simulated)</SelectItem>
                   </SelectContent>
                 </Select>
-                <FormDescription>Apply an effect to your voice. Effect is applied when recording stops.</FormDescription>
+                <FormDescription>Select an effect. The preview will update. Effects are currently simulated.</FormDescription>
                 <FormMessage />
               </FormItem>
             )}
@@ -417,6 +452,7 @@ export function CreateEkoForm() {
         
         <Button type="submit" className="w-full" disabled={!canSubmit}>
           {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+          {isProcessingEffect && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
           Post EkoDrop
         </Button>
         
@@ -425,11 +461,10 @@ export function CreateEkoForm() {
             {!authLoading && !user && <p>Please log in to post.</p>}
             {!authLoading && user && !userProfile && <p>User profile is not available. Posting disabled.</p>}
             {isRecording && <p className="text-yellow-500">Please stop recording before posting.</p>}
+            {isProcessingEffect && <p className="text-blue-500">Applying voice effect...</p>}
         </div>
 
       </form>
     </Form>
   );
 }
-
-
