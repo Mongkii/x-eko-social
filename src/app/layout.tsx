@@ -6,23 +6,19 @@ import './globals.css';
 import { Toaster } from "@/components/ui/toaster";
 import { ThemeProvider } from "@/components/theme-provider";
 import { FontSizeProvider } from '@/contexts/font-size-context';
+import { AuthProvider } from '@/contexts/auth-context'; // Import AuthProvider
 import { cn } from '@/lib/utils';
 
 export const metadata: Metadata = {
   title: 'Eko - Voice Social Network',
   description: 'Eko - The Voice-First Social Network. Share your voice with the world.',
-  // Add more metadata specific to Eko: open graph, twitter cards, etc.
 };
 
 export const viewport: Viewport = {
-  themeColor: [ // Adapt theme color for PWA
-    { media: '(prefers-color-scheme: light)', color: '#FFFFFF' }, // Light theme primary color
-    { media: '(prefers-color-scheme: dark)', color: '#0A0F1A' },  // Dark theme primary color (Eko Dark Blue/Black)
+  themeColor: [
+    { media: '(prefers-color-scheme: light)', color: '#FFFFFF' },
+    { media: '(prefers-color-scheme: dark)', color: '#0A0F1A' },
   ],
-  // Add PWA related viewport settings if Eko will be a PWA
-  // initialScale: 1,
-  // maximumScale: 1,
-  // userScalable: false,
 };
 
 export default function RootLayout({
@@ -35,14 +31,16 @@ export default function RootLayout({
       <body>
         <ThemeProvider
           attribute="class"
-          defaultTheme="dark" // Eko might be dark by default
+          defaultTheme="dark"
           enableSystem
           disableTransitionOnChange
         >
-          <FontSizeProvider>
-            {children}
-            <Toaster />
-          </FontSizeProvider>
+          <AuthProvider> {/* Wrap with AuthProvider */}
+            <FontSizeProvider>
+              {children}
+              <Toaster />
+            </FontSizeProvider>
+          </AuthProvider>
         </ThemeProvider>
       </body>
     </html>
