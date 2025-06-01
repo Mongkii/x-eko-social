@@ -1,9 +1,9 @@
 
-import { initializeApp, getApps, getApp, FirebaseApp } from "firebase/app";
-import { getAuth, Auth } from "firebase/auth";
-import { getFirestore, Firestore } from "firebase/firestore";
-import { getStorage, FirebaseStorage } from "firebase/storage";
-// import { getAnalytics, Analytics } from "firebase/analytics"; // Uncomment if you need Analytics
+import { initializeApp, getApps, getApp, type FirebaseApp } from "firebase/app";
+import { getAuth, type Auth } from "firebase/auth";
+import { getFirestore, type Firestore } from "firebase/firestore";
+import { getStorage, type FirebaseStorage } from "firebase/storage";
+// import { getAnalytics, type Analytics } from "firebase/analytics"; // Uncomment if you need Analytics
 
 const firebaseConfig = {
   apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
@@ -16,23 +16,27 @@ const firebaseConfig = {
 };
 
 let app: FirebaseApp;
-let auth: Auth;
-let firestore: Firestore;
-let storage: FirebaseStorage;
-// let analytics: Analytics; // Uncomment if you need Analytics
+let authInstance: Auth;
+let firestoreInstance: Firestore;
+let storageInstance: FirebaseStorage;
+// let analyticsInstance: Analytics; // Uncomment if you need Analytics
 
-if (typeof window !== "undefined" && !getApps().length) {
+// Initialize Firebase App
+if (!getApps().length) {
   app = initializeApp(firebaseConfig);
-  auth = getAuth(app);
-  firestore = getFirestore(app);
-  storage = getStorage(app);
-  // analytics = getAnalytics(app); // Uncomment if you need Analytics
 } else {
-  // Ensure app is initialized on server or if already initialized on client
-  app = getApps().length ? getApp() : initializeApp(firebaseConfig);
-  auth = getAuth(app);
-  firestore = getFirestore(app);
-  storage = getStorage(app);
+  app = getApp();
 }
 
-export { app, auth, firestore, storage };
+// Get Firebase services
+authInstance = getAuth(app);
+firestoreInstance = getFirestore(app);
+storageInstance = getStorage(app);
+// if (typeof window !== 'undefined') { // Initialize Analytics only on client side
+//   analyticsInstance = getAnalytics(app);
+// }
+
+// Export the initialized instances
+// Note: It's common to export the instances with their conventional names (auth, firestore, storage)
+export { app, authInstance as auth, firestoreInstance as firestore, storageInstance as storage };
+// export { app, authInstance as auth, firestoreInstance as firestore, storageInstance as storage, analyticsInstance as analytics }; // Uncomment if using Analytics
