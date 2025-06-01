@@ -12,7 +12,7 @@ const {
   NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET,
   NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID,
   NEXT_PUBLIC_FIREBASE_APP_ID,
-  // NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID, // Measurement ID is optional for core Firestore/Auth
+  NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID,
 } = process.env;
 
 if (!NEXT_PUBLIC_FIREBASE_API_KEY) {
@@ -28,15 +28,30 @@ if (!NEXT_PUBLIC_FIREBASE_PROJECT_ID) {
   );
 }
 
-const firebaseConfig = {
+// Define a type for the config object to allow conditional assignment
+interface FirebaseConfig {
+  apiKey: string;
+  authDomain?: string;
+  projectId: string;
+  storageBucket?: string;
+  messagingSenderId?: string;
+  appId?: string;
+  measurementId?: string;
+}
+
+const firebaseConfig: FirebaseConfig = {
   apiKey: NEXT_PUBLIC_FIREBASE_API_KEY,
   authDomain: NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN,
   projectId: NEXT_PUBLIC_FIREBASE_PROJECT_ID,
   storageBucket: NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET,
   messagingSenderId: NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID,
   appId: NEXT_PUBLIC_FIREBASE_APP_ID,
-  measurementId: process.env.NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID, // Keep this one direct as it's less critical
 };
+
+// Conditionally add measurementId if it exists
+if (NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID) {
+  firebaseConfig.measurementId = NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID;
+}
 
 let app: FirebaseApp;
 let authInstance: Auth;
@@ -60,6 +75,5 @@ storageInstance = getStorage(app);
 // }
 
 // Export the initialized instances
-// Note: It's common to export the instances with their conventional names (auth, firestore, storage)
 export { app, authInstance as auth, firestoreInstance as firestore, storageInstance as storage };
 // export { app, authInstance as auth, firestoreInstance as firestore, storageInstance as storage, analyticsInstance as analytics }; // Uncomment if using Analytics
