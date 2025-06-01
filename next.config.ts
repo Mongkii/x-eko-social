@@ -19,6 +19,11 @@ const nextConfig: NextConfig = {
       // Add other image CDNs if used
     ],
   },
+  experimental: {
+    allowedDevOrigins: [
+      'https://6000-firebase-studio-1747392932640.cluster-c3a7z3wnwzapkx3rfr5kz62dac.cloudworkstations.dev',
+    ],
+  },
 };
 
 export default nextConfig;
