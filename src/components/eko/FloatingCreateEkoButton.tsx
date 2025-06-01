@@ -29,7 +29,7 @@ export function FloatingCreateEkoButton() {
       variant="default"
       size="icon"
       className={cn(
-        "fixed bottom-6 right-6 z-50 h-16 w-16 rounded-full shadow-xl", // FAB specific styles
+        "fixed bottom-6 right-6 z-[101] h-16 w-16 rounded-full shadow-xl", // FAB specific styles, increased z-index
         "bg-accent hover:bg-accent/90 text-accent-foreground" // Using accent color for FAB
       )}
       onClick={handleClick}
