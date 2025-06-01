@@ -16,7 +16,7 @@
     --secondary: 215 27.9% 16.9%; /* Eko Dark Grey */
     --secondary-foreground: 210 20% 98%;
     --muted: 215.4 16.3% 46.9%;
-    --muted-foreground: 215.4 16.3% 86.9%; /* Lighter text on muted */
+    --muted-foreground: 215 15% 35%; /* Darker muted text for light theme */
     --accent: 34.9 91.6% 57.1%; /* Eko Orange Accent */
     --accent-foreground: 210 20% 98%;
     --destructive: 0 84.2% 60.2%;
