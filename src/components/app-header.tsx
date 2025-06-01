@@ -7,7 +7,7 @@ import { AppLogoIcon } from "@/components/icons/app-logo-icon";
 import { ThemeToggle } from '@/components/theme-toggle';
 import { FontSizeSwitcher } from '@/components/font-size-switcher';
 import { Sheet, SheetContent, SheetTrigger, SheetClose } from "@/components/ui/sheet";
-import { Menu, Home, Search, UserCircle, Settings, LogIn, LogOut, Mic, Users, Edit } from 'lucide-react';
+import { Menu, Home, Search, UserCircle, Settings, LogIn, LogOut, Users } from 'lucide-react'; // Removed Mic, Edit
 import { usePathname, useRouter } from 'next/navigation';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/contexts/auth-context';
@@ -39,21 +39,12 @@ export function AppHeader() {
     router.refresh();
   };
 
-  const handleRecordEko = () => {
-    if (!user) {
-      router.push('/auth/login?redirect=/create-eko');
-    } else {
-      router.push('/create-eko');
-    }
-  };
-
   const getAvatarFallback = () => {
     if (userProfile?.username) return userProfile.username[0].toUpperCase();
     if (user?.email) return user.email[0].toUpperCase();
     return "U";
   };
 
-  // Simplified for desktop usage, sheet links are handled explicitly below
   const renderDesktopNavLinks = () =>
     navLinks
       .filter(link => !link.protected || (link.protected && user))
@@ -70,14 +61,13 @@ export function AppHeader() {
           )}
         >
           <Link href={link.href}>
-            {/* Desktop links typically don't have icons in this design */}
             <span>{link.label}</span>
           </Link>
         </Button>
       ));
 
   return (
-    <header className="sticky top-0 z-50 w-full border-b border-border/40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+    <header className="sticky top-0 z-40 w-full border-b border-border/40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60"> {/* Adjusted z-index to be below FAB */}
       <div className="container flex h-16 max-w-screen-2xl items-center justify-between">
         <Link href="/" className="flex items-center space-x-2">
           <AppLogoIcon className="h-8 w-8 text-accent" />
@@ -89,18 +79,7 @@ export function AppHeader() {
         </nav>
 
         <div className="flex items-center space-x-2 md:space-x-4">
-          {user && (
-            <>
-              <Button variant="ghost" size="icon" className="md:hidden" onClick={handleRecordEko} aria-label="Record Eko">
-                 <Edit className="h-5 w-5" />
-                 <span className="sr-only">Record Eko</span>
-              </Button>
-              <Button variant="default" size="sm" className="hidden md:flex items-center" onClick={handleRecordEko}>
-                <Edit className="mr-2 h-4 w-4" />
-                Create Eko
-              </Button>
-            </>
-          )}
+          {/* Create Eko button removed from here */}
           <FontSizeSwitcher />
           <ThemeToggle />
 
@@ -168,7 +147,6 @@ export function AppHeader() {
               </Button>
             </SheetTrigger>
             <SheetContent side="right" className="w-[280px] sm:w-[320px]">
-              {/* Content is now direct children of SheetContent */}
               <div className="flex flex-col space-y-4 p-4">
                 <SheetClose asChild>
                   <Link href="/" className="flex items-center space-x-2 mb-4">
@@ -205,6 +183,7 @@ export function AppHeader() {
                     <div className="p-2 text-muted-foreground">Loading...</div>
                  ) : user ? (
                   <>
+                    {/* Create Eko button removed from sheet menu as well */}
                     <SheetClose asChild>
                       <Button
                         variant="ghost"
@@ -268,11 +247,3 @@ export function AppHeader() {
     </header>
   );
 }
-
-// Removed the `declare module` block for SheetContentProps as it's no longer needed
-// and was part of the problematic pattern.
-// declare module "@/components/ui/sheet" {
-//   interface SheetContentProps {
-//     closeFunctionProp?: (closeSheet: () => void) => React.ReactNode;
-//   }
-// }

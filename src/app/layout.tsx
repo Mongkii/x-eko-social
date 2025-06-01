@@ -8,6 +8,7 @@ import { ThemeProvider } from "@/components/theme-provider";
 import { FontSizeProvider } from '@/contexts/font-size-context';
 import { AuthProvider } from '@/contexts/auth-context'; // Import AuthProvider
 import { cn } from '@/lib/utils';
+import { FloatingCreateEkoButton } from '@/components/eko/FloatingCreateEkoButton'; // Import the new FAB
 
 export const metadata: Metadata = {
   title: 'Eko - Voice Social Network',
@@ -38,6 +39,7 @@ export default function RootLayout({
           <AuthProvider> {/* Wrap with AuthProvider */}
             <FontSizeProvider>
               {children}
+              <FloatingCreateEkoButton /> {/* Add FAB here */}
               <Toaster />
             </FontSizeProvider>
           </AuthProvider>
