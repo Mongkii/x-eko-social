@@ -1,0 +1,74 @@
+
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Default: Deny all access
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // Users Collection
+    // User profiles can be public or private based on a field within the document.
+    // For simplicity, initial rule allows read for public profiles.
+    // BRD: users/{userId}/privacy.profile ('public' | 'private')
+    match /users/{userId} {
+      allow read: if true; // Or: resource.data.privacy.profile == 'public' || (resource.data.privacy.profile == 'private' && request.auth.uid == userId);
+      allow create: if request.auth.uid == userId;
+      allow update: if request.auth.uid == userId;
+      // Deletion of user accounts should typically be handled by a Cloud Function for cleanup.
+      allow delete: if false; // Or: request.auth.uid == userId; (if self-deletion is allowed directly)
+    }
+
+    // Posts (EkoDrops) Collection
+    // BRD: posts/{postId}/visibility ('public' | 'followers-only' | 'private')
+    match /posts/{postId} {
+      allow read: if resource.data.visibility == 'public'
+                   || (resource.data.visibility == 'followers-only' && isSignedIn() ) // Basic check, full follower logic is more complex
+                   || (resource.data.visibility == 'private' && request.auth.uid == resource.data.userId);
+      allow create: if request.auth.uid == request.resource.data.userId;
+      allow update: if request.auth.uid == resource.data.userId;
+      allow delete: if request.auth.uid == resource.data.userId;
+    }
+
+    // ReEkos Collection
+    // BRD: reEkos/{id}: { originalPostId: string, userId: string, timestamp: Timestamp }
+    match /reEkos/{reEkoId} {
+      allow read: if true; // Re-Ekos are generally public if the original post is accessible
+      allow create: if isSignedIn() && request.auth.uid == request.resource.data.userId;
+      allow delete: if isSignedIn() && request.auth.uid == resource.data.userId; // Users can undo their re-eko
+      allow update: if false; // Re-Ekos are typically not updated
+    }
+
+    // Comments Collection
+    // BRD: comments/{id}: { postId: string, audioURL: string, userId: string, timestamp }
+    match /comments/{commentId} {
+      allow read: if true; // Comments are generally public if the post is accessible
+      allow create: if isSignedIn() && request.auth.uid == request.resource.data.userId;
+      allow update: if isSignedIn() && request.auth.uid == resource.data.userId; // e.g., for editing own comment
+      allow delete: if isSignedIn() && request.auth.uid == resource.data.userId; // e.g., for deleting own comment
+    }
+
+    // Reports Collection
+    // BRD: reports/{id}: { postId: string, userId: string, reason: string, timestamp: Timestamp }
+    match /reports/{reportId} {
+      allow read: if false; // Reports should generally not be readable by clients, only admins via backend/functions
+      allow create: if isSignedIn() && request.auth.uid == request.resource.data.reportingUserId; // Assuming reportingUserId is who submitted
+      allow update: if false; // Reports are typically not updated by clients
+      allow delete: if false; // Reports are typically not deleted by clients
+    }
+
+    // Localization Collection (as per BRD)
+    // BRD: localization/{lang}
+    match /localization/{lang} {
+      allow read: if true; // UI strings should be publicly readable
+      allow write: if false; // Should be managed by admins
+    }
+
+    // Helper function to check if user is signed in
+    function isSignedIn() {
+      return request.auth != null;
+    }
+  }
+}

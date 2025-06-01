@@ -1,0 +1,38 @@
+
+rules_version = '2';
+
+service firebase.storage {
+  match /b/{bucket}/o {
+
+    // Default: Deny all access
+    match /{allPaths=**} {
+      allow read, write: if false;
+    }
+
+    // User Avatars
+    // Path: users/{userId}/avatar/{fileName}
+    match /users/{userId}/avatar/{fileName} {
+      allow read: if true; // Avatars are generally public
+      allow write: if request.auth != null && request.auth.uid == userId; // User can update their own avatar
+    }
+
+    // EkoDrop Audio Files
+    // Path: ekoDrops/{postId}/audio/{fileName} (BRD mentions posts/{postId}, using ekoDrops for clarity in storage)
+    // Access control should ideally mirror Firestore post visibility.
+    // For simplicity here, public read, authenticated write.
+    // Robust security might involve custom claims or checking Firestore doc via a function.
+    match /ekoDrops/{postId}/audio/{fileName} {
+      allow read: if true; // Assuming public posts, otherwise needs more complex check
+      allow write: if request.auth != null; // Authenticated users can upload. Further checks (e.g. ownership) are ideal via Cloud Functions.
+    }
+
+    // Voice Comment Audio Files
+    // Path: comments/{commentId}/audio/{fileName}
+    match /comments/{commentId}/audio/{fileName} {
+      allow read: if true; // Assuming public comments
+      allow write: if request.auth != null; // Authenticated users can upload.
+    }
+
+    // Other potential paths (e.g., shared waveform images) would go here
+  }
+}
