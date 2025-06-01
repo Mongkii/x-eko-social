@@ -1,5 +1,6 @@
-
-// This file is no longer used as we've removed the [locale] segment for now
-// and simplified to English-only. The main page is now src/app/page.tsx.
-// This file can be deleted.
-export {};
+// This file is no longer used as the [locale] segment has been removed.
+// The main page is src/app/page.tsx.
+// This file is a placeholder to prevent build errors and can ideally be deleted.
+export default function LocalePage() {
+  return null;
+}
