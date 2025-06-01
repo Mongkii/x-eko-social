@@ -34,6 +34,7 @@ import {
   Timestamp,
 } from "firebase/firestore";
 import { useToast } from "@/hooks/use-toast";
+import { processHashtags } from "@/lib/utils";
 
 
 interface EkoPostCardProps {
@@ -52,15 +53,13 @@ export function EkoPostCard({ post: initialPost }: EkoPostCardProps) {
   const [isLiking, setIsLiking] = useState(false);
 
   const [isReEkoing, setIsReEkoing] = useState(false);
-  // const [isReEkoed, setIsReEkoed] = useState(false); // For future UI changes if re-ekoed
 
   const [showCommentInput, setShowCommentInput] = useState(false);
   const [commentText, setCommentText] = useState("");
   const [isCommenting, setIsCommenting] = useState(false);
-  // const [comments, setComments] = useState<EkoComment[]>([]); // For displaying comments later
 
   useEffect(() => {
-    setPost(initialPost); // Update local post state if initialPost prop changes
+    setPost(initialPost);
   }, [initialPost]);
 
 
@@ -119,15 +118,15 @@ export function EkoPostCard({ post: initialPost }: EkoPostCardProps) {
       await runTransaction(firestore, async (transaction) => {
         const postDoc = await transaction.get(postRef);
         if (!postDoc.exists()) {
-          throw "Post does not exist!";
+          throw new Error("Post does not exist!");
         }
 
         if (isLiked && likeDocId) {
           const likeRef = doc(firestore, "likes", likeDocId);
           transaction.delete(likeRef);
           transaction.update(postRef, { likeCount: increment(-1) });
+          setPost(p => ({ ...p, likeCount: Math.max(0, p.likeCount - 1) })); // Ensure count doesn't go below 0
           setIsLiked(false);
-          setPost(p => ({ ...p, likeCount: p.likeCount - 1 }));
           setLikeDocId(null);
         } else {
           const newLikeRef = doc(collection(firestore, "likes"));
@@ -137,16 +136,14 @@ export function EkoPostCard({ post: initialPost }: EkoPostCardProps) {
             createdAt: serverTimestamp(),
           });
           transaction.update(postRef, { likeCount: increment(1) });
-          setIsLiked(true);
           setPost(p => ({ ...p, likeCount: p.likeCount + 1 }));
-          setLikeDocId(newLikeRef.id); // Store new like doc id
+          setIsLiked(true);
+          setLikeDocId(newLikeRef.id);
         }
       });
-      // toast({ title: isLiked ? "Liked!" : "Unliked", variant: "default" }); // Toast can be annoying for likes
     } catch (error) {
       console.error("Error liking/unliking post:", error);
       toast({ title: "Like Error", description: "Could not update like. Please try again.", variant: "destructive" });
-      // Revert optimistic UI update if needed or re-fetch state
     } finally {
       setIsLiking(false);
     }
@@ -163,18 +160,9 @@ export function EkoPostCard({ post: initialPost }: EkoPostCardProps) {
     const postRef = doc(firestore, "posts", post.id);
     const reEkosRef = collection(firestore, "reEkos");
 
-    // Optional: Check if user already re-ekoed this post to prevent duplicates
-    // const q = query(reEkosRef, where("userId", "==", user.uid), where("originalPostId", "==", post.id));
-    // const existingReEko = await getDocs(q);
-    // if (!existingReEko.empty) {
-    //   toast({ title: "Already Re-Ekoed", description: "You have already re-ekoed this post.", variant: "default" });
-    //   setIsReEkoing(false);
-    //   return;
-    // }
-
     try {
       const batch = writeBatch(firestore);
-      const newReEkoRef = doc(reEkosRef); // Auto-generate ID
+      const newReEkoRef = doc(reEkosRef);
       batch.set(newReEkoRef, {
         originalPostId: post.id,
         userId: user.uid,
@@ -186,8 +174,7 @@ export function EkoPostCard({ post: initialPost }: EkoPostCardProps) {
       await batch.commit();
 
       setPost(p => ({ ...p, reEkoCount: p.reEkoCount + 1 }));
-      // setIsReEkoed(true); // For UI changes later
-      toast({ title: "Re-Ekoed!", description: "Shared to your followers (conceptually).", variant: "default" });
+      toast({ title: "Re-Ekoed!", variant: "default" });
     } catch (error) {
       console.error("Error re-ekoing post:", error);
       toast({ title: "Re-Eko Error", description: "Could not re-eko. Please try again.", variant: "destructive" });
@@ -197,7 +184,7 @@ export function EkoPostCard({ post: initialPost }: EkoPostCardProps) {
   };
 
   const handleShare = async () => {
-    const postUrl = `${window.location.origin}/post/${post.id}`; // Assuming a route like /post/:id exists or will exist
+    const postUrl = `${window.location.origin}/post/${post.id}`; 
     if (navigator.share) {
       try {
         await navigator.share({
@@ -205,15 +192,11 @@ export function EkoPostCard({ post: initialPost }: EkoPostCardProps) {
           text: post.textContent.substring(0, 100) + (post.textContent.length > 100 ? "..." : ""),
           url: postUrl,
         });
-        toast({ title: "Shared!", variant: "default" });
       } catch (error) {
-        console.error("Error sharing:", error);
-        // Fallback to copy link if user cancels share dialog or error occurs
         navigator.clipboard.writeText(postUrl);
         toast({ title: "Link Copied!", description: "Share link copied to clipboard.", variant: "default" });
       }
     } else {
-      // Fallback for browsers that don't support navigator.share
       navigator.clipboard.writeText(postUrl);
       toast({ title: "Link Copied!", description: "Share link copied to clipboard.", variant: "default" });
     }
@@ -225,8 +208,7 @@ export function EkoPostCard({ post: initialPost }: EkoPostCardProps) {
       return;
     }
     console.log(`Report post ${post.id} by user ${user.uid}`);
-    // TODO: Open Report Dialog/Modal
-    toast({ title: "Report Action", description: "Reporting functionality coming soon! Logged to console for now.", variant: "default" });
+    toast({ title: "Report Action", description: "Reporting functionality coming soon!", variant: "default" });
   };
 
   const handleAddComment = async () => {
@@ -242,7 +224,7 @@ export function EkoPostCard({ post: initialPost }: EkoPostCardProps) {
 
     try {
       const batch = writeBatch(firestore);
-      const newCommentRef = doc(commentsRef); // Auto-generate ID
+      const newCommentRef = doc(commentsRef);
       batch.set(newCommentRef, {
         postId: post.id,
         userId: user.uid,
@@ -256,9 +238,8 @@ export function EkoPostCard({ post: initialPost }: EkoPostCardProps) {
 
       setPost(p => ({ ...p, commentCount: p.commentCount + 1 }));
       setCommentText("");
-      setShowCommentInput(false); // Optionally close input after commenting
+      setShowCommentInput(false);
       toast({ title: "Comment Posted!", variant: "default" });
-      // TODO: Optionally refresh displayed comments list
     } catch (error) {
       console.error("Error posting comment:", error);
       toast({ title: "Comment Error", description: "Could not post comment. Please try again.", variant: "destructive" });
@@ -269,7 +250,7 @@ export function EkoPostCard({ post: initialPost }: EkoPostCardProps) {
 
   const authorUsername = authorProfile?.username || post.username || "Unknown User";
   const authorAvatar = authorProfile?.avatarURL || post.userAvatarURL || `https://placehold.co/40x40.png?text=${authorUsername[0]?.toUpperCase() || 'U'}`;
-
+  const processedContent = processHashtags(post.textContent);
 
   return (
     <Card className="w-full max-w-xl mx-auto shadow-lg hover:shadow-xl transition-shadow duration-300">
@@ -298,7 +279,6 @@ export function EkoPostCard({ post: initialPost }: EkoPostCardProps) {
                 </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
-                {/* Add other options like Edit/Delete if user is author */}
                 <DropdownMenuItem onClick={handleReport} className="text-yellow-600 hover:!text-yellow-700 focus:!text-yellow-700 focus:!bg-yellow-100 dark:text-yellow-400 dark:hover:!text-yellow-500 dark:focus:!text-yellow-500 dark:focus:!bg-yellow-700/20">
                     <AlertTriangle className="mr-2 h-4 w-4" /> Report EkoDrop
                 </DropdownMenuItem>
@@ -306,7 +286,17 @@ export function EkoPostCard({ post: initialPost }: EkoPostCardProps) {
         </DropdownMenu>
       </CardHeader>
       <CardContent className="p-4 pt-0">
-        <p className="text-sm whitespace-pre-wrap">{post.textContent}</p>
+        <p className="text-sm whitespace-pre-wrap">
+            {processedContent.map((part, index) =>
+              part.type === 'hashtag' ? (
+                <Link key={index} href={`/discover?tag=${part.content.substring(1)}`} className="text-accent hover:underline">
+                  {part.content}
+                </Link>
+              ) : (
+                part.content
+              )
+            )}
+        </p>
         {post.audioURL && (
             <div className="mt-3">
                 <audio controls src={post.audioURL} className="w-full">

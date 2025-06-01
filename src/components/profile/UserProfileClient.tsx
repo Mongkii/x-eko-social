@@ -3,47 +3,87 @@
 
 import { useEffect, useState } from 'react';
 import { firestore } from '@/lib/firebase';
-import { collection, query, where, getDocs, doc, getDoc, orderBy, Timestamp } from 'firebase/firestore';
-import type { UserProfile, EkoPost } from '@/lib/types';
+import {
+  collection,
+  query,
+  where,
+  getDocs,
+  doc,
+  getDoc,
+  orderBy,
+  Timestamp,
+  writeBatch,
+  increment,
+  runTransaction,
+  serverTimestamp,
+  deleteDoc,
+  setDoc,
+} from 'firebase/firestore';
+import type { UserProfile, EkoPost, Follow } from '@/lib/types';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { Loader2, CalendarDays, Edit3, UserPlus, MessageSquare } from 'lucide-react';
+import { Card, CardContent } from '@/components/ui/card';
+import { Loader2, CalendarDays, Edit3, UserPlus, UserMinus, MessageSquare, Check } from 'lucide-react';
 import { EkoPostCard } from '@/components/feed/EkoPostCard';
 import { formatTimestamp } from '@/lib/format-timestamp';
 import { useAuth } from '@/contexts/auth-context';
 import Link from 'next/link';
-import Image from 'next/image'; // For Next/Image
+import Image from 'next/image';
+import { useToast } from '@/hooks/use-toast';
 
 interface UserProfileClientProps {
   username: string;
 }
 
 export function UserProfileClient({ username }: UserProfileClientProps) {
-  const { user: currentUser, userProfile: currentUserProfile } = useAuth();
+  const { user: currentUser, userProfile: currentUserProfile, loading: authLoading } = useAuth();
+  const { toast } = useToast();
+
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [userPosts, setUserPosts] = useState<EkoPost[]>([]);
   const [isLoadingProfile, setIsLoadingProfile] = useState(true);
   const [isLoadingPosts, setIsLoadingPosts] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
+  const [isFollowing, setIsFollowing] = useState(false);
+  const [isProcessingFollow, setIsProcessingFollow] = useState(false);
+  const [followDocId, setFollowDocId] = useState<string | null>(null);
+
+
   useEffect(() => {
-    const fetchUserProfile = async () => {
+    const fetchUserProfileAndFollowStatus = async () => {
       setIsLoadingProfile(true);
       setError(null);
       if (!username) return;
 
       try {
         const usersRef = collection(firestore, 'users');
-        // Query by username_lowercase for case-insensitive match
         const q = query(usersRef, where('username_lowercase', '==', username.toLowerCase()));
         const querySnapshot = await getDocs(q);
 
         if (!querySnapshot.empty) {
           const userDoc = querySnapshot.docs[0];
           const userData = userDoc.data() as UserProfile;
-          setProfile({ ...userData, id: userDoc.id }); // Ensure ID is included
+          setProfile({ ...userData, id: userDoc.id });
           fetchUserPosts(userDoc.id);
+
+          // Check follow status if a user is logged in and it's not their own profile
+          if (currentUser && currentUser.uid !== userDoc.id) {
+            const followsRef = collection(firestore, 'follows');
+            const followQuery = query(
+              followsRef,
+              where('followerId', '==', currentUser.uid),
+              where('followingId', '==', userDoc.id)
+            );
+            const followSnapshot = await getDocs(followQuery);
+            if (!followSnapshot.empty) {
+              setIsFollowing(true);
+              setFollowDocId(followSnapshot.docs[0].id);
+            } else {
+              setIsFollowing(false);
+              setFollowDocId(null);
+            }
+          }
         } else {
           setError('User profile not found.');
         }
@@ -67,20 +107,80 @@ export function UserProfileClient({ username }: UserProfileClientProps) {
         const fetchedPosts = postsSnapshot.docs.map(doc => ({
           id: doc.id,
           ...doc.data(),
-           createdAt: doc.data().createdAt instanceof Timestamp ? doc.data().createdAt : Timestamp.fromDate(new Date()),
+          createdAt: doc.data().createdAt instanceof Timestamp ? doc.data().createdAt : Timestamp.fromDate(new Date()),
         })) as EkoPost[];
         setUserPosts(fetchedPosts);
       } catch (err) {
         console.error('Error fetching user posts:', err);
-        // Don't set global error for posts, just show message in posts section
       } finally {
         setIsLoadingPosts(false);
       }
     };
 
-    fetchUserProfile();
+    fetchUserProfileAndFollowStatus();
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [username]);
+  }, [username, currentUser]);
+
+  const handleFollowToggle = async () => {
+    if (!currentUser || !currentUserProfile || !profile || authLoading || isProcessingFollow) return;
+    if (currentUser.uid === profile.id) return; // Cannot follow self
+
+    setIsProcessingFollow(true);
+    const targetUserRef = doc(firestore, 'users', profile.id);
+    const currentUserRef = doc(firestore, 'users', currentUser.uid);
+
+    try {
+      await runTransaction(firestore, async (transaction) => {
+        if (isFollowing && followDocId) { // Unfollow
+          const followRef = doc(firestore, 'follows', followDocId);
+          transaction.delete(followRef);
+          transaction.update(targetUserRef, { followersCount: increment(-1) });
+          transaction.update(currentUserRef, { followingCount: increment(-1) });
+          setIsFollowing(false);
+          setProfile(p => p ? { ...p, followersCount: p.followersCount - 1 } : null);
+          // Note: currentUserProfile update needs context refresh or manual state update if displayed directly on this page
+          toast({ title: `Unfollowed ${profile.username}` });
+        } else { // Follow
+          const newFollowRef = doc(collection(firestore, 'follows'));
+          const followData: Follow = {
+            followerId: currentUser.uid,
+            followingId: profile.id,
+            createdAt: serverTimestamp() as Timestamp,
+          };
+          transaction.set(newFollowRef, followData);
+          transaction.update(targetUserRef, { followersCount: increment(1) });
+          transaction.update(currentUserRef, { followingCount: increment(1) });
+          setIsFollowing(true);
+          setFollowDocId(newFollowRef.id);
+          setProfile(p => p ? { ...p, followersCount: p.followersCount + 1 } : null);
+          toast({ title: `Followed ${profile.username}` });
+        }
+      });
+    } catch (e) {
+      console.error("Error processing follow/unfollow:", e);
+      toast({ title: "Error", description: "Could not process follow/unfollow. Please try again.", variant: "destructive" });
+      // Re-fetch follow status to ensure consistency
+        if (currentUser && profile.id && currentUser.uid !== profile.id) {
+            const followsRef = collection(firestore, 'follows');
+            const followQuery = query(
+              followsRef,
+              where('followerId', '==', currentUser.uid),
+              where('followingId', '==', profile.id)
+            );
+            const followSnapshot = await getDocs(followQuery);
+            if (!followSnapshot.empty) {
+              setIsFollowing(true);
+              setFollowDocId(followSnapshot.docs[0].id);
+            } else {
+              setIsFollowing(false);
+              setFollowDocId(null);
+            }
+          }
+    } finally {
+      setIsProcessingFollow(false);
+    }
+  };
+
 
   if (isLoadingProfile) {
     return (
@@ -95,33 +195,31 @@ export function UserProfileClient({ username }: UserProfileClientProps) {
       <div className="text-center py-10">
         <p className="text-destructive text-xl">{error}</p>
         <Link href="/feed" passHref>
-            <Button variant="link" className="mt-4">Go to Feed</Button>
+          <Button variant="link" className="mt-4">Go to Feed</Button>
         </Link>
       </div>
     );
   }
 
   if (!profile) {
-    // This case should ideally be handled by the error state, but as a fallback
     return <div className="text-center py-10"><p>User not found.</p></div>;
   }
 
   const isCurrentUserProfile = currentUser && currentUser.uid === profile.id;
   const coverImageUrl = profile.coverImageURL || "https://placehold.co/1200x300.png";
 
-
   return (
     <div className="space-y-8">
       <Card className="shadow-xl overflow-hidden">
         <div className="h-48 bg-gradient-to-r from-secondary to-primary relative">
-           <Image 
-            src={coverImageUrl} 
-            alt={`${profile.username}'s cover image`} 
-            layout="fill" 
-            objectFit="cover" 
+          <Image
+            src={coverImageUrl}
+            alt={`${profile.username}'s cover image`}
+            layout="fill"
+            objectFit="cover"
             priority
             data-ai-hint={profile.coverImageURL ? "user cover" : "abstract background"}
-            />
+          />
         </div>
         <CardContent className="p-6 pt-0 relative">
           <div className="flex flex-col sm:flex-row items-center sm:items-end -mt-16 sm:-mt-20 space-y-4 sm:space-y-0 sm:space-x-6">
@@ -140,27 +238,38 @@ export function UserProfileClient({ username }: UserProfileClientProps) {
                     <Edit3 className="mr-2 h-4 w-4" /> Edit Profile
                   </Link>
                 </Button>
-              ) : (
+              ) : currentUser && !authLoading ? (
                 <>
-                  <Button size="sm">
-                    <UserPlus className="mr-2 h-4 w-4" /> Follow
+                  <Button 
+                    size="sm" 
+                    onClick={handleFollowToggle} 
+                    disabled={isProcessingFollow}
+                    variant={isFollowing ? "outline" : "default"}
+                  >
+                    {isProcessingFollow ? (
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    ) : isFollowing ? (
+                      <UserMinus className="mr-2 h-4 w-4" />
+                    ) : (
+                      <UserPlus className="mr-2 h-4 w-4" />
+                    )}
+                    {isFollowing ? "Unfollow" : "Follow"}
                   </Button>
                   <Button variant="outline" size="sm">
                     <MessageSquare className="mr-2 h-4 w-4" /> Message
                   </Button>
                 </>
-              )}
+              ) : null}
             </div>
           </div>
 
           {profile.bio && <p className="mt-6 text-center sm:text-left text-muted-foreground">{profile.bio}</p>}
-          
+
           <div className="mt-6 flex flex-wrap gap-x-6 gap-y-2 text-sm text-muted-foreground justify-center sm:justify-start">
             <div className="flex items-center">
               <CalendarDays className="h-4 w-4 mr-1.5" />
               Joined {profile.createdAt ? `${formatTimestamp(profile.createdAt, true).split(',')[0]}, ${formatTimestamp(profile.createdAt, true).split(',')[1]}` : 'N/A'}
             </div>
-            {/* Add more profile details here like location, website if available */}
           </div>
 
           <div className="mt-6 flex justify-around sm:justify-start space-x-4 sm:space-x-8 border-t pt-4">

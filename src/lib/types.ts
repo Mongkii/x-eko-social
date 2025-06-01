@@ -14,14 +14,14 @@ export interface UserProfile {
   email: string; // Added for clarity, from Firebase Auth
   bio?: string;
   avatarURL?: string;
-  coverImageURL?: string; // Added for header/cover image
+  coverImageURL?: string;
   privacy: {
     profile: PrivacySetting;
     defaultPostVisibility: PostVisibility;
   };
   language: SupportedLanguage; // User's preferred language for UI
-  followersCount?: number; // Initialize to 0
-  followingCount?: number; // Initialize to 0
+  followersCount: number; // Initialize to 0
+  followingCount: number; // Initialize to 0
   // Timestamps
   createdAt: Timestamp;
   updatedAt?: Timestamp;
@@ -32,80 +32,80 @@ export interface EkoPost {
   userId: string; // Reference to users/{userId}
   username: string; // Denormalized username for easier display
   userAvatarURL?: string; // Denormalized avatar for easier display
-  audioURL?: string; // Firebase Storage reference - for future audio
-  textContent: string; // Main text content of the EkoDrop
-  waveform?: number[]; // FFT data for visualization
-  transcription?: string; // Optional: server-generated transcription
+  audioURL?: string;
+  textContent: string;
+  waveform?: number[];
+  transcription?: string;
   durationSeconds?: number;
   visibility: PostVisibility;
-  hashtags?: string[];
-  mentions?: string[]; // Array of userIds (usernames or UIDs)
-  reEkoCount: number; // Initialize to 0
-  commentCount: number; // Initialize to 0
-  likeCount: number; // Initialize to 0
-  // Timestamps
+  hashtags?: string[]; // Extracted hashtags for querying/filtering
+  mentions?: string[];
+  reEkoCount: number;
+  commentCount: number;
+  likeCount: number;
   createdAt: Timestamp;
   updatedAt?: Timestamp;
 }
 
 export interface Like {
-  id?: string; // Firestore document ID
-  userId: string; // User who liked
-  postId: string; // Post that was liked
+  id?: string;
+  userId: string;
+  postId: string;
   createdAt: Timestamp;
 }
 
 export interface ReEko {
-  id?: string; // Firestore document ID
-  originalPostId: string; // Reference to posts/{postId}
-  userId: string; // User who re-ekoed, Reference to users/{userId}
-  username: string; // Denormalized username of re-ekoer
-  userAvatarURL?: string; // Denormalized avatar of re-ekoer
+  id?: string;
+  originalPostId: string;
+  userId: string;
+  username: string;
+  userAvatarURL?: string;
   createdAt: Timestamp;
-  // Optional: A re-eko could also have its own textContent if users can quote-tweet/re-eko with comment
-  // textContent?: string;
 }
 
 export interface EkoComment {
-  id?: string; // Firestore document ID
-  postId: string; // Reference to posts/{postId}
-  userId: string; // User who commented, Reference to users/{userId}
-  username: string; // Denormalized username of commenter
-  userAvatarURL?: string; // Denormalized avatar of commenter
-  textContent?: string; // Text of the comment
-  audioURL?: string; // Firebase Storage reference for voice comment
+  id?: string;
+  postId: string;
+  userId: string;
+  username: string;
+  userAvatarURL?: string;
+  textContent?: string;
+  audioURL?: string;
   durationSeconds?: number;
   waveform?: number[];
   createdAt: Timestamp;
-  // Future: Add likeCount for comments, replies (parentId)
 }
 
-// Kept VoiceComment for potential future distinction, but EkoComment can serve both
 export interface VoiceComment extends EkoComment {
-  audioURL: string; // Firebase Storage reference
+  audioURL: string;
 }
-
 
 export interface Report {
-  id?: string; // document ID
+  id?: string;
   reportedContentType: 'post' | 'comment' | 'user';
-  reportedContentId: string; // ID of the post, comment, or user being reported
-  reportingUserId: string; // User who submitted the report
-  reason: 'spam' | 'abuse' | 'illegal_content' | 'hate_speech' | 'misinformation' | 'other'; // Extended reasons
+  reportedContentId: string;
+  reportingUserId: string;
+  reason: 'spam' | 'abuse' | 'illegal_content' | 'hate_speech' | 'misinformation' | 'other';
   additionalComments?: string;
-  status: 'pending' | 'reviewed_action_taken' | 'reviewed_no_action'; // Default to 'pending'
+  status: 'pending' | 'reviewed_action_taken' | 'reviewed_no_action';
   createdAt: Timestamp;
   reviewedAt?: Timestamp;
-  reviewerId?: string; // Admin who reviewed
+  reviewerId?: string;
 }
 
-// For UI String Localization (as per BRD Firestore-backed i18n)
-// This will be relevant when we implement the Firestore-backed i18n.
+// For user follows
+export interface Follow {
+  id?: string; // Firestore document ID
+  followerId: string; // User ID of the person initiating the follow
+  followingId: string; // User ID of the person being followed
+  createdAt: Timestamp;
+}
+
+
 export interface LocalizationStrings {
-  [key: string]: string | LocalizationStrings; // Allows nested strings
+  [key: string]: string | LocalizationStrings;
 }
 
-// Ad types for AdMob integration
 export type AdType =
   | 'FEED_NATIVE'
   | 'PROFILE_BANNER'
@@ -113,7 +113,6 @@ export type AdType =
   | 'RE_EKO_REWARDED'
   | 'SEARCH_BANNER';
 
-// Example for a generic list item, can be adapted
 export interface ListItem {
   id: string;
   title: string;

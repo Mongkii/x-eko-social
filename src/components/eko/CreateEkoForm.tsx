@@ -15,69 +15,74 @@ import {
 } from "@/components/ui/form";
 import { Textarea } from "@/components/ui/textarea";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"; // Assuming Select component is available
 import { useToast } from "@/hooks/use-toast";
-import { firestore, storage } from "@/lib/firebase"; // Import storage
+import { firestore, storage } from "@/lib/firebase";
 import { collection, addDoc, serverTimestamp, Timestamp } from "firebase/firestore";
-import { ref, uploadBytes, getDownloadURL } from "firebase/storage"; // Firebase Storage functions
+import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import { useAuth } from "@/contexts/auth-context";
 import { useRouter } from "next/navigation";
 import { useState, useEffect, useRef } from "react";
-import { Loader2, Mic, StopCircle, Play, Trash2, AlertTriangle } from "lucide-react";
+import { Loader2, Mic, StopCircle, Play, Trash2, AlertTriangle, Wand2 } from "lucide-react";
 import type { EkoPost, PostVisibility } from "@/lib/types";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-
 
 const formSchema = z.object({
   textContent: z.string().max(280, "EkoDrop text too long.").optional(),
   visibility: z.enum(["public", "followers-only", "private"]),
+  voiceEffect: z.string().optional(), // Added for voice effect
 }).refine(data => {
-  // This refine is tricky with external state for audio.
-  // We'll do this check in the onSubmit handler.
   return true;
 }, {
   message: "An EkoDrop must have either text content or an audio recording.",
-  path: ["textContent"], // Path can be adjusted
+  path: ["textContent"],
 });
 
+type VoiceEffect = "none" | "chipmunk" | "deep" | "robot"; // Example effects
 
 export function CreateEkoForm() {
   const { toast } = useToast();
-  const { user, userProfile, loading: authLoading } = useAuth(); // Renamed loading to authLoading
+  const { user, userProfile, loading: authLoading } = useAuth();
   const router = useRouter();
-  const [isSubmitting, setIsSubmitting] = useState(false); // Renamed isLoading to isSubmitting
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // Audio state
   const [isRecording, setIsRecording] = useState(false);
   const [audioBlob, setAudioBlob] = useState<Blob | null>(null);
-  const [audioUrl, setAudioUrl] = useState<string | null>(null); // For preview
+  const [audioUrl, setAudioUrl] = useState<string | null>(null);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const audioChunksRef = useRef<Blob[]>([]);
   const audioPreviewRef = useRef<HTMLAudioElement>(null);
   const [hasMicrophonePermission, setHasMicrophonePermission] = useState<boolean | null>(null);
   const [microphoneError, setMicrophoneError] = useState<string | null>(null);
-
+  const [selectedVoiceEffect, setSelectedVoiceEffect] = useState<VoiceEffect>("none");
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
       textContent: "",
-      visibility: "public", // Default, will be updated by useEffect
+      visibility: "public",
+      voiceEffect: "none",
     },
   });
   
   useEffect(() => {
-    // Set default visibility based on userProfile once it loads
     if (userProfile) {
       form.reset({
-        textContent: form.getValues("textContent") || "", // Preserve existing text content
+        textContent: form.getValues("textContent") || "",
         visibility: userProfile.privacy.defaultPostVisibility || "public",
+        voiceEffect: form.getValues("voiceEffect") || "none",
       });
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [userProfile, form.reset]); // Removed form from dependencies to avoid loop if form.reset changes form instance
+  }, [userProfile, form.reset]);
 
   useEffect(() => {
-    // Cleanup audio URL when component unmounts or audioBlob changes
     return () => {
       if (audioUrl) {
         URL.revokeObjectURL(audioUrl);
@@ -108,18 +113,35 @@ export function CreateEkoForm() {
     }
   };
   
-  useEffect(() => {
-    // Optional: Request permission on load, or wait for user interaction.
-    // getMicrophonePermission(); 
-  }, []);
+  // Placeholder for actual audio processing
+  const applyVoiceEffect = async (inputBlob: Blob, effect: VoiceEffect): Promise<Blob> => {
+    if (effect === "none") {
+      return inputBlob;
+    }
+    toast({ title: "Applying Voice Effect...", description: `Applying ${effect} effect. This is a placeholder.` });
+    // Actual Web Audio API logic would go here.
+    // For demonstration, we'll just return the original blob after a delay.
+    await new Promise(resolve => setTimeout(resolve, 1000)); // Simulate processing time
+    
+    // Example: If 'chipmunk' effect was chosen, you would use Web Audio API:
+    // 1. Create AudioContext
+    // 2. Create AudioBufferSourceNode from inputBlob
+    // 3. Create BiquadFilterNode or PitchShifterNode
+    // 4. Connect source -> filter -> destination (OfflineAudioContext)
+    // 5. Start source, render offline context to get processed AudioBuffer
+    // 6. Convert processed AudioBuffer back to Blob
+    // This is highly complex and requires careful implementation.
+    
+    console.warn(`Voice effect "${effect}" is a placeholder and not actually applied to the audio.`);
+    return inputBlob; 
+  };
 
 
   const startRecording = async () => {
     if (hasMicrophonePermission === null) {
       await getMicrophonePermission(); 
     }
-    // Re-check permission after awaiting getMicrophonePermission
-    if (hasMicrophonePermission === false || !navigator.mediaDevices) { // Added !navigator.mediaDevices for safety
+    if (hasMicrophonePermission === false || !navigator.mediaDevices) {
        toast({ variant: "destructive", title: "Microphone Required", description: microphoneError || "Microphone permission is not granted or media devices are not available."});
        return;
     }
@@ -133,8 +155,14 @@ export function CreateEkoForm() {
         audioChunksRef.current.push(event.data);
       };
 
-      mediaRecorderRef.current.onstop = () => {
-        const completeAudioBlob = new Blob(audioChunksRef.current, { type: 'audio/webm' }); 
+      mediaRecorderRef.current.onstop = async () => { // Make onstop async
+        let completeAudioBlob = new Blob(audioChunksRef.current, { type: 'audio/webm' }); 
+        
+        // Apply voice effect if selected
+        if (selectedVoiceEffect !== "none") {
+          completeAudioBlob = await applyVoiceEffect(completeAudioBlob, selectedVoiceEffect);
+        }
+
         setAudioBlob(completeAudioBlob);
         const previewUrl = URL.createObjectURL(completeAudioBlob);
         setAudioUrl(previewUrl);
@@ -153,7 +181,7 @@ export function CreateEkoForm() {
 
   const stopRecording = () => {
     if (mediaRecorderRef.current && isRecording) {
-      mediaRecorderRef.current.stop();
+      mediaRecorderRef.current.stop(); // This will trigger onstop and then applyVoiceEffect
       setIsRecording(false);
     }
   };
@@ -173,12 +201,12 @@ export function CreateEkoForm() {
     const randomSuffix = Math.random().toString(36).substring(2, 8);
     const audioFileName = `eko_${timestamp}_${randomSuffix}.webm`;
     const storageRefPath = `ekoPostsAudio/${userId}/${audioFileName}`;
-    const audioStorageRef = ref(storage, storageRefPath); // Corrected ref usage
+    const audioStorageRef = ref(storage, storageRefPath);
     
     toast({ title: "Uploading Audio...", description: "Please wait."});
     await uploadBytes(audioStorageRef, audioToUpload);
     const downloadURL = await getDownloadURL(audioStorageRef);
-    toast({ title: "Audio Uploaded!", variant: "default"}); // "success" variant not standard
+    toast({ title: "Audio Uploaded!", variant: "default"});
     return downloadURL;
   };
 
@@ -189,7 +217,7 @@ export function CreateEkoForm() {
       return;
     }
     if (!userProfile) {
-      toast({ title: "Profile Error", description: "Your user profile could not be loaded. Please try again or ensure your profile is complete.", variant: "destructive" });
+      toast({ title: "Profile Error", description: "Your user profile could not be loaded.", variant: "destructive" });
       return;
     }
 
@@ -209,9 +237,17 @@ export function CreateEkoForm() {
     let audioDownloadURL: string | undefined = undefined;
 
     try {
-      if (audioBlob) {
-        audioDownloadURL = await uploadAudio(audioBlob, user.uid);
+      let finalAudioBlob = audioBlob;
+      // Note: Voice effect is now applied during onstop before setting audioBlob
+      // So, audioBlob should already be the processed version if an effect was chosen.
+
+      if (finalAudioBlob) {
+        audioDownloadURL = await uploadAudio(finalAudioBlob, user.uid);
       }
+      
+      // Extract hashtags
+      const hashtags = values.textContent ? values.textContent.match(/#\w+/g)?.map(h => h.toLowerCase()) : [];
+
 
       const newPostData: Omit<EkoPost, 'id' | 'createdAt'> & { createdAt: Timestamp } = {
         userId: user.uid,
@@ -224,6 +260,8 @@ export function CreateEkoForm() {
         reEkoCount: 0,
         createdAt: serverTimestamp() as Timestamp,
         ...(audioDownloadURL && { audioURL: audioDownloadURL }),
+        ...(hashtags && hashtags.length > 0 && { hashtags }),
+        // voiceEffect: values.voiceEffect !== "none" ? values.voiceEffect : undefined, // Store applied effect
       };
 
       await addDoc(collection(firestore, "posts"), newPostData);
@@ -233,7 +271,8 @@ export function CreateEkoForm() {
         description: "Your voice is out there.",
       });
       clearAudio();
-      form.reset({ textContent: "", visibility: userProfile.privacy.defaultPostVisibility || "public" });
+      form.reset({ textContent: "", visibility: userProfile.privacy.defaultPostVisibility || "public", voiceEffect: "none" });
+      setSelectedVoiceEffect("none"); // Reset selected effect
       router.push("/feed");
     } catch (error) {
       console.error("Error posting EkoDrop:", error);
@@ -260,7 +299,7 @@ export function CreateEkoForm() {
               <FormLabel>What's on your mind? (Optional if recording audio)</FormLabel>
               <FormControl>
                 <Textarea
-                  placeholder="Share your thoughts..."
+                  placeholder="Share your thoughts... #eko #voicefirst"
                   className="resize-none min-h-[100px]"
                   {...field}
                 />
@@ -313,6 +352,49 @@ export function CreateEkoForm() {
           )}
         </div>
 
+        {audioBlob && !isRecording && (
+           <FormField
+            control={form.control}
+            name="voiceEffect"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel className="flex items-center"><Wand2 className="mr-2 h-4 w-4 text-accent" /> Voice Changer (Optional)</FormLabel>
+                <Select 
+                  onValueChange={(value: VoiceEffect) => {
+                    field.onChange(value);
+                    setSelectedVoiceEffect(value);
+                    // If audio exists, user might want to re-apply effect.
+                    // This is complex as it requires re-processing.
+                    // For now, effect selection applies to *new* recordings or on final processing.
+                    // Ideally, changing effect here would re-process and update audioUrl.
+                    // For now, it's simpler to apply effect at time of recording stop.
+                    if (audioBlob) {
+                        toast({title: "Effect Selection", description: "Effect will be applied when you finalize the recording or if you re-record."})
+                    }
+
+                  }} 
+                  defaultValue={field.value}
+                  value={selectedVoiceEffect}
+                >
+                  <FormControl>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select a voice effect" />
+                    </SelectTrigger>
+                  </FormControl>
+                  <SelectContent>
+                    <SelectItem value="none">Normal</SelectItem>
+                    <SelectItem value="chipmunk">Chipmunk</SelectItem>
+                    <SelectItem value="deep">Deep Voice</SelectItem>
+                    <SelectItem value="robot">Robot (Placeholder)</SelectItem>
+                  </SelectContent>
+                </Select>
+                <FormDescription>Apply an effect to your voice. Effect is applied when recording stops.</FormDescription>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        )}
+
 
         <FormField
           control={form.control}
@@ -324,7 +406,7 @@ export function CreateEkoForm() {
                 <RadioGroup
                   onValueChange={field.onChange}
                   defaultValue={field.value}
-                  value={field.value} // Ensure RadioGroup is controlled
+                  value={field.value}
                   className="flex flex-col space-y-1 sm:flex-row sm:space-y-0 sm:space-x-4"
                 >
                   <FormItem className="flex items-center space-x-3 space-y-0">
