@@ -13,6 +13,7 @@ import { EkoPostCard } from '@/components/feed/EkoPostCard';
 import { formatTimestamp } from '@/lib/format-timestamp';
 import { useAuth } from '@/contexts/auth-context';
 import Link from 'next/link';
+import Image from 'next/image'; // For Next/Image
 
 interface UserProfileClientProps {
   username: string;
@@ -106,13 +107,21 @@ export function UserProfileClient({ username }: UserProfileClientProps) {
   }
 
   const isCurrentUserProfile = currentUser && currentUser.uid === profile.id;
+  const coverImageUrl = profile.coverImageURL || "https://placehold.co/1200x300.png";
+
 
   return (
     <div className="space-y-8">
       <Card className="shadow-xl overflow-hidden">
         <div className="h-48 bg-gradient-to-r from-secondary to-primary relative">
-           {/* Placeholder for cover image - can be fetched from profile.coverImageURL */}
-           <img src="https://placehold.co/1200x300.png" alt="Cover" className="w-full h-full object-cover" data-ai-hint="abstract background"/>
+           <Image 
+            src={coverImageUrl} 
+            alt={`${profile.username}'s cover image`} 
+            layout="fill" 
+            objectFit="cover" 
+            priority
+            data-ai-hint={profile.coverImageURL ? "user cover" : "abstract background"}
+            />
         </div>
         <CardContent className="p-6 pt-0 relative">
           <div className="flex flex-col sm:flex-row items-center sm:items-end -mt-16 sm:-mt-20 space-y-4 sm:space-y-0 sm:space-x-6">
@@ -126,8 +135,10 @@ export function UserProfileClient({ username }: UserProfileClientProps) {
             </div>
             <div className="flex space-x-2 pt-4 sm:pt-0">
               {isCurrentUserProfile ? (
-                <Button variant="outline" size="sm">
-                  <Edit3 className="mr-2 h-4 w-4" /> Edit Profile
+                <Button variant="outline" size="sm" asChild>
+                  <Link href={`/profile/${profile.username_lowercase}/edit`}>
+                    <Edit3 className="mr-2 h-4 w-4" /> Edit Profile
+                  </Link>
                 </Button>
               ) : (
                 <>
@@ -147,7 +158,7 @@ export function UserProfileClient({ username }: UserProfileClientProps) {
           <div className="mt-6 flex flex-wrap gap-x-6 gap-y-2 text-sm text-muted-foreground justify-center sm:justify-start">
             <div className="flex items-center">
               <CalendarDays className="h-4 w-4 mr-1.5" />
-              Joined {formatTimestamp(profile.createdAt, true).split(',')[0]}, {formatTimestamp(profile.createdAt, true).split(',')[1]}
+              Joined {profile.createdAt ? `${formatTimestamp(profile.createdAt, true).split(',')[0]}, ${formatTimestamp(profile.createdAt, true).split(',')[1]}` : 'N/A'}
             </div>
             {/* Add more profile details here like location, website if available */}
           </div>

@@ -1,27 +1,87 @@
 
+"use client"; // Make this a client component to use useAuth
+
 import { AppHeader } from "@/components/app-header";
 import { AppFooter } from "@/components/app-footer";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Separator } from "@/components/ui/separator";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Switch } from "@/components/ui/switch";
-import { User, Bell, Shield, Palette, Languages, Edit3, KeyRound } from "lucide-react";
-import Link from "next/link"; // For Edit Profile link
-
-// Mock current settings - in a real app, this would come from useAuth() or a settings context/hook
-const mockUserSettings = {
-  username: "EkoUser123",
-  email: "user@eko.app",
-  profileVisibility: "public",
-  defaultPostVisibility: "public",
-  language: "en",
-  enableNotifications: true,
-};
+import { User, Bell, Shield, Palette, Languages, Edit3, KeyRound, Loader2 } from "lucide-react";
+import Link from "next/link";
+import { useAuth } from "@/contexts/auth-context"; // Import useAuth
+import { useEffect, useState } from "react";
+import type { UserProfile } from "@/lib/types"; // Assuming UserProfile is needed
 
 export default function SettingsPage() {
+  const { user, userProfile, loading: authLoading } = useAuth(); // Get userProfile and loading state
+
+  // Local state for settings, could be initialized from userProfile
+  const [settings, setSettings] = useState({
+    profileVisibility: userProfile?.privacy?.profile || "public",
+    defaultPostVisibility: userProfile?.privacy?.defaultPostVisibility || "public",
+    enableNotifications: true, // Example, fetch from user preferences
+    language: userProfile?.language || "en",
+  });
+
+  useEffect(() => {
+    if (userProfile) {
+      setSettings({
+        profileVisibility: userProfile.privacy?.profile || "public",
+        defaultPostVisibility: userProfile.privacy?.defaultPostVisibility || "public",
+        enableNotifications: true, // Replace with actual preference
+        language: userProfile.language || "en",
+      });
+    }
+  }, [userProfile]);
+
+
+  if (authLoading) {
+    return (
+      <div className="flex flex-col min-h-screen">
+        <AppHeader />
+        <main className="flex-grow container mx-auto px-4 py-12 flex items-center justify-center">
+          <Loader2 className="h-12 w-12 animate-spin text-accent" />
+        </main>
+        <AppFooter />
+      </div>
+    );
+  }
+
+  if (!user || !userProfile) {
+    // Optionally redirect to login or show a message
+    return (
+      <div className="flex flex-col min-h-screen">
+        <AppHeader />
+        <main className="flex-grow container mx-auto px-4 py-12">
+          <Card className="text-center max-w-md mx-auto">
+            <CardHeader>
+              <CardTitle>Access Denied</CardTitle>
+              <CardDescription>Please log in to view your settings.</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <Button asChild><Link href="/auth/login?redirect=/settings">Login</Link></Button>
+            </CardContent>
+          </Card>
+        </main>
+        <AppFooter />
+      </div>
+    );
+  }
+
+  // Placeholder for actual save logic
+  const handleSavePrivacySettings = () => {
+    console.log("Saving privacy settings:", settings.profileVisibility, settings.defaultPostVisibility);
+    // TODO: Implement actual Firestore update for userProfile.privacy
+  };
+  const handleSaveNotificationSettings = () => {
+    console.log("Saving notification settings:", settings.enableNotifications);
+    // TODO: Implement actual save logic
+  };
+
+
   return (
     <div className="flex flex-col min-h-screen">
       <AppHeader />
@@ -33,7 +93,6 @@ export default function SettingsPage() {
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
           <div className="md:col-span-1">
-            {/* Placeholder for settings navigation if needed, or just keep it simple */}
             <h2 className="text-xl font-semibold mb-4">Categories</h2>
             <nav className="space-y-2">
               <a href="#profile" className="flex items-center p-2 rounded-md hover:bg-muted">
@@ -64,16 +123,21 @@ export default function SettingsPage() {
                 <CardDescription>Update your public profile information.</CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
-                <div>
-                  <Label htmlFor="username">Username</Label>
-                  <Input id="username" defaultValue={mockUserSettings.username} />
+                 <div>
+                  <Label htmlFor="username-display">Username</Label>
+                  <Input id="username-display" value={userProfile.username || ''} disabled />
                 </div>
                 <div>
-                  <Label htmlFor="bio">Bio</Label>
-                  <textarea id="bio" className="w-full p-2 border rounded-md min-h-[80px]" placeholder="Tell us about yourself..."></textarea>
+                  <Label htmlFor="bio-display">Bio</Label>
+                  <Textarea 
+                    id="bio-display" 
+                    value={userProfile.bio || 'No bio set.'} 
+                    disabled 
+                    className="min-h-[60px] bg-muted/50"
+                  />
                 </div>
                 <Button asChild variant="outline">
-                  <Link href={`/profile/${mockUserSettings.username.toLowerCase()}/edit`}> {/* Hypothetical edit page */}
+                  <Link href={`/profile/${userProfile.username_lowercase}/edit`}>
                     <Edit3 className="mr-2 h-4 w-4" /> Go to Full Profile Edit
                   </Link>
                 </Button>
@@ -87,8 +151,8 @@ export default function SettingsPage() {
               </CardHeader>
               <CardContent className="space-y-4">
                 <div>
-                  <Label htmlFor="email">Email</Label>
-                  <Input id="email" type="email" defaultValue={mockUserSettings.email} disabled />
+                  <Label htmlFor="email-display">Email</Label>
+                  <Input id="email-display" type="email" value={user.email || ''} disabled />
                 </div>
                 <Button variant="outline">Change Password</Button>
               </CardContent>
@@ -102,7 +166,11 @@ export default function SettingsPage() {
               <CardContent className="space-y-6">
                 <div>
                   <Label className="block mb-2">Profile Visibility</Label>
-                  <RadioGroup defaultValue={mockUserSettings.profileVisibility} name="profileVisibility">
+                  <RadioGroup 
+                    value={settings.profileVisibility} 
+                    onValueChange={(value) => setSettings(s => ({...s, profileVisibility: value}))}
+                    name="profileVisibility"
+                  >
                     <div className="flex items-center space-x-2">
                       <RadioGroupItem value="public" id="pv-public" />
                       <Label htmlFor="pv-public">Public</Label>
@@ -115,7 +183,11 @@ export default function SettingsPage() {
                 </div>
                 <div>
                   <Label className="block mb-2">Default EkoDrop Visibility</Label>
-                  <RadioGroup defaultValue={mockUserSettings.defaultPostVisibility} name="defaultPostVisibility">
+                  <RadioGroup 
+                    value={settings.defaultPostVisibility} 
+                    onValueChange={(value) => setSettings(s => ({...s, defaultPostVisibility: value}))}
+                    name="defaultPostVisibility"
+                  >
                     <div className="flex items-center space-x-2">
                       <RadioGroupItem value="public" id="dpv-public" />
                       <Label htmlFor="dpv-public">Public</Label>
@@ -130,7 +202,7 @@ export default function SettingsPage() {
                     </div>
                   </RadioGroup>
                 </div>
-                 <Button>Save Privacy Settings</Button>
+                 <Button onClick={handleSavePrivacySettings}>Save Privacy Settings</Button>
               </CardContent>
             </Card>
 
@@ -147,10 +219,13 @@ export default function SettingsPage() {
                       Receive notifications for likes, comments, follows, etc.
                     </span>
                   </Label>
-                  <Switch id="enable-notifications" defaultChecked={mockUserSettings.enableNotifications} />
+                  <Switch 
+                    id="enable-notifications" 
+                    checked={settings.enableNotifications} 
+                    onCheckedChange={(checked) => setSettings(s => ({...s, enableNotifications: checked}))}
+                  />
                 </div>
-                {/* Add more granular notification settings here */}
-                <Button>Save Notification Settings</Button>
+                <Button onClick={handleSaveNotificationSettings}>Save Notification Settings</Button>
               </CardContent>
             </Card>
 
@@ -167,16 +242,13 @@ export default function SettingsPage() {
             <Card id="language">
                 <CardHeader>
                     <CardTitle className="flex items-center"><Languages className="mr-2 h-6 w-6 text-accent"/> Language</CardTitle>
-                    <CardDescription>Choose your preferred language for the Eko app.</CardDescription>
+                    <CardDescription>Choose your preferred language for the Eko app. Current: {settings.language.toUpperCase()}</CardDescription>
                 </CardHeader>
                 <CardContent>
-                    {/* Language selection dropdown - to be implemented */}
                     <p className="text-muted-foreground">Language selection will be available here.</p>
                      <Button variant="outline" disabled>Change Language (Coming Soon)</Button>
                 </CardContent>
             </Card>
-
-
           </div>
         </div>
       </main>

@@ -14,6 +14,7 @@ export interface UserProfile {
   email: string; // Added for clarity, from Firebase Auth
   bio?: string;
   avatarURL?: string;
+  coverImageURL?: string; // Added for header/cover image
   privacy: {
     profile: PrivacySetting;
     defaultPostVisibility: PostVisibility;
