@@ -39,11 +39,13 @@ const formSchema = z.object({
   visibility: z.enum(["public", "followers-only", "private"]),
   voiceEffect: z.string().optional(),
 }).refine(data => {
-  // Allow post if textContent exists OR if a voice effect is chosen (implying audio will be recorded/attached)
+  // Allow post if textContent exists OR if a voice effect (other than "none") is chosen OR if audio is recorded
+  // The presence of audioBlob (which implies a recording happened) is handled outside Zod for now.
+  // This refine focuses on the declared intent through form values.
   return data.textContent || (data.voiceEffect && data.voiceEffect !== "none");
 }, {
-  message: "An EkoDrop must have either text content or an audio recording with a selected effect.",
-  path: ["textContent"], // Or path: ["voiceEffect"] if you want error on effect
+  message: "An EkoDrop must have either text content or an audio recording with a selected effect (if audio is the primary content).",
+  path: ["textContent"], 
 });
 
 
@@ -57,6 +59,19 @@ type VoiceEffect =
   | "monster"
   | "radio";
 
+// Helper function to create a distortion curve for WaveShaperNode
+function makeDistortionCurve(amount: number): Float32Array {
+  const k = typeof amount === 'number' ? amount : 50;
+  const n_samples = 44100; // Standard sample rate, doesn't strictly matter for the curve shape
+  const curve = new Float32Array(n_samples);
+  const deg = Math.PI / 180;
+  for (let i = 0; i < n_samples; ++i) {
+    const x = (i * 2) / n_samples - 1;
+    curve[i] = ((3 + k) * x * 20 * deg) / (Math.PI + k * Math.abs(x));
+  }
+  return curve;
+}
+
 // Helper function to convert AudioBuffer to WAV Blob
 function audioBufferToWav(buffer: AudioBuffer): Blob {
   const numChannels = buffer.numberOfChannels;
@@ -65,14 +80,24 @@ function audioBufferToWav(buffer: AudioBuffer): Blob {
   const bitDepth = 16;
 
   let result: Int16Array;
-  // Interleave channels if stereo, otherwise use mono
   const channelData = [];
   for (let i = 0; i < numChannels; i++) {
     channelData.push(buffer.getChannelData(i));
   }
 
   if (numChannels === 2) {
-    result = interleave(channelData[0], channelData[1]);
+    // Simple stereo interleave (if your source is stereo)
+    const inputL = channelData[0];
+    const inputR = channelData[1];
+    const length = inputL.length + inputR.length;
+    result = new Int16Array(length);
+    let index = 0;
+    let inputIndex = 0;
+    while (index < length) {
+      result[index++] = Math.max(-32768, Math.min(32767, inputL[inputIndex] * 32767));
+      result[index++] = Math.max(-32768, Math.min(32767, inputR[inputIndex] * 32767));
+      inputIndex++;
+    }
   } else { // Mono or more (take first channel for simplicity if more than 2)
     const monoChannel = channelData[0];
     result = new Int16Array(monoChannel.length);
@@ -114,19 +139,6 @@ function audioBufferToWav(buffer: AudioBuffer): Blob {
   return new Blob([view], { type: 'audio/wav' });
 }
 
-function interleave(inputL: Float32Array, inputR: Float32Array): Int16Array {
-  const length = inputL.length + inputR.length;
-  const result = new Int16Array(length);
-  let index = 0;
-  let inputIndex = 0;
-  while (index < length) {
-    result[index++] = Math.max(-32768, Math.min(32767, inputL[inputIndex] * 32767));
-    result[index++] = Math.max(-32768, Math.min(32767, inputR[inputIndex] * 32767));
-    inputIndex++;
-  }
-  return result;
-}
-
 
 export function CreateEkoForm() {
   const { toast } = useToast();
@@ -135,9 +147,9 @@ export function CreateEkoForm() {
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const [isRecording, setIsRecording] = useState(false);
-  const [initialAudioBlob, setInitialAudioBlob] = useState<Blob | null>(null); // Store the original recording
-  const [processedAudioBlob, setProcessedAudioBlob] = useState<Blob | null>(null); // Store effect-applied audio
-  const [audioUrl, setAudioUrl] = useState<string | null>(null); // For <audio> preview src
+  const [initialAudioBlob, setInitialAudioBlob] = useState<Blob | null>(null);
+  const [processedAudioBlob, setProcessedAudioBlob] = useState<Blob | null>(null); 
+  const [audioUrl, setAudioUrl] = useState<string | null>(null); 
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const audioChunksRef = useRef<Blob[]>([]);
   const audioPreviewRef = useRef<HTMLAudioElement>(null);
@@ -157,8 +169,6 @@ export function CreateEkoForm() {
             setMicrophoneError("Web Audio API is not supported. Voice effects will not work.");
         }
     }
-    // No cleanup needed for AudioContext here as it's created once.
-    // Specific OfflineAudioContexts are created and discarded per effect application.
   }, []);
 
 
@@ -196,7 +206,7 @@ export function CreateEkoForm() {
       try {
         const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
         setHasMicrophonePermission(true);
-        stream.getTracks().forEach(track => track.stop()); // Stop tracks immediately after permission check
+        stream.getTracks().forEach(track => track.stop());
         setMicrophoneError(null);
       } catch (error) {
         console.error('Error accessing microphone:', error);
@@ -215,7 +225,7 @@ export function CreateEkoForm() {
   };
   
   const applyVoiceEffect = useCallback(async (inputBlob: Blob | null, effect: VoiceEffect): Promise<Blob | null> => {
-    if (!inputBlob || !audioContextRef.current) return inputBlob; // Return original if no context or blob
+    if (!inputBlob || !audioContextRef.current) return inputBlob; 
 
     setIsProcessingEffect(true);
     toast({ title: "Applying Voice Effect...", description: `Processing audio with ${effect} effect.` });
@@ -243,44 +253,84 @@ export function CreateEkoForm() {
           source.connect(offlineCtx.destination);
           break;
         case "robot":
-          source.playbackRate.value = 0.9; // Slightly slower, deeper
+          source.playbackRate.value = 0.9; 
           const robotFilter = offlineCtx.createBiquadFilter();
           robotFilter.type = 'peaking';
-          robotFilter.frequency.value = 1200; // Resonant frequency
-          robotFilter.Q.value = 6;      // Narrow peak
-          robotFilter.gain.value = 15;   // Boost the peak
+          robotFilter.frequency.value = 1200; 
+          robotFilter.Q.value = 6;      
+          robotFilter.gain.value = 15;   
           source.connect(robotFilter);
           robotFilter.connect(offlineCtx.destination);
           break;
         case "echo":
-          const delayNode = offlineCtx.createDelay(1.0); // Max delay time 1s
-          delayNode.delayTime.value = 0.25; // Actual delay of 250ms
+          const delayNode = offlineCtx.createDelay(1.0); 
+          delayNode.delayTime.value = 0.25; 
 
           const feedbackNode = offlineCtx.createGain();
-          feedbackNode.gain.value = 0.5; // Feedback gain (0 to 1)
+          feedbackNode.gain.value = 0.4; 
 
           const dryGainNode = offlineCtx.createGain();
-          dryGainNode.gain.value = 0.7; // Original signal volume
+          dryGainNode.gain.value = 1.0; 
 
           const wetGainNode = offlineCtx.createGain();
-          wetGainNode.gain.value = 0.3; // Echoed signal volume
+          wetGainNode.gain.value = 0.5; 
 
           source.connect(dryGainNode);
           dryGainNode.connect(offlineCtx.destination);
 
           source.connect(delayNode);
           delayNode.connect(feedbackNode);
-          feedbackNode.connect(delayNode); // Feedback loop
+          feedbackNode.connect(delayNode); 
           
           delayNode.connect(wetGainNode);
           wetGainNode.connect(offlineCtx.destination);
           break;
         case "alien":
+          source.playbackRate.value = 1.4; // Higher pitch
+          const lfo = offlineCtx.createOscillator();
+          lfo.type = 'sine';
+          lfo.frequency.value = 15; // Faster warble
+          const lfoGain = offlineCtx.createGain();
+          lfoGain.gain.value = 0.05; // Subtle warble depth
+          
+          const alienBiquad = offlineCtx.createBiquadFilter();
+          alienBiquad.type = 'bandpass';
+          alienBiquad.frequency.value = 2000;
+          alienBiquad.Q.value = 1.5;
+
+          lfo.connect(lfoGain.gain);
+          source.connect(alienBiquad);
+          alienBiquad.connect(lfoGain); // Modulate output of filter
+          lfoGain.connect(offlineCtx.destination);
+          lfo.start(0);
+          break;
         case "monster":
+          source.playbackRate.value = 0.45; // Very low pitch
+          const distortion = offlineCtx.createWaveShaper();
+          distortion.curve = makeDistortionCurve(150); // Heavy distortion
+          distortion.oversample = '4x';
+
+          const monsterLowPass = offlineCtx.createBiquadFilter();
+          monsterLowPass.type = "lowpass";
+          monsterLowPass.frequency.value = 800; // Cut off high frequencies
+          
+          source.connect(distortion);
+          distortion.connect(monsterLowPass);
+          monsterLowPass.connect(offlineCtx.destination);
+          break;
         case "radio":
-          // These remain simulated (passthrough) for now
-          console.warn(`Effect "${effect}" is complex and currently not fully implemented. Audio passes through unchanged.`);
-          source.connect(offlineCtx.destination);
+          const bandpass = offlineCtx.createBiquadFilter();
+          bandpass.type = 'bandpass';
+          bandpass.frequency.value = 1500; 
+          bandpass.Q.value = 4; // Narrower band
+
+          const radioDistortion = offlineCtx.createWaveShaper();
+          radioDistortion.curve = makeDistortionCurve(30); // Moderate distortion
+          radioDistortion.oversample = '2x';
+          
+          source.connect(radioDistortion);
+          radioDistortion.connect(bandpass);
+          bandpass.connect(offlineCtx.destination);
           break;
         case "none":
         default:
@@ -293,50 +343,50 @@ export function CreateEkoForm() {
       const wavBlob = audioBufferToWav(renderedBuffer);
 
       setIsProcessingEffect(false);
-      toast({ title: "Effect Applied!", description: `Audio processed with ${effect} effect.`});
+      const effectDisplayName = effect.charAt(0).toUpperCase() + effect.slice(1);
+      toast({ title: "Effect Applied!", description: `Audio processed with ${effectDisplayName} effect.`});
       return wavBlob;
 
     } catch (error) {
       console.error("Error applying voice effect:", error);
       setIsProcessingEffect(false);
       toast({ variant: "destructive", title: "Effect Error", description: "Could not apply voice effect." });
-      return inputBlob; // Return original blob on error
+      return inputBlob;
     }
   }, [toast]);
 
 
   const processAndSetAudio = useCallback(async (baseBlob: Blob | null, effect: VoiceEffect) => {
     if (!baseBlob) {
-      clearAudio(true); // Keep initial if baseBlob is null (e.g. only effect changed)
+      clearAudio(true); 
       return;
     }
     const PAblob = await applyVoiceEffect(baseBlob, effect);
-    setProcessedAudioBlob(PAblob); // This is what gets uploaded
+    setProcessedAudioBlob(PAblob); 
     
     if (audioUrl) URL.revokeObjectURL(audioUrl); 
     if (PAblob) {
         const newPreviewUrl = URL.createObjectURL(PAblob);
-        setAudioUrl(newPreviewUrl); // Update preview URL
+        setAudioUrl(newPreviewUrl); 
     } else {
         setAudioUrl(null);
     }
-  }, [applyVoiceEffect, audioUrl]); // Added clearAudio, it was missing
+  }, [applyVoiceEffect, audioUrl]); 
 
 
   useEffect(() => {
-    // Re-process audio if the effect changes and there's an initial recording
     if (initialAudioBlob) {
       processAndSetAudio(initialAudioBlob, selectedVoiceEffect);
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [selectedVoiceEffect]); // Dependency: only selectedVoiceEffect. initialAudioBlob changing is handled by onstop.
+  }, [selectedVoiceEffect]); 
 
   const startRecording = async () => {
-    clearAudio(); // Clear previous recording and effects fully
+    clearAudio(); 
     if (hasMicrophonePermission === null) {
       await getMicrophonePermission(); 
     }
-    if (hasMicrophonePermission === false || !navigator.mediaDevices || !audioContextRef.current) { // Check AudioContext too
+    if (hasMicrophonePermission === false || !navigator.mediaDevices || !audioContextRef.current) { 
        const errorMsg = !audioContextRef.current ? "Web Audio API not available. Effects disabled." : microphoneError;
        toast({ variant: "destructive", title: "Microphone/Audio Init Error", description: errorMsg || "Microphone permission is not granted or media devices are not available."});
        return;
@@ -344,13 +394,12 @@ export function CreateEkoForm() {
 
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      // Use a common mimeType that's likely supported and good for processing
       const options = { mimeType: 'audio/webm;codecs=opus' };
       try {
         mediaRecorderRef.current = new MediaRecorder(stream, options);
       } catch (e) {
         console.warn("WebM Opus not supported, falling back to default MediaRecorder config", e);
-        mediaRecorderRef.current = new MediaRecorder(stream); // Fallback
+        mediaRecorderRef.current = new MediaRecorder(stream); 
       }
       
       audioChunksRef.current = [];
@@ -361,9 +410,9 @@ export function CreateEkoForm() {
 
       mediaRecorderRef.current.onstop = async () => {
         const completeAudioBlob = new Blob(audioChunksRef.current, { type: mediaRecorderRef.current?.mimeType || 'audio/webm' }); 
-        setInitialAudioBlob(completeAudioBlob); // Store the original
-        await processAndSetAudio(completeAudioBlob, selectedVoiceEffect); // Process with current effect for initial preview
-        stream.getTracks().forEach(track => track.stop()); // Stop media stream tracks
+        setInitialAudioBlob(completeAudioBlob); 
+        await processAndSetAudio(completeAudioBlob, selectedVoiceEffect); 
+        stream.getTracks().forEach(track => track.stop()); 
       };
 
       mediaRecorderRef.current.start();
@@ -380,7 +429,6 @@ export function CreateEkoForm() {
     if (mediaRecorderRef.current && isRecording) {
       mediaRecorderRef.current.stop();
       setIsRecording(false);
-      // Processing and preview update is handled by onstop listener
     }
   };
 
@@ -393,10 +441,10 @@ export function CreateEkoForm() {
     }
     audioChunksRef.current = [];
     if (audioPreviewRef.current) {
-        audioPreviewRef.current.src = ''; // Clear preview player
+        audioPreviewRef.current.src = ''; 
     }
     if (!keepInitial) {
-        setSelectedVoiceEffect("none"); // Reset effect if clearing fully
+        setSelectedVoiceEffect("none"); 
         form.setValue("voiceEffect", "none");
     }
   };
@@ -404,7 +452,7 @@ export function CreateEkoForm() {
   const uploadAudio = async (audioToUpload: Blob, userId: string): Promise<string> => {
     const timestamp = Date.now();
     const randomSuffix = Math.random().toString(36).substring(2, 8);
-    const audioFileName = `eko_${userId}_${timestamp}_${randomSuffix}.wav`; // Upload as WAV
+    const audioFileName = `eko_${userId}_${timestamp}_${randomSuffix}.wav`; 
     const storageRefPath = `ekoPostsAudio/${userId}/${audioFileName}`;
     const audioStorageRef = ref(storage, storageRefPath);
     
@@ -426,7 +474,7 @@ export function CreateEkoForm() {
       return;
     }
 
-    if (!values.textContent && !processedAudioBlob) { // Ensure there's content
+    if (!values.textContent && !processedAudioBlob) { 
         toast({
             title: "Empty EkoDrop",
             description: "Please add some text or record audio and apply an effect.",
@@ -442,7 +490,7 @@ export function CreateEkoForm() {
     let audioDownloadURL: string | undefined = undefined;
 
     try {
-      if (processedAudioBlob) { // Upload the processed blob
+      if (processedAudioBlob) { 
         audioDownloadURL = await uploadAudio(processedAudioBlob, user.uid);
       }
       
@@ -470,7 +518,7 @@ export function CreateEkoForm() {
         title: "EkoDrop Posted!",
         description: "Your voice is out there.",
       });
-      clearAudio(); // Fully clear after successful post
+      clearAudio(); 
       form.reset({ textContent: "", visibility: userProfile.privacy.defaultPostVisibility || "public", voiceEffect: "none" });
       setSelectedVoiceEffect("none");
       router.push("/feed");
@@ -520,7 +568,7 @@ export function CreateEkoForm() {
               </AlertDescription>
             </Alert>
           )}
-          {audioUrl && processedAudioBlob && ( // Preview processed audio
+          {audioUrl && processedAudioBlob && ( 
             <div className="space-y-2 p-3 border rounded-md">
               <p className="text-sm font-medium">
                 Previewing: {selectedVoiceEffect !== "none" ? 
@@ -535,7 +583,7 @@ export function CreateEkoForm() {
             </div>
           )}
 
-          {!initialAudioBlob && ( // Show record button only if no initial recording exists
+          {!initialAudioBlob && ( 
             <div className="flex items-center space-x-2">
               {isRecording ? (
                 <Button type="button" variant="destructive" onClick={stopRecording} className="flex-1">
@@ -557,7 +605,7 @@ export function CreateEkoForm() {
           )}
         </div>
 
-        {initialAudioBlob && !isRecording && ( // Show effect selector if initial recording exists and not currently recording
+        {initialAudioBlob && !isRecording && ( 
            <FormField
             control={form.control}
             name="voiceEffect"
@@ -583,15 +631,15 @@ export function CreateEkoForm() {
                     <SelectItem value="deep">Deep Voice</SelectItem>
                     <SelectItem value="robot">Robot (Basic)</SelectItem>
                     <SelectItem value="echo">Echo (Basic)</SelectItem>
-                    <SelectItem value="alien">Alien (Simulated)</SelectItem>
-                    <SelectItem value="monster">Monster (Simulated)</SelectItem>
-                    <SelectItem value="radio">Radio (Simulated)</SelectItem>
+                    <SelectItem value="alien">Alien</SelectItem>
+                    <SelectItem value="monster">Monster</SelectItem>
+                    <SelectItem value="radio">Radio</SelectItem>
                   </SelectContent>
                 </Select>
                 <FormDescription>
                   Apply an effect to your voice. 
                   Chipmunk/Deep effects change pitch & speed. Robot/Echo are basic.
-                  Other advanced effects are currently simulated.
+                  Alien, Monster, and Radio effects are more experimental.
                 </FormDescription>
                 <FormMessage />
               </FormItem>
