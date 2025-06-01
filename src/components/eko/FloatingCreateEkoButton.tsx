@@ -8,9 +8,10 @@ import { useAuth } from "@/contexts/auth-context";
 import { cn } from "@/lib/utils";
 import { useState, useRef, useEffect, useCallback } from "react";
 import { useToast } from "@/hooks/use-toast";
-import { quickPostEkoDrop } from "@/lib/actions/postActions"; 
+import { quickPostEkoDrop } from "@/lib/actions/postActions";
+import { formatTimestampSimple } from "@/lib/format-timestamp"; // Import for duration formatting
 
-const LONG_PRESS_DURATION_MS = 500; 
+const LONG_PRESS_DURATION_MS = 500;
 
 export function FloatingCreateEkoButton() {
   const router = useRouter();
@@ -20,11 +21,13 @@ export function FloatingCreateEkoButton() {
   const [isRecording, setIsRecording] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isLongPressActive, setIsLongPressActive] = useState(false);
-  
+  const [recordingDuration, setRecordingDuration] = useState(0); // State for recording duration
+
   const longPressTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const audioChunksRef = useRef<Blob[]>([]);
-  
+  const durationIntervalRef = useRef<NodeJS.Timeout | null>(null); // Ref for duration interval
+
   const [hasPermission, setHasPermission] = useState<boolean | null>(null);
 
   const requestMicPermission = useCallback(async () => {
@@ -56,18 +59,17 @@ export function FloatingCreateEkoButton() {
       permissionGranted = await requestMicPermission();
     }
     if (!permissionGranted) {
-        setIsLongPressActive(false); 
+        setIsLongPressActive(false);
         return;
     }
 
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      // Try specific codecs for better quality/compression if available
       const options = MediaRecorder.isTypeSupported('audio/webm;codecs=opus')
         ? { mimeType: 'audio/webm;codecs=opus' }
         : MediaRecorder.isTypeSupported('audio/ogg;codecs=opus')
         ? { mimeType: 'audio/ogg;codecs=opus' }
-        : {}; // Fallback to default
+        : {};
       mediaRecorderRef.current = new MediaRecorder(stream, options);
       audioChunksRef.current = [];
 
@@ -79,20 +81,30 @@ export function FloatingCreateEkoButton() {
 
       mediaRecorderRef.current.onstart = () => {
         setIsRecording(true);
+        setRecordingDuration(0); // Reset duration
+        if (durationIntervalRef.current) clearInterval(durationIntervalRef.current);
+        durationIntervalRef.current = setInterval(() => {
+          setRecordingDuration(prev => prev + 1);
+        }, 1000);
         toast({ title: "Recording started...", duration: 2000 });
       };
-      
+
       mediaRecorderRef.current.onstop = async () => {
         setIsRecording(false);
-        setIsLongPressActive(false); 
-        
+        setIsLongPressActive(false);
+        if (durationIntervalRef.current) {
+          clearInterval(durationIntervalRef.current);
+          durationIntervalRef.current = null;
+        }
+        // setRecordingDuration(0); // Duration is reset on next start
+
         const audioBlob = new Blob(audioChunksRef.current, { type: mediaRecorderRef.current?.mimeType || 'audio/webm' });
         audioChunksRef.current = [];
-        stream.getTracks().forEach(track => track.stop()); 
+        stream.getTracks().forEach(track => track.stop());
 
         if (audioBlob.size === 0) {
           toast({ title: "Recording Error", description: "No audio data captured.", variant: "destructive"});
-          setIsSubmitting(false); // Ensure submitting state is reset
+          setIsSubmitting(false);
           return;
         }
 
@@ -107,7 +119,7 @@ export function FloatingCreateEkoButton() {
 
         const formData = new FormData();
         formData.append('audioBlob', audioBlob);
-        formData.append('userId', user.uid); // Pass userId in FormData
+        formData.append('userId', user.uid);
 
         try {
           const result = await quickPostEkoDrop(formData);
@@ -131,17 +143,25 @@ export function FloatingCreateEkoButton() {
       toast({ title: "Recording Error", description: "Could not start recording.", variant: "destructive" });
       setIsRecording(false);
       setIsLongPressActive(false);
+      if (durationIntervalRef.current) {
+        clearInterval(durationIntervalRef.current);
+        durationIntervalRef.current = null;
+      }
     }
   };
 
   const stopRecordingAndPost = () => {
     if (mediaRecorderRef.current && isRecording) {
-      mediaRecorderRef.current.stop(); 
+      mediaRecorderRef.current.stop();
     }
     setIsLongPressActive(false);
     if (longPressTimeoutRef.current) {
       clearTimeout(longPressTimeoutRef.current);
       longPressTimeoutRef.current = null;
+    }
+    if (durationIntervalRef.current) { // Ensure timer stops if manually stopped
+      clearInterval(durationIntervalRef.current);
+      durationIntervalRef.current = null;
     }
   };
 
@@ -154,7 +174,7 @@ export function FloatingCreateEkoButton() {
 
     setIsLongPressActive(true);
     longPressTimeoutRef.current = setTimeout(() => {
-      if (isLongPressActive) { 
+      if (isLongPressActive) {
         startRecording();
       }
     }, LONG_PRESS_DURATION_MS);
@@ -166,16 +186,16 @@ export function FloatingCreateEkoButton() {
       longPressTimeoutRef.current = null;
     }
 
-    if (isRecording) { 
+    if (isRecording) {
       stopRecordingAndPost();
-    } else if (isLongPressActive) { 
+    } else if (isLongPressActive) {
       if (user) {
         router.push('/create-eko');
       } else {
         router.push('/auth/login?redirect=/create-eko');
       }
     }
-    setIsLongPressActive(false); 
+    setIsLongPressActive(false);
   };
 
   useEffect(() => {
@@ -187,56 +207,69 @@ export function FloatingCreateEkoButton() {
       if (longPressTimeoutRef.current) {
         clearTimeout(longPressTimeoutRef.current);
       }
+      if (durationIntervalRef.current) {
+        clearInterval(durationIntervalRef.current);
+      }
     };
   }, []);
-  
+
   if (authLoading) {
-    return null; 
+    return null;
   }
 
   let buttonIcon = <Mic className="h-7 w-7" />;
-  let buttonClass = "bg-accent hover:bg-accent/90 text-accent-foreground";
+  let buttonBaseClass = "bg-accent hover:bg-accent/90 text-accent-foreground";
   let buttonTitle = user ? "Create EkoDrop (Hold to record)" : "Login to Create EkoDrop";
   let isDisabled = isSubmitting;
+  let animationClass = "";
 
   if (isSubmitting) {
     buttonIcon = <Loader2 className="h-7 w-7 animate-spin" />;
     buttonTitle = "Posting...";
   } else if (isRecording) {
     buttonIcon = <StopCircle className="h-7 w-7" />;
-    buttonClass = "bg-red-500 hover:bg-red-600 text-white animate-pulse";
+    buttonBaseClass = "bg-red-500 hover:bg-red-600 text-white";
     buttonTitle = "Stop Recording & Post";
+    animationClass = "animate-pulse scale-110"; // Animation for recording
   } else if (hasPermission === false) {
     buttonIcon = <AlertTriangle className="h-7 w-7" />;
-    buttonClass = "bg-yellow-500 hover:bg-yellow-600 text-white";
+    buttonBaseClass = "bg-yellow-500 hover:bg-yellow-600 text-white";
     buttonTitle = "Microphone permission needed. Click to retry or go to settings.";
   }
 
 
   return (
-    <Button
-      variant="default"
-      size="icon"
-      className={cn(
-        "fixed bottom-6 right-6 z-[101] h-16 w-16 rounded-full shadow-xl transition-all duration-150 ease-in-out",
-        buttonClass
+    <div className="fixed bottom-6 right-6 z-[101]">
+      {isRecording && (
+        <div className="absolute -top-8 left-1/2 -translate-x-1/2 bg-black/70 text-white px-2 py-1 rounded-md text-xs whitespace-nowrap">
+          {formatTimestampSimple(recordingDuration)}
+        </div>
       )}
-      onMouseDown={handlePressStart}
-      onMouseUp={handlePressEnd}
-      onTouchStart={handlePressStart}
-      onTouchEnd={handlePressEnd}
-      onMouseLeave={() => { 
-        if (isLongPressActive && !isRecording && longPressTimeoutRef.current) {
-            clearTimeout(longPressTimeoutRef.current);
-            longPressTimeoutRef.current = null;
-            setIsLongPressActive(false);
-        }
-      }}
-      disabled={isDisabled || authLoading}
-      aria-label={buttonTitle}
-      title={buttonTitle}
-    >
-      {buttonIcon}
-    </Button>
+      <Button
+        variant="default"
+        size="icon"
+        className={cn(
+          "h-16 w-16 rounded-full shadow-xl transition-all duration-150 ease-in-out",
+          buttonBaseClass,
+          animationClass
+        )}
+        onMouseDown={handlePressStart}
+        onMouseUp={handlePressEnd}
+        onTouchStart={handlePressStart}
+        onTouchEnd={handlePressEnd}
+        onMouseLeave={() => {
+          if (isLongPressActive && !isRecording && longPressTimeoutRef.current) {
+              clearTimeout(longPressTimeoutRef.current);
+              longPressTimeoutRef.current = null;
+              setIsLongPressActive(false);
+          }
+        }}
+        disabled={isDisabled || authLoading}
+        aria-label={buttonTitle}
+        title={buttonTitle}
+      >
+        {buttonIcon}
+      </Button>
+    </div>
   );
 }
