@@ -6,8 +6,8 @@ import { Button } from "@/components/ui/button";
 import { AppLogoIcon } from "@/components/icons/app-logo-icon";
 import { ThemeToggle } from '@/components/theme-toggle';
 import { FontSizeSwitcher } from '@/components/font-size-switcher';
-import { Sheet, SheetContent, SheetTrigger, SheetClose } from "@/components/ui/sheet";
-import { Menu, Home, Search, UserCircle, Settings, LogIn, LogOut, Users } from 'lucide-react'; // Removed Mic, Edit
+import { Sheet, SheetContent, SheetTrigger, SheetClose, SheetHeader, SheetTitle } from "@/components/ui/sheet";
+import { Menu, Home, Search, UserCircle, Settings, LogIn, LogOut, Users } from 'lucide-react';
 import { usePathname, useRouter } from 'next/navigation';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/contexts/auth-context';
@@ -67,7 +67,7 @@ export function AppHeader() {
       ));
 
   return (
-    <header className="sticky top-0 z-40 w-full border-b border-border/40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60"> {/* Adjusted z-index to be below FAB */}
+    <header className="sticky top-0 z-40 w-full border-b border-border/40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <div className="container flex h-16 max-w-screen-2xl items-center justify-between">
         <Link href="/" className="flex items-center space-x-2">
           <AppLogoIcon className="h-8 w-8 text-accent" />
@@ -79,7 +79,6 @@ export function AppHeader() {
         </nav>
 
         <div className="flex items-center space-x-2 md:space-x-4">
-          {/* Create Eko button removed from here */}
           <FontSizeSwitcher />
           <ThemeToggle />
 
@@ -146,8 +145,11 @@ export function AppHeader() {
                 <span className="sr-only">Open menu</span>
               </Button>
             </SheetTrigger>
-            <SheetContent side="right" className="w-[280px] sm:w-[320px]">
-              <div className="flex flex-col space-y-4 p-4">
+            <SheetContent side="right" className="w-[280px] sm:w-[320px] p-0">
+              <SheetHeader className="p-6 pb-0"> {/* Add padding here, remove from div below if desired */}
+                <SheetTitle>Menu</SheetTitle>
+              </SheetHeader>
+              <div className="flex flex-col space-y-4 p-6 pt-4"> {/* Adjust padding as needed */}
                 <SheetClose asChild>
                   <Link href="/" className="flex items-center space-x-2 mb-4">
                     <AppLogoIcon className="h-8 w-8 text-accent" />
@@ -183,7 +185,6 @@ export function AppHeader() {
                     <div className="p-2 text-muted-foreground">Loading...</div>
                  ) : user ? (
                   <>
-                    {/* Create Eko button removed from sheet menu as well */}
                     <SheetClose asChild>
                       <Button
                         variant="ghost"
