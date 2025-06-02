@@ -1,9 +1,8 @@
-
 "use client";
 
-import i18nextInstance from '@/i18n/config'; // Ensure this path is correct
-import type { ReactNode} from 'react';
-import { useEffect, useState, Suspense } from 'react';
+import i18nextInstance from '@/i18n/config';
+import type { ReactNode } from 'react';
+import { useEffect, useState } from 'react';
 import { I18nextProvider, useTranslation } from 'react-i18next';
 import { Loader2 } from 'lucide-react';
 
@@ -12,13 +11,14 @@ interface I18nInitializerProps {
 }
 
 function SetHtmlLangDir() {
-  const { i18n } = useTranslation(); // This hook will suspend if i18n not ready and useSuspense=true
+  const { i18n } = useTranslation();
   useEffect(() => {
-    if (typeof document !== 'undefined') {
+    // Only set lang/dir if i18next is initialized and we are on the client
+    if (i18n.isInitialized && typeof document !== 'undefined') {
       document.documentElement.lang = i18n.language;
       document.documentElement.dir = i18n.dir(i18n.language);
     }
-  }, [i18n, i18n.language]);
+  }, [i18n, i18n.language, i18n.isInitialized]); // Depend on i18n.isInitialized
   return null;
 }
 
@@ -29,36 +29,35 @@ const GlobalLoader = () => (
 );
 
 export function I18nInitializer({ children }: I18nInitializerProps) {
-  // This state will be false on the server and initially on the client.
-  // It will only be set to true on the client after i18next is confirmed to be initialized.
-  const [isI18nextReadyForClient, setIsI18nextReadyForClient] = useState(false);
+  // This state confirms i18next is ready on the client side.
+  const [isI18nextReadyOnClient, setIsI18nextReadyOnClient] = useState(false);
 
   useEffect(() => {
     // This effect runs only on the client.
     const initHandler = () => {
-      setIsI18nextReadyForClient(true);
-      // Clean up the event listener once it has fired
+      setIsI18nextReadyOnClient(true);
       i18nextInstance.off('initialized', initHandler);
     };
 
     if (i18nextInstance.isInitialized) {
-      // If already initialized by the time this effect runs (e.g., from a previous navigation)
-      setIsI18nextReadyForClient(true);
+      // If already initialized by the time this effect runs
+      setIsI18nextReadyOnClient(true);
     } else {
-      // Otherwise, attach the event listener
+      // Otherwise, attach the event listener.
+      // init() should have been called by config.ts when imported.
       i18nextInstance.on('initialized', initHandler);
     }
 
-    // Cleanup: In case the component unmounts before 'initialized' fires
+    // Cleanup
     return () => {
       i18nextInstance.off('initialized', initHandler);
     };
   }, []); // Empty dependency array ensures this runs once on mount (client-side)
 
-  if (!isI18nextReadyForClient) {
-    // On the server, isI18nextReadyForClient is false.
-    // On the client, during the first render (before useEffect), isI18nextReadyForClient is false.
-    // Both will render this loader, ensuring the initial HTML matches, preventing hydration error.
+  if (!isI18nextReadyOnClient) {
+    // On the server, isI18nextReadyOnClient is false.
+    // On the client, during the first render (before useEffect), isI18nextReadyOnClient is false.
+    // Both should render this loader, aiming to prevent hydration mismatch.
     return <GlobalLoader />;
   }
 
@@ -66,11 +65,9 @@ export function I18nInitializer({ children }: I18nInitializerProps) {
   return (
     <I18nextProvider i18n={i18nextInstance}>
       <SetHtmlLangDir />
-      {/* The Suspense here is for children that might themselves suspend,
-          e.g., for data fetching or if they use useTranslation before their specific namespaces are loaded by HttpBackend. */}
-      <Suspense fallback={<GlobalLoader />}>
-        {children}
-      </Suspense>
+      {/* Children are rendered directly. If they need Suspense for their own async ops,
+          they should implement it. */}
+      {children}
     </I18nextProvider>
   );
 }

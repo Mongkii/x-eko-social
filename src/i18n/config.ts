@@ -1,4 +1,3 @@
-
 "use client"; // Ensure this runs on the client where localStorage/navigator is available
 
 import i18n from 'i18next';
@@ -42,7 +41,7 @@ if (!i18n.isInitialized) {
       },
       // React specific options
       react: {
-        useSuspense: true, // Recommended for integrating with Suspense
+        useSuspense: false, // Set to false to prevent useTranslation from suspending
       }
     });
 }
