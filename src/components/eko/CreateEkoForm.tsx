@@ -15,7 +15,7 @@ import {
   FormDescription,
 } from "@/components/ui/form";
 import { Textarea } from "@/components/ui/textarea";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+// import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"; // No longer used
 import {
   Select,
   SelectContent,
@@ -30,7 +30,7 @@ import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import { useAuth } from "@/contexts/auth-context";
 import { useRouter } from "next/navigation";
 import { useState, useEffect, useRef, useCallback } from "react";
-import { Loader2, Mic, StopCircle, Trash2, AlertTriangle, Wand2 } from "lucide-react";
+import { Loader2, Mic, StopCircle, Trash2, AlertTriangle, Wand2, Globe, Users, Lock } from "lucide-react";
 import type { EkoPost, PostVisibility } from "@/lib/types";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
@@ -39,9 +39,6 @@ const formSchema = z.object({
   visibility: z.enum(["public", "followers-only", "private"]),
   voiceEffect: z.string().optional(),
 }).refine(data => {
-  // Allow post if textContent exists OR if a voice effect (other than "none") is chosen OR if audio is recorded
-  // The presence of audioBlob (which implies a recording happened) is handled outside Zod for now.
-  // This refine focuses on the declared intent through form values.
   return data.textContent || (data.voiceEffect && data.voiceEffect !== "none");
 }, {
   message: "An EkoDrop must have either text content or an audio recording with a selected effect (if audio is the primary content).",
@@ -535,20 +532,26 @@ export function CreateEkoForm() {
   }
   
   const canSubmit = !isSubmitting && !authLoading && user && userProfile && !isRecording && !isProcessingEffect;
+  
+  const visibilityOptions = [
+    { value: "public", label: "Public", icon: <Globe className="mr-2 h-4 w-4" /> },
+    { value: "followers-only", label: "Followers Only", icon: <Users className="mr-2 h-4 w-4" /> },
+    { value: "private", label: "Private", icon: <Lock className="mr-2 h-4 w-4" /> },
+  ];
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
         <FormField
           control={form.control}
           name="textContent"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>What's on your mind? (Optional if recording audio)</FormLabel>
+              <FormLabel>What's on your mind? (Optional with audio)</FormLabel>
               <FormControl>
                 <Textarea
                   placeholder="Share your thoughts... #eko #voicefirst"
-                  className="resize-none min-h-[100px]"
+                  className="resize-none min-h-[80px]"
                   {...field}
                 />
               </FormControl>
@@ -556,9 +559,40 @@ export function CreateEkoForm() {
             </FormItem>
           )}
         />
+        
+        <div className="flex items-center justify-between space-x-2">
+          <FormField
+            control={form.control}
+            name="visibility"
+            render={({ field }) => (
+              <FormItem className="flex-grow">
+                <Select onValueChange={field.onChange} value={field.value} defaultValue={userProfile?.privacy.defaultPostVisibility || "public"}>
+                  <FormControl>
+                    <SelectTrigger className="h-10 text-xs sm:text-sm w-full">
+                       {visibilityOptions.find(opt => opt.value === field.value)?.icon}
+                      <SelectValue placeholder="Set visibility" />
+                    </SelectTrigger>
+                  </FormControl>
+                  <SelectContent>
+                    {visibilityOptions.map(opt => (
+                      <SelectItem key={opt.value} value={opt.value}>
+                        <div className="flex items-center">
+                          {opt.icon}
+                          {opt.label}
+                        </div>
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        </div>
 
-        <div className="space-y-3">
-          <FormLabel>Add Voice</FormLabel>
+
+        <div className="space-y-3 pt-2">
+          {/* <FormLabel>Add Voice</FormLabel> */}
           {hasMicrophonePermission === false && microphoneError && (
             <Alert variant="destructive">
               <AlertTriangle className="h-4 w-4" />
@@ -576,9 +610,9 @@ export function CreateEkoForm() {
                   : "Normal voice"}
                 {isProcessingEffect && <Loader2 className="h-4 w-4 inline animate-spin ml-2" />}
               </p>
-              <audio ref={audioPreviewRef} src={audioUrl} controls className="w-full" />
+              <audio ref={audioPreviewRef} src={audioUrl} controls className="w-full h-10" /> {/* Reduced height */}
               <Button type="button" variant="outline" size="sm" onClick={() => clearAudio()} className="w-full text-red-500 hover:text-red-600">
-                <Trash2 className="mr-2 h-4 w-4" /> Delete Recording & Effects
+                <Trash2 className="mr-2 h-4 w-4" /> Delete Recording
               </Button>
             </div>
           )}
@@ -611,7 +645,7 @@ export function CreateEkoForm() {
             name="voiceEffect"
             render={({ field }) => (
               <FormItem>
-                <FormLabel className="flex items-center"><Wand2 className="mr-2 h-4 w-4 text-accent" /> Voice Changer (Optional)</FormLabel>
+                <FormLabel className="flex items-center text-sm"><Wand2 className="mr-2 h-4 w-4 text-accent" /> Voice Changer (Optional)</FormLabel>
                 <Select 
                   onValueChange={(value: VoiceEffect) => {
                     field.onChange(value);
@@ -621,7 +655,7 @@ export function CreateEkoForm() {
                   disabled={isProcessingEffect}
                 >
                   <FormControl>
-                    <SelectTrigger>
+                    <SelectTrigger className="h-10">
                       <SelectValue placeholder="Select a voice effect" />
                     </SelectTrigger>
                   </FormControl>
@@ -636,55 +670,14 @@ export function CreateEkoForm() {
                     <SelectItem value="radio">Radio</SelectItem>
                   </SelectContent>
                 </Select>
-                <FormDescription>
-                  Apply an effect to your voice. 
-                  Chipmunk/Deep effects change pitch & speed. Robot/Echo are basic.
-                  Alien, Monster, and Radio effects are more experimental.
+                <FormDescription className="text-xs">
+                  Apply an effect to your voice.
                 </FormDescription>
                 <FormMessage />
               </FormItem>
             )}
           />
         )}
-
-
-        <FormField
-          control={form.control}
-          name="visibility"
-          render={({ field }) => (
-            <FormItem className="space-y-3">
-              <FormLabel>Visibility:</FormLabel>
-              <FormControl>
-                <RadioGroup
-                  onValueChange={field.onChange}
-                  defaultValue={field.value}
-                  value={field.value}
-                  className="flex flex-col space-y-1 sm:flex-row sm:space-y-0 sm:space-x-4"
-                >
-                  <FormItem className="flex items-center space-x-3 space-y-0">
-                    <FormControl>
-                      <RadioGroupItem value="public" />
-                    </FormControl>
-                    <FormLabel className="font-normal">Public</FormLabel>
-                  </FormItem>
-                  <FormItem className="flex items-center space-x-3 space-y-0">
-                    <FormControl>
-                      <RadioGroupItem value="followers-only" />
-                    </FormControl>
-                    <FormLabel className="font-normal">Followers Only</FormLabel>
-                  </FormItem>
-                  <FormItem className="flex items-center space-x-3 space-y-0">
-                    <FormControl>
-                      <RadioGroupItem value="private" />
-                    </FormControl>
-                    <FormLabel className="font-normal">Private (Only You)</FormLabel>
-                  </FormItem>
-                </RadioGroup>
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
         
         <Button type="submit" className="w-full" disabled={!canSubmit}>
           {(isSubmitting || isProcessingEffect) && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
@@ -703,3 +696,6 @@ export function CreateEkoForm() {
     </Form>
   );
 }
+
+
+    
