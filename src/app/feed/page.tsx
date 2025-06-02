@@ -11,12 +11,13 @@ import { useEffect, useState } from "react";
 import { Loader2, Mic } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { CreateEkoForm } from "@/components/eko/CreateEkoForm";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"; // Added Card components
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 export default function FeedPage() {
   const [posts, setPosts] = useState<EkoPost[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [showCreateEkoForm, setShowCreateEkoForm] = useState(false);
 
   useEffect(() => {
     const fetchPosts = async () => {
@@ -52,19 +53,34 @@ export default function FeedPage() {
       <AppHeader />
       <main className="flex-grow container mx-auto px-4 py-8 pb-24">
 
-        <section className="mb-12">
-          <Card className="w-full max-w-md mx-auto shadow-md">
-            <CardHeader>
-              <CardTitle className="text-xl flex items-center font-semibold">
-                <Mic className="mr-3 h-5 w-5 text-accent" />
-                Share an EkoDrop
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="pt-2 pb-4"> {/* Adjusted padding for compactness */}
-              <CreateEkoForm />
-            </CardContent>
-          </Card>
-        </section>
+        {!showCreateEkoForm && (
+          <section className="mb-8 text-center">
+            <Button
+              size="lg"
+              onClick={() => setShowCreateEkoForm(true)}
+              className="w-full max-w-md mx-auto shadow-md hover:shadow-lg transition-shadow"
+            >
+              <Mic className="mr-2 h-5 w-5" />
+              Share an EkoDrop
+            </Button>
+          </section>
+        )}
+
+        {showCreateEkoForm && (
+          <section className="mb-12">
+            <Card className="w-full max-w-md mx-auto shadow-md">
+              <CardHeader>
+                <CardTitle className="text-xl flex items-center font-semibold">
+                  <Mic className="mr-3 h-5 w-5 text-accent" />
+                  Share an EkoDrop
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="pt-2 pb-4">
+                <CreateEkoForm />
+              </CardContent>
+            </Card>
+          </section>
+        )}
 
         <h1 className="text-3xl font-bold mb-8 text-center md:text-left">Eko Feed</h1>
         
