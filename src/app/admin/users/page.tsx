@@ -1,101 +1,258 @@
+"use client";
 
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
+import Link from 'next/link'; // Using standard next/link
 import { Button } from "@/components/ui/button";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Badge } from "@/components/ui/badge";
-import { MoreHorizontal, PlusCircle, Search } from "lucide-react";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
-import type { UserProfile } from "@/lib/types"; // Ensure UserProfile is defined
-import { Timestamp } from "firebase/firestore";
+import { AppLogoIcon } from "@/components/icons/app-logo-icon";
+import { ThemeToggle } from '@/components/theme-toggle';
+import { FontSizeSwitcher } from '@/components/font-size-switcher';
+import { LanguageSwitcher } from '@/components/language-switcher'; // New language switcher
+import { Sheet, SheetContent, SheetTrigger, SheetClose, SheetHeader, SheetTitle } from "@/components/ui/sheet";
+import { Menu, Home, Settings, LogIn, LogOut, Users, ListMusic, SlidersHorizontal } from 'lucide-react';
+import { usePathname, useRouter } from 'next/navigation'; // Using standard next/navigation
+import { cn } from '@/lib/utils';
+import { useAuth } from '@/contexts/auth-context';
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuGroup,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { useTranslation } from 'react-i18next'; // For translations
 
-// Mock data - replace with Firebase data fetching
-const mockUsers: UserProfile[] = [
-  { id: "user1", username: "ekoFanatic", email: "fan@example.com", language: "en", privacy: { profile: "public", defaultPostVisibility: "public" }, createdAt: Timestamp.now(), followersCount: 1200, followingCount: 300 },
-  { id: "user2", username: "voiceQueen", email: "queen@example.com", language: "ar", privacy: { profile: "private", defaultPostVisibility: "followers-only" }, createdAt: Timestamp.now(), followersCount: 5600, followingCount: 50 },
-  { id: "user3", username: "soundWaveSurfer", email: "surfer@example.com", language: "es", privacy: { profile: "public", defaultPostVisibility: "public" }, createdAt: Timestamp.now(), followersCount: 800, followingCount: 150 },
-  // Add more mock users
+const navLinksConfig = (t: (key: string) => string) => [ // Function to generate links with translations
+  { href: "/feed", label: t('feedTitle'), icon: Home, protected: false },
+  { href: "/discover", label: t('discoverTitle'), icon: SlidersHorizontal, protected: false },
+  { href: "/playlists", label: t('playlistsTitle'), icon: ListMusic, protected: true },
+  { href: "/settings", label: t('settingsTitle'), icon: Settings, protected: true } 
 ];
 
 
-export default function AdminUsersPage() {
-  // State for search, pagination, etc. would go here
+export function AppHeader() {
+  const pathname = usePathname();
+  const router = useRouter();
+  const { user, userProfile, loading, signOut } = useAuth();
+  const { t } = useTranslation(); // Initialize useTranslation hook
+
+  const navLinks = navLinksConfig(t); // Get translated nav links
+
+  const handleSignOut = async () => {
+    await signOut();
+    router.push('/'); // Redirect to home or login page
+    router.refresh();
+  };
+
+  const getAvatarFallback = () => {
+    if (userProfile?.username) return userProfile.username[0].toUpperCase();
+    if (user?.email) return user.email[0].toUpperCase();
+    return "U";
+  };
+
+  const renderDesktopNavLinks = () =>
+    navLinks
+      .filter(link => !link.protected || (link.protected && user))
+      .map((link) => (
+        <Button
+          key={link.href}
+          variant="link"
+          asChild
+          className={cn(
+            "transition-colors hover:text-accent no-underline",
+            pathname === link.href
+              ? "text-accent font-semibold"
+              : "text-muted-foreground"
+          )}
+        >
+          <Link href={link.href} className="flex items-center space-x-2">
+            <link.icon className="h-5 w-5" />
+            <span>{link.label}</span>
+          </Link>
+        </Button>
+      ));
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <h1 className="text-3xl font-bold tracking-tight">User Management</h1>
-        <Button>
-          <PlusCircle className="mr-2 h-4 w-4" /> Add User (Manual)
-        </Button>
-      </div>
+    <header className="sticky top-0 z-40 w-full border-b border-border/40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+      <div className="container flex h-16 max-w-screen-2xl items-center justify-between">
+        <Link href="/" className="flex items-center space-x-2">
+          <AppLogoIcon className="h-8 w-8 text-accent" />
+          <span className="font-bold text-xl">{t('appName')}</span>
+        </Link>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>All Users</CardTitle>
-          <CardDescription>View, edit, and manage user accounts.</CardDescription>
-          <div className="relative mt-4">
-            <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-            <Input type="search" placeholder="Search users by username or email..." className="pl-8 w-full md:w-1/3" />
-          </div>
-        </CardHeader>
-        <CardContent>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Username</TableHead>
-                <TableHead className="hidden md:table-cell">Email</TableHead>
-                <TableHead>Language</TableHead>
-                <TableHead>Profile Status</TableHead>
-                <TableHead className="hidden md:table-cell">Followers</TableHead>
-                <TableHead className="hidden md:table-cell">Joined Date</TableHead>
-                <TableHead><span className="sr-only">Actions</span></TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {mockUsers.map((user) => (
-                <TableRow key={user.id}>
-                  <TableCell className="font-medium">{user.username}</TableCell>
-                  <TableCell className="hidden md:table-cell">{user.email}</TableCell>
-                  <TableCell>{user.language.toUpperCase()}</TableCell>
-                  <TableCell>
-                    <Badge variant={user.privacy.profile === 'public' ? 'default' : 'secondary'}>
-                      {user.privacy.profile}
-                    </Badge>
-                  </TableCell>
-                  <TableCell className="hidden md:table-cell">{user.followersCount || 0}</TableCell>
-                  <TableCell className="hidden md:table-cell">
-                    {user.createdAt?.toDate().toLocaleDateString()}
-                  </TableCell>
-                  <TableCell>
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button aria-haspopup="true" size="icon" variant="ghost">
-                          <MoreHorizontal className="h-4 w-4" />
-                          <span className="sr-only">Toggle menu</span>
+        <nav className="hidden md:flex items-center space-x-1 text-sm font-medium">
+          {renderDesktopNavLinks()}
+        </nav>
+
+        <div className="flex items-center space-x-2 md:space-x-4">
+          <LanguageSwitcher /> {/* Added LanguageSwitcher */}
+          <FontSizeSwitcher />
+          <ThemeToggle />
+
+          {loading ? (
+            <div className="h-8 w-8 animate-pulse rounded-full bg-muted"></div>
+          ) : user ? (
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" className="relative h-8 w-8 rounded-full">
+                  <Avatar className="h-8 w-8" data-ai-hint="user avatar">
+                    <AvatarImage src={userProfile?.avatarURL || ""} alt={userProfile?.username || user.email || ""} />
+                    <AvatarFallback>{getAvatarFallback()}</AvatarFallback>
+                  </Avatar>
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent className="w-56" align="end" forceMount>
+                <DropdownMenuLabel className="font-normal">
+                  <div className="flex flex-col space-y-1">
+                    <p className="text-sm font-medium leading-none">{userProfile?.username || "Eko User"}</p>
+                    <p className="text-xs leading-none text-muted-foreground">
+                      {user.email}
+                    </p>
+                  </div>
+                </DropdownMenuLabel>
+                <DropdownMenuSeparator />
+                <DropdownMenuGroup>
+                  <DropdownMenuItem onClick={() => router.push(`/profile/${userProfile?.username_lowercase || user.uid}`)}>
+                    <Users className="mr-2 h-4 w-4" />
+                    <span>{t('profileAction')}</span>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => router.push('/settings')}>
+                    <Settings className="mr-2 h-4 w-4" />
+                    <span>{t('settingsTitle')}</span>
+                  </DropdownMenuItem>
+                </DropdownMenuGroup>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onClick={handleSignOut}>
+                  <LogOut className="mr-2 h-4 w-4" />
+                  <span>{t('logoutAction')}</span>
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          ) : (
+            <div className="hidden md:flex items-center space-x-2">
+              <Button asChild variant="outline" size="sm">
+                <Link href="/auth/login">
+                  <LogIn className="mr-2 h-4 w-4" />
+                  {t('loginAction')}
+                </Link>
+              </Button>
+              <Button asChild size="sm">
+                <Link href="/auth/signup">
+                  <Users className="mr-2 h-4 w-4" />
+                  {t('signupAction')}
+                </Link>
+              </Button>
+            </div>
+          )}
+
+          <Sheet>
+            <SheetTrigger asChild className="md:hidden">
+              <Button variant="outline" size="icon">
+                <Menu className="h-6 w-6" />
+                <span className="sr-only">Open menu</span>
+              </Button>
+            </SheetTrigger>
+            <SheetContent side="right" className="w-[280px] sm:w-[320px] p-0">
+              <SheetHeader className="p-6 pb-0"> 
+                <SheetTitle>Menu</SheetTitle>
+              </SheetHeader>
+              <div className="flex flex-col space-y-4 p-6 pt-4"> 
+                <SheetClose asChild>
+                  <Link href="/" className="flex items-center space-x-2 mb-4">
+                    <AppLogoIcon className="h-8 w-8 text-accent" />
+                    <span className="font-bold text-lg">{t('appName')}</span>
+                  </Link>
+                </SheetClose>
+                
+                <div className="flex flex-col space-y-1">
+                  {navLinks
+                    .filter(link => !link.protected || (link.protected && user))
+                    .map((link) => (
+                      <SheetClose asChild key={link.href}>
+                        <Button
+                          variant="ghost"
+                          asChild
+                          className={cn(
+                            "w-full justify-start text-left flex items-center space-x-2 rounded-md p-2 hover:bg-accent hover:text-accent-foreground",
+                            pathname === link.href
+                              ? "bg-accent/20 text-accent"
+                              : "text-muted-foreground"
+                          )}
+                        >
+                          <Link href={link.href}>
+                            <link.icon className="h-5 w-5" />
+                            <span>{link.label}</span>
+                          </Link>
                         </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end">
-                        <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                        <DropdownMenuItem>View Profile</DropdownMenuItem>
-                        <DropdownMenuItem>Edit User</DropdownMenuItem>
-                        <DropdownMenuItem>Suspend User</DropdownMenuItem>
-                        <DropdownMenuItem className="text-destructive">Delete User</DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </CardContent>
-        {/* Add CardFooter for pagination if needed */}
-      </Card>
-    </div>
+                      </SheetClose>
+                    ))}
+                </div>
+                <hr />
+                 {loading ? (
+                    <div className="p-2 text-muted-foreground">Loading...</div>
+                 ) : user ? (
+                  <>
+                    <SheetClose asChild>
+                      <Button
+                        variant="ghost"
+                        asChild
+                        className="flex items-center space-x-2 rounded-md p-2 hover:bg-accent hover:text-accent-foreground text-muted-foreground w-full justify-start"
+                      >
+                        <Link href={`/profile/${userProfile?.username_lowercase || user.uid}`}>
+                          <Users className="h-5 w-5" />
+                          <span>{t('profileAction')}</span>
+                        </Link>
+                      </Button>
+                    </SheetClose>
+                    <SheetClose asChild>
+                      <Button
+                        variant="ghost"
+                        asChild
+                        className="flex items-center space-x-2 rounded-md p-2 hover:bg-accent hover:text-accent-foreground text-muted-foreground w-full justify-start"
+                      >
+                         <Link href="/settings">
+                          <Settings className="h-5 w-5" />
+                          <span>{t('settingsTitle')}</span>
+                        </Link>
+                      </Button>
+                    </SheetClose>
+                    <SheetClose asChild>
+                      <Button
+                        variant="ghost"
+                        onClick={handleSignOut}
+                        className="flex items-center space-x-2 rounded-md p-2 hover:bg-accent hover:text-accent-foreground text-muted-foreground w-full justify-start"
+                      >
+                        <LogOut className="h-5 w-5" />
+                        <span>{t('logoutAction')}</span>
+                      </Button>
+                    </SheetClose>
+                  </>
+                 ) : (
+                  <>
+                    <SheetClose asChild>
+                      <Button asChild variant="ghost" className="flex items-center space-x-2 rounded-md p-2 hover:bg-accent hover:text-accent-foreground text-muted-foreground w-full justify-start">
+                        <Link href="/auth/login">
+                          <LogIn className="h-5 w-5" />
+                          <span>{t('loginAction')}</span>
+                        </Link>
+                      </Button>
+                    </SheetClose>
+                    <SheetClose asChild>
+                     <Button asChild variant="default" className="w-full justify-start">
+                        <Link href="/auth/signup" className="flex items-center space-x-2">
+                          <Users className="h-5 w-5" />
+                          <span>{t('signupAction')}</span>
+                        </Link>
+                      </Button>
+                    </SheetClose>
+                  </>
+                 )}
+              </div>
+            </SheetContent>
+          </Sheet>
+        </div>
+      </div>
+    </header>
   );
-}
-
-// Helper to make email optional for UserProfile in mock data
-interface MockUserProfile extends Omit<UserProfile, 'email'> {
-  email?: string;
 }

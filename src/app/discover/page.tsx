@@ -1,18 +1,23 @@
 
+"use client";
+
 import { AppHeader } from "@/components/app-header";
 import { AppFooter } from "@/components/app-footer";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Search, Zap, Users, TrendingUp } from "lucide-react";
+import { useTranslation } from 'react-i18next';
 
 export default function DiscoverPage() {
+  const { t } = useTranslation();
+
   return (
     <div className="flex flex-col min-h-screen">
       <AppHeader />
-      <main className="flex-grow container mx-auto px-4 py-8 pb-24"> {/* Added pb-24 for player */}
+      <main className="flex-grow container mx-auto px-4 py-8 pb-24">
         <header className="mb-12 text-center">
-          <h1 className="text-4xl font-bold tracking-tight mb-2">Discover EkoDrops</h1>
+          <h1 className="text-4xl font-bold tracking-tight mb-2">{t('discoverTitle')}</h1>
           <p className="text-lg text-muted-foreground">
             Find new voices, trending topics, and communities.
           </p>
@@ -23,7 +28,7 @@ export default function DiscoverPage() {
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
             <Input
               type="search"
-              placeholder="Search EkoDrops, users, or topics..."
+              placeholder={t('searchPlaceholder')}
               className="w-full pl-10 pr-4 py-3 rounded-full text-base shadow-sm"
             />
           </div>

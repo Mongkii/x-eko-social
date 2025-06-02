@@ -12,8 +12,10 @@ import { Loader2, Mic } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { CreateEkoForm } from "@/components/eko/CreateEkoForm";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { useTranslation } from 'react-i18next';
 
 export default function FeedPage() {
+  const { t } = useTranslation();
   const [posts, setPosts] = useState<EkoPost[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -61,7 +63,7 @@ export default function FeedPage() {
               className="w-full max-w-md mx-auto shadow-md hover:shadow-lg transition-shadow"
             >
               <Mic className="mr-2 h-5 w-5" />
-              Share an EkoDrop
+              {t('shareAnEkoDrop')}
             </Button>
           </section>
         )}
@@ -72,7 +74,7 @@ export default function FeedPage() {
               <CardHeader>
                 <CardTitle className="text-xl flex items-center font-semibold">
                   <Mic className="mr-3 h-5 w-5 text-accent" />
-                  Share an EkoDrop
+                  {t('shareAnEkoDrop')}
                 </CardTitle>
               </CardHeader>
               <CardContent className="pt-2 pb-4">
@@ -82,7 +84,7 @@ export default function FeedPage() {
           </section>
         )}
 
-        <h1 className="text-3xl font-bold mb-8 text-center md:text-left">Eko Feed</h1>
+        <h1 className="text-3xl font-bold mb-8 text-center md:text-left">{t('feedTitle')}</h1>
         
         {isLoading && (
           <div className="flex justify-center items-center py-10">

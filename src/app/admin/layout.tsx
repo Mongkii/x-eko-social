@@ -5,7 +5,7 @@ import { AppLogoIcon } from '@/components/icons/app-logo-icon';
 import { Home, Users, MessageSquareWarning, BarChart3, ShieldCheck, Settings } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { ThemeToggle } from '@/components/theme-toggle';
-import { UserNav } from './_components/user-nav'; // Placeholder for admin user dropdown
+import { UserNav } from './_components/user-nav'; // Adjusted path
 
 // export const metadata = {
 //   title: 'Eko Admin Dashboard',

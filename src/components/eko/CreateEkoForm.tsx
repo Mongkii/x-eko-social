@@ -15,7 +15,6 @@ import {
   FormDescription,
 } from "@/components/ui/form";
 import { Textarea } from "@/components/ui/textarea";
-// import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"; // No longer used
 import {
   Select,
   SelectContent,
@@ -23,6 +22,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Slider } from "@/components/ui/slider";
 import { useToast } from "@/hooks/use-toast";
 import { firestore, storage } from "@/lib/firebase";
 import { collection, addDoc, serverTimestamp, Timestamp } from "firebase/firestore";
@@ -31,13 +31,16 @@ import { useAuth } from "@/contexts/auth-context";
 import { useRouter } from "next/navigation";
 import { useState, useEffect, useRef, useCallback } from "react";
 import { Loader2, Mic, StopCircle, Trash2, AlertTriangle, Wand2, Globe, Users, Lock } from "lucide-react";
-import type { EkoPost, PostVisibility } from "@/lib/types";
+import type { EkoPost, PostVisibility, VoiceEffect } from "@/lib/types";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { useTranslation } from 'react-i18next';
+
 
 const formSchema = z.object({
   textContent: z.string().max(280, "EkoDrop text too long.").optional(),
   visibility: z.enum(["public", "followers-only", "private"]),
   voiceEffect: z.string().optional(),
+  // Removed parameters from Zod schema for now to simplify, will be handled by state
 }).refine(data => {
   return data.textContent || (data.voiceEffect && data.voiceEffect !== "none");
 }, {
@@ -46,20 +49,10 @@ const formSchema = z.object({
 });
 
 
-type VoiceEffect = 
-  | "none" 
-  | "chipmunk" 
-  | "deep" 
-  | "robot" 
-  | "echo" 
-  | "alien" 
-  | "monster"
-  | "radio";
-
 // Helper function to create a distortion curve for WaveShaperNode
 function makeDistortionCurve(amount: number): Float32Array {
   const k = typeof amount === 'number' ? amount : 50;
-  const n_samples = 44100; // Standard sample rate, doesn't strictly matter for the curve shape
+  const n_samples = 44100; 
   const curve = new Float32Array(n_samples);
   const deg = Math.PI / 180;
   for (let i = 0; i < n_samples; ++i) {
@@ -83,7 +76,6 @@ function audioBufferToWav(buffer: AudioBuffer): Blob {
   }
 
   if (numChannels === 2) {
-    // Simple stereo interleave (if your source is stereo)
     const inputL = channelData[0];
     const inputR = channelData[1];
     const length = inputL.length + inputR.length;
@@ -95,7 +87,7 @@ function audioBufferToWav(buffer: AudioBuffer): Blob {
       result[index++] = Math.max(-32768, Math.min(32767, inputR[inputIndex] * 32767));
       inputIndex++;
     }
-  } else { // Mono or more (take first channel for simplicity if more than 2)
+  } else { 
     const monoChannel = channelData[0];
     result = new Int16Array(monoChannel.length);
     for (let i = 0; i < monoChannel.length; i++) {
@@ -119,12 +111,12 @@ function audioBufferToWav(buffer: AudioBuffer): Blob {
   view.setUint32(offset, bufferLength - 8, true); offset += 4;
   writeString(view, offset, 'WAVE'); offset += 4;
   writeString(view, offset, 'fmt '); offset += 4;
-  view.setUint32(offset, 16, true); offset += 4; // Subchunk1Size (16 for PCM)
+  view.setUint32(offset, 16, true); offset += 4;
   view.setUint16(offset, format, true); offset += 2;
   view.setUint16(offset, numChannels, true); offset += 2;
   view.setUint32(offset, sampleRate, true); offset += 4;
-  view.setUint32(offset, sampleRate * numChannels * (bitDepth / 8), true); offset += 4; // ByteRate
-  view.setUint16(offset, numChannels * (bitDepth / 8), true); offset += 2; // BlockAlign
+  view.setUint32(offset, sampleRate * numChannels * (bitDepth / 8), true); offset += 4; 
+  view.setUint16(offset, numChannels * (bitDepth / 8), true); offset += 2;
   view.setUint16(offset, bitDepth, true); offset += 2;
   writeString(view, offset, 'data'); offset += 4;
   view.setUint32(offset, dataLength, true); offset += 4;
@@ -137,11 +129,43 @@ function audioBufferToWav(buffer: AudioBuffer): Blob {
 }
 
 
+interface VoiceEffectParams {
+  echoDelayTime: number; // 0.0 to 1.0 seconds
+  echoFeedback: number; // 0.0 to 0.9 (to avoid infinite feedback)
+  robotPitchFactor: number; // 0.5 (deep) to 2.0 (high)
+  robotQFactor: number; // 1 to 20
+  robotGain: number; // 0 to 30 dB
+  alienPitchFactor: number; // 0.5 to 2.0
+  alienLFOFrequency: number; // 1 Hz to 30 Hz
+  alienLFOGain: number; // 0.01 to 0.2
+  monsterPitchFactor: number; // 0.3 to 0.8
+  monsterDistortionAmount: number; // 50 to 400
+  radioBandpassFrequency: number; // 500 Hz to 3000 Hz
+  radioDistortionAmount: number; // 10 to 100
+}
+
+const initialVoiceEffectParams: VoiceEffectParams = {
+  echoDelayTime: 0.25,
+  echoFeedback: 0.4,
+  robotPitchFactor: 0.9,
+  robotQFactor: 6,
+  robotGain: 15,
+  alienPitchFactor: 1.4,
+  alienLFOFrequency: 15,
+  alienLFOGain: 0.05,
+  monsterPitchFactor: 0.45,
+  monsterDistortionAmount: 150,
+  radioBandpassFrequency: 1500,
+  radioDistortionAmount: 30,
+};
+
+
 export function CreateEkoForm() {
   const { toast } = useToast();
   const { user, userProfile, loading: authLoading } = useAuth();
   const router = useRouter();
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const { t } = useTranslation();
 
   const [isRecording, setIsRecording] = useState(false);
   const [initialAudioBlob, setInitialAudioBlob] = useState<Blob | null>(null);
@@ -156,6 +180,15 @@ export function CreateEkoForm() {
   const [isProcessingEffect, setIsProcessingEffect] = useState(false);
 
   const audioContextRef = useRef<AudioContext | null>(null);
+  const [voiceEffectParams, setVoiceEffectParams] = useState<VoiceEffectParams>(initialVoiceEffectParams);
+
+
+  const handleParamChange = (paramName: keyof VoiceEffectParams, value: number) => {
+    setVoiceEffectParams(prevParams => ({
+      ...prevParams,
+      [paramName]: value,
+    }));
+  };
 
   useEffect(() => {
     if (typeof window !== 'undefined' && !audioContextRef.current) {
@@ -186,6 +219,7 @@ export function CreateEkoForm() {
         voiceEffect: "none",
       });
       setSelectedVoiceEffect("none");
+      setVoiceEffectParams(initialVoiceEffectParams);
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [userProfile, form.reset]);
@@ -221,7 +255,7 @@ export function CreateEkoForm() {
     }
   };
   
-  const applyVoiceEffect = useCallback(async (inputBlob: Blob | null, effect: VoiceEffect): Promise<Blob | null> => {
+  const applyVoiceEffect = useCallback(async (inputBlob: Blob | null, effect: VoiceEffect, params: VoiceEffectParams): Promise<Blob | null> => {
     if (!inputBlob || !audioContextRef.current) return inputBlob; 
 
     setIsProcessingEffect(true);
@@ -250,27 +284,27 @@ export function CreateEkoForm() {
           source.connect(offlineCtx.destination);
           break;
         case "robot":
-          source.playbackRate.value = 0.9; 
+          source.playbackRate.value = params.robotPitchFactor; 
           const robotFilter = offlineCtx.createBiquadFilter();
           robotFilter.type = 'peaking';
           robotFilter.frequency.value = 1200; 
-          robotFilter.Q.value = 6;      
-          robotFilter.gain.value = 15;   
+          robotFilter.Q.value = params.robotQFactor;      
+          robotFilter.gain.value = params.robotGain;   
           source.connect(robotFilter);
           robotFilter.connect(offlineCtx.destination);
           break;
         case "echo":
           const delayNode = offlineCtx.createDelay(1.0); 
-          delayNode.delayTime.value = 0.25; 
+          delayNode.delayTime.value = params.echoDelayTime; 
 
           const feedbackNode = offlineCtx.createGain();
-          feedbackNode.gain.value = 0.4; 
+          feedbackNode.gain.value = params.echoFeedback; 
 
           const dryGainNode = offlineCtx.createGain();
           dryGainNode.gain.value = 1.0; 
 
           const wetGainNode = offlineCtx.createGain();
-          wetGainNode.gain.value = 0.5; 
+          wetGainNode.gain.value = 0.5; // Wet gain can be fixed or another param
 
           source.connect(dryGainNode);
           dryGainNode.connect(offlineCtx.destination);
@@ -283,33 +317,33 @@ export function CreateEkoForm() {
           wetGainNode.connect(offlineCtx.destination);
           break;
         case "alien":
-          source.playbackRate.value = 1.4; // Higher pitch
+          source.playbackRate.value = params.alienPitchFactor;
           const lfo = offlineCtx.createOscillator();
           lfo.type = 'sine';
-          lfo.frequency.value = 15; // Faster warble
+          lfo.frequency.value = params.alienLFOFrequency;
           const lfoGain = offlineCtx.createGain();
-          lfoGain.gain.value = 0.05; // Subtle warble depth
+          lfoGain.gain.value = params.alienLFOGain;
           
           const alienBiquad = offlineCtx.createBiquadFilter();
           alienBiquad.type = 'bandpass';
-          alienBiquad.frequency.value = 2000;
-          alienBiquad.Q.value = 1.5;
+          alienBiquad.frequency.value = 2000; // Can be fixed or a param
+          alienBiquad.Q.value = 1.5; // Can be fixed or a param
 
           lfo.connect(lfoGain.gain);
           source.connect(alienBiquad);
-          alienBiquad.connect(lfoGain); // Modulate output of filter
+          alienBiquad.connect(lfoGain); 
           lfoGain.connect(offlineCtx.destination);
           lfo.start(0);
           break;
         case "monster":
-          source.playbackRate.value = 0.45; // Very low pitch
+          source.playbackRate.value = params.monsterPitchFactor;
           const distortion = offlineCtx.createWaveShaper();
-          distortion.curve = makeDistortionCurve(150); // Heavy distortion
+          distortion.curve = makeDistortionCurve(params.monsterDistortionAmount);
           distortion.oversample = '4x';
 
           const monsterLowPass = offlineCtx.createBiquadFilter();
           monsterLowPass.type = "lowpass";
-          monsterLowPass.frequency.value = 800; // Cut off high frequencies
+          monsterLowPass.frequency.value = 800; // Can be fixed or a param
           
           source.connect(distortion);
           distortion.connect(monsterLowPass);
@@ -318,11 +352,11 @@ export function CreateEkoForm() {
         case "radio":
           const bandpass = offlineCtx.createBiquadFilter();
           bandpass.type = 'bandpass';
-          bandpass.frequency.value = 1500; 
-          bandpass.Q.value = 4; // Narrower band
+          bandpass.frequency.value = params.radioBandpassFrequency; 
+          bandpass.Q.value = 4; // Can be fixed or param
 
           const radioDistortion = offlineCtx.createWaveShaper();
-          radioDistortion.curve = makeDistortionCurve(30); // Moderate distortion
+          radioDistortion.curve = makeDistortionCurve(params.radioDistortionAmount);
           radioDistortion.oversample = '2x';
           
           source.connect(radioDistortion);
@@ -353,12 +387,12 @@ export function CreateEkoForm() {
   }, [toast]);
 
 
-  const processAndSetAudio = useCallback(async (baseBlob: Blob | null, effect: VoiceEffect) => {
+  const processAndSetAudio = useCallback(async (baseBlob: Blob | null, effect: VoiceEffect, params: VoiceEffectParams) => {
     if (!baseBlob) {
       clearAudio(true); 
       return;
     }
-    const PAblob = await applyVoiceEffect(baseBlob, effect);
+    const PAblob = await applyVoiceEffect(baseBlob, effect, params);
     setProcessedAudioBlob(PAblob); 
     
     if (audioUrl) URL.revokeObjectURL(audioUrl); 
@@ -373,10 +407,10 @@ export function CreateEkoForm() {
 
   useEffect(() => {
     if (initialAudioBlob) {
-      processAndSetAudio(initialAudioBlob, selectedVoiceEffect);
+      processAndSetAudio(initialAudioBlob, selectedVoiceEffect, voiceEffectParams);
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [selectedVoiceEffect]); 
+  }, [selectedVoiceEffect, voiceEffectParams, initialAudioBlob]); // Added voiceEffectParams dependency
 
   const startRecording = async () => {
     clearAudio(); 
@@ -408,7 +442,7 @@ export function CreateEkoForm() {
       mediaRecorderRef.current.onstop = async () => {
         const completeAudioBlob = new Blob(audioChunksRef.current, { type: mediaRecorderRef.current?.mimeType || 'audio/webm' }); 
         setInitialAudioBlob(completeAudioBlob); 
-        await processAndSetAudio(completeAudioBlob, selectedVoiceEffect); 
+        await processAndSetAudio(completeAudioBlob, selectedVoiceEffect, voiceEffectParams); 
         stream.getTracks().forEach(track => track.stop()); 
       };
 
@@ -443,6 +477,7 @@ export function CreateEkoForm() {
     if (!keepInitial) {
         setSelectedVoiceEffect("none"); 
         form.setValue("voiceEffect", "none");
+        setVoiceEffectParams(initialVoiceEffectParams); // Reset params
     }
   };
 
@@ -518,6 +553,7 @@ export function CreateEkoForm() {
       clearAudio(); 
       form.reset({ textContent: "", visibility: userProfile.privacy.defaultPostVisibility || "public", voiceEffect: "none" });
       setSelectedVoiceEffect("none");
+      setVoiceEffectParams(initialVoiceEffectParams); // Reset params
       router.push("/feed");
     } catch (error) {
       console.error("Error posting EkoDrop:", error);
@@ -539,6 +575,94 @@ export function CreateEkoForm() {
     { value: "private", label: "Private", icon: <Lock className="mr-2 h-4 w-4" /> },
   ];
 
+  const renderEffectParameters = () => {
+    if (!initialAudioBlob || selectedVoiceEffect === "none") return null;
+
+    switch (selectedVoiceEffect) {
+      case "echo":
+        return (
+          <div className="space-y-3 p-3 border rounded-md mt-2">
+            <p className="text-xs font-medium">Echo Parameters:</p>
+            <FormItem>
+              <FormLabel htmlFor="echoDelayTime" className="text-xs">Delay Time: {voiceEffectParams.echoDelayTime.toFixed(2)}s</FormLabel>
+              <Slider id="echoDelayTime" defaultValue={[voiceEffectParams.echoDelayTime]} min={0.05} max={1} step={0.05} onValueChange={(val) => handleParamChange('echoDelayTime', val[0])} />
+            </FormItem>
+            <FormItem>
+              <FormLabel htmlFor="echoFeedback" className="text-xs">Feedback: {voiceEffectParams.echoFeedback.toFixed(2)}</FormLabel>
+              <Slider id="echoFeedback" defaultValue={[voiceEffectParams.echoFeedback]} min={0} max={0.9} step={0.05} onValueChange={(val) => handleParamChange('echoFeedback', val[0])} />
+            </FormItem>
+          </div>
+        );
+      case "robot":
+        return (
+          <div className="space-y-3 p-3 border rounded-md mt-2">
+            <p className="text-xs font-medium">Robot Parameters:</p>
+            <FormItem>
+              <FormLabel htmlFor="robotPitchFactor" className="text-xs">Pitch Factor: {voiceEffectParams.robotPitchFactor.toFixed(1)}x</FormLabel>
+              <Slider id="robotPitchFactor" defaultValue={[voiceEffectParams.robotPitchFactor]} min={0.5} max={2} step={0.1} onValueChange={(val) => handleParamChange('robotPitchFactor', val[0])} />
+            </FormItem>
+             <FormItem>
+              <FormLabel htmlFor="robotQFactor" className="text-xs">Filter Q: {voiceEffectParams.robotQFactor.toFixed(1)}</FormLabel>
+              <Slider id="robotQFactor" defaultValue={[voiceEffectParams.robotQFactor]} min={1} max={20} step={0.5} onValueChange={(val) => handleParamChange('robotQFactor', val[0])} />
+            </FormItem>
+             <FormItem>
+              <FormLabel htmlFor="robotGain" className="text-xs">Filter Gain: {voiceEffectParams.robotGain.toFixed(0)}dB</FormLabel>
+              <Slider id="robotGain" defaultValue={[voiceEffectParams.robotGain]} min={0} max={30} step={1} onValueChange={(val) => handleParamChange('robotGain', val[0])} />
+            </FormItem>
+          </div>
+        );
+      case "alien":
+        return (
+          <div className="space-y-3 p-3 border rounded-md mt-2">
+            <p className="text-xs font-medium">Alien Parameters:</p>
+            <FormItem>
+              <FormLabel htmlFor="alienPitchFactor" className="text-xs">Pitch Factor: {voiceEffectParams.alienPitchFactor.toFixed(1)}x</FormLabel>
+              <Slider id="alienPitchFactor" defaultValue={[voiceEffectParams.alienPitchFactor]} min={0.5} max={2} step={0.1} onValueChange={(val) => handleParamChange('alienPitchFactor', val[0])} />
+            </FormItem>
+            <FormItem>
+              <FormLabel htmlFor="alienLFOFrequency" className="text-xs">LFO Freq: {voiceEffectParams.alienLFOFrequency.toFixed(0)}Hz</FormLabel>
+              <Slider id="alienLFOFrequency" defaultValue={[voiceEffectParams.alienLFOFrequency]} min={1} max={30} step={1} onValueChange={(val) => handleParamChange('alienLFOFrequency', val[0])} />
+            </FormItem>
+            <FormItem>
+              <FormLabel htmlFor="alienLFOGain" className="text-xs">LFO Gain: {voiceEffectParams.alienLFOGain.toFixed(2)}</FormLabel>
+              <Slider id="alienLFOGain" defaultValue={[voiceEffectParams.alienLFOGain]} min={0.01} max={0.2} step={0.01} onValueChange={(val) => handleParamChange('alienLFOGain', val[0])} />
+            </FormItem>
+          </div>
+        );
+      case "monster":
+         return (
+          <div className="space-y-3 p-3 border rounded-md mt-2">
+            <p className="text-xs font-medium">Monster Parameters:</p>
+            <FormItem>
+              <FormLabel htmlFor="monsterPitchFactor" className="text-xs">Pitch Factor: {voiceEffectParams.monsterPitchFactor.toFixed(2)}x</FormLabel>
+              <Slider id="monsterPitchFactor" defaultValue={[voiceEffectParams.monsterPitchFactor]} min={0.3} max={0.8} step={0.01} onValueChange={(val) => handleParamChange('monsterPitchFactor', val[0])} />
+            </FormItem>
+            <FormItem>
+              <FormLabel htmlFor="monsterDistortionAmount" className="text-xs">Distortion: {voiceEffectParams.monsterDistortionAmount.toFixed(0)}</FormLabel>
+              <Slider id="monsterDistortionAmount" defaultValue={[voiceEffectParams.monsterDistortionAmount]} min={50} max={400} step={10} onValueChange={(val) => handleParamChange('monsterDistortionAmount', val[0])} />
+            </FormItem>
+          </div>
+        );
+      case "radio":
+        return (
+          <div className="space-y-3 p-3 border rounded-md mt-2">
+            <p className="text-xs font-medium">Radio Parameters:</p>
+            <FormItem>
+              <FormLabel htmlFor="radioBandpassFrequency" className="text-xs">Bandpass Freq: {voiceEffectParams.radioBandpassFrequency.toFixed(0)}Hz</FormLabel>
+              <Slider id="radioBandpassFrequency" defaultValue={[voiceEffectParams.radioBandpassFrequency]} min={500} max={3000} step={50} onValueChange={(val) => handleParamChange('radioBandpassFrequency', val[0])} />
+            </FormItem>
+            <FormItem>
+              <FormLabel htmlFor="radioDistortionAmount" className="text-xs">Distortion: {voiceEffectParams.radioDistortionAmount.toFixed(0)}</FormLabel>
+              <Slider id="radioDistortionAmount" defaultValue={[voiceEffectParams.radioDistortionAmount]} min={10} max={100} step={5} onValueChange={(val) => handleParamChange('radioDistortionAmount', val[0])} />
+            </FormItem>
+          </div>
+        );
+      default:
+        return null;
+    }
+  };
+
+
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
@@ -547,7 +671,7 @@ export function CreateEkoForm() {
           name="textContent"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>What's on your mind? (Optional with audio)</FormLabel>
+              <FormLabel>{t('whatsOnYourMind')} (Optional with audio)</FormLabel>
               <FormControl>
                 <Textarea
                   placeholder="Share your thoughts... #eko #voicefirst"
@@ -560,12 +684,12 @@ export function CreateEkoForm() {
           )}
         />
         
-        <div className="flex items-center justify-between space-x-2">
+        <div className="flex items-start space-x-2">
           <FormField
             control={form.control}
             name="visibility"
             render={({ field }) => (
-              <FormItem className="flex-grow">
+              <FormItem className="flex-grow max-w-[200px]"> {/* Max width for select */}
                 <Select onValueChange={field.onChange} value={field.value} defaultValue={userProfile?.privacy.defaultPostVisibility || "public"}>
                   <FormControl>
                     <SelectTrigger className="h-10 text-xs sm:text-sm w-full">
@@ -588,11 +712,29 @@ export function CreateEkoForm() {
               </FormItem>
             )}
           />
+          {/* Mic button moved here */}
+          <div className="flex-shrink-0 pt-1"> {/* pt-1 to align better with select box */}
+            {isRecording ? (
+                <Button type="button" variant="destructive" onClick={stopRecording} size="icon" className="h-10 w-10">
+                  <StopCircle className="h-5 w-5" />
+                </Button>
+              ) : (
+                <Button 
+                  type="button" 
+                  variant="outline" 
+                  onClick={hasMicrophonePermission === null ? getMicrophonePermission : startRecording} 
+                  size="icon" className="h-10 w-10"
+                  disabled={hasMicrophonePermission === false || authLoading || !audioContextRef.current}
+                  title={hasMicrophonePermission === null ? "Enable Mic & Record" : "Record Audio"}
+                >
+                  <Mic className="h-5 w-5" /> 
+                </Button>
+              )}
+          </div>
         </div>
 
 
-        <div className="space-y-3 pt-2">
-          {/* <FormLabel>Add Voice</FormLabel> */}
+        <div className="space-y-3 pt-1">
           {hasMicrophonePermission === false && microphoneError && (
             <Alert variant="destructive">
               <AlertTriangle className="h-4 w-4" />
@@ -610,36 +752,16 @@ export function CreateEkoForm() {
                   : "Normal voice"}
                 {isProcessingEffect && <Loader2 className="h-4 w-4 inline animate-spin ml-2" />}
               </p>
-              <audio ref={audioPreviewRef} src={audioUrl} controls className="w-full h-10" /> {/* Reduced height */}
+              <audio ref={audioPreviewRef} src={audioUrl} controls className="w-full h-10" />
               <Button type="button" variant="outline" size="sm" onClick={() => clearAudio()} className="w-full text-red-500 hover:text-red-600">
                 <Trash2 className="mr-2 h-4 w-4" /> Delete Recording
               </Button>
             </div>
           )}
-
-          {!initialAudioBlob && ( 
-            <div className="flex items-center space-x-2">
-              {isRecording ? (
-                <Button type="button" variant="destructive" onClick={stopRecording} className="flex-1">
-                  <StopCircle className="mr-2 h-5 w-5" /> Stop Recording
-                </Button>
-              ) : (
-                <Button 
-                  type="button" 
-                  variant="outline" 
-                  onClick={hasMicrophonePermission === null ? getMicrophonePermission : startRecording} 
-                  className="flex-1" 
-                  disabled={hasMicrophonePermission === false || authLoading || !audioContextRef.current}
-                >
-                  <Mic className="mr-2 h-5 w-5" /> 
-                  {hasMicrophonePermission === null ? "Enable Mic & Record" : "Record Audio"}
-                </Button>
-              )}
-            </div>
-          )}
         </div>
 
         {initialAudioBlob && !isRecording && ( 
+          <>
            <FormField
             control={form.control}
             name="voiceEffect"
@@ -663,8 +785,8 @@ export function CreateEkoForm() {
                     <SelectItem value="none">Normal</SelectItem>
                     <SelectItem value="chipmunk">Chipmunk</SelectItem>
                     <SelectItem value="deep">Deep Voice</SelectItem>
-                    <SelectItem value="robot">Robot (Basic)</SelectItem>
-                    <SelectItem value="echo">Echo (Basic)</SelectItem>
+                    <SelectItem value="robot">Robot</SelectItem>
+                    <SelectItem value="echo">Echo</SelectItem>
                     <SelectItem value="alien">Alien</SelectItem>
                     <SelectItem value="monster">Monster</SelectItem>
                     <SelectItem value="radio">Radio</SelectItem>
@@ -677,6 +799,8 @@ export function CreateEkoForm() {
               </FormItem>
             )}
           />
+          {renderEffectParameters()}
+          </>
         )}
         
         <Button type="submit" className="w-full" disabled={!canSubmit}>
@@ -696,6 +820,3 @@ export function CreateEkoForm() {
     </Form>
   );
 }
-
-
-    

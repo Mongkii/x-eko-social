@@ -1,17 +1,13 @@
-
 import { type NextRequest, NextResponse } from 'next/server';
 
-// This is a minimal middleware function.
-// It currently does nothing and just passes the request to the next handler.
-// The original i18n middleware logic has been removed.
+// Minimal middleware. i18next-browser-languagedetector handles client-side detection.
+// This could be expanded to set a cookie based on Accept-Language for SSR if needed.
 export function middleware(request: NextRequest) {
   return NextResponse.next();
 }
 
-// Optionally, you can define a config object to specify which paths the middleware should run on.
-// export const config = {
-//   matcher: [
-//     // Paths to match, e.g.,
-//     // '/((?!api|_next/static|_next/image|favicon.ico).*)',
-//   ],
-// };
+export const config = {
+  // Matcher can be adjusted if specific paths need middleware handling.
+  // For now, it runs on all paths, but i18next detection is client-side.
+  matcher: '/((?!api|_next/static|_next/image|favicon.ico).*)',
+};

@@ -1,14 +1,15 @@
 
 "use client";
 
-import Link from 'next/link';
+import Link from 'next/link'; // Using standard next/link
 import { Button } from "@/components/ui/button";
 import { AppLogoIcon } from "@/components/icons/app-logo-icon";
 import { ThemeToggle } from '@/components/theme-toggle';
 import { FontSizeSwitcher } from '@/components/font-size-switcher';
+import { LanguageSwitcher } from '@/components/language-switcher'; // New language switcher
 import { Sheet, SheetContent, SheetTrigger, SheetClose, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Menu, Home, Settings, LogIn, LogOut, Users, ListMusic, SlidersHorizontal } from 'lucide-react';
-import { usePathname, useRouter } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation'; // Using standard next/navigation
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/contexts/auth-context';
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -21,22 +22,27 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { useTranslation } from 'react-i18next'; // For translations
 
-const navLinks = [
-  { href: "/feed", label: "Feed", icon: Home, protected: false },
-  { href: "/discover", label: "Discover", icon: SlidersHorizontal, protected: false },
-  { href: "/playlists", label: "Playlists", icon: ListMusic, protected: true },
-  { href: "/settings", label: "Settings", icon: Settings, protected: true } 
+const navLinksConfig = (t: (key: string) => string) => [ // Function to generate links with translations
+  { href: "/feed", label: t('feedTitle'), icon: Home, protected: false },
+  { href: "/discover", label: t('discoverTitle'), icon: SlidersHorizontal, protected: false },
+  { href: "/playlists", label: t('playlistsTitle'), icon: ListMusic, protected: true },
+  { href: "/settings", label: t('settingsTitle'), icon: Settings, protected: true } 
 ];
+
 
 export function AppHeader() {
   const pathname = usePathname();
   const router = useRouter();
   const { user, userProfile, loading, signOut } = useAuth();
+  const { t } = useTranslation(); // Initialize useTranslation hook
+
+  const navLinks = navLinksConfig(t); // Get translated nav links
 
   const handleSignOut = async () => {
     await signOut();
-    router.push('/');
+    router.push('/'); // Redirect to home or login page
     router.refresh();
   };
 
@@ -73,7 +79,7 @@ export function AppHeader() {
       <div className="container flex h-16 max-w-screen-2xl items-center justify-between">
         <Link href="/" className="flex items-center space-x-2">
           <AppLogoIcon className="h-8 w-8 text-accent" />
-          <span className="font-bold text-xl">Eko</span>
+          <span className="font-bold text-xl">{t('appName')}</span>
         </Link>
 
         <nav className="hidden md:flex items-center space-x-1 text-sm font-medium">
@@ -81,6 +87,7 @@ export function AppHeader() {
         </nav>
 
         <div className="flex items-center space-x-2 md:space-x-4">
+          <LanguageSwitcher /> {/* Added LanguageSwitcher */}
           <FontSizeSwitcher />
           <ThemeToggle />
 
@@ -108,19 +115,18 @@ export function AppHeader() {
                 <DropdownMenuSeparator />
                 <DropdownMenuGroup>
                   <DropdownMenuItem onClick={() => router.push(`/profile/${userProfile?.username_lowercase || user.uid}`)}>
-                     {/* Use userProfile.username_lowercase for profile links */}
-                    <Users className="mr-2 h-4 w-4" /> {/* Changed icon to Users for profile */}
-                    <span>Profile</span>
+                    <Users className="mr-2 h-4 w-4" />
+                    <span>{t('profileAction')}</span>
                   </DropdownMenuItem>
                   <DropdownMenuItem onClick={() => router.push('/settings')}>
                     <Settings className="mr-2 h-4 w-4" />
-                    <span>Settings</span>
+                    <span>{t('settingsTitle')}</span>
                   </DropdownMenuItem>
                 </DropdownMenuGroup>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem onClick={handleSignOut}>
                   <LogOut className="mr-2 h-4 w-4" />
-                  <span>Log out</span>
+                  <span>{t('logoutAction')}</span>
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
@@ -129,13 +135,13 @@ export function AppHeader() {
               <Button asChild variant="outline" size="sm">
                 <Link href="/auth/login">
                   <LogIn className="mr-2 h-4 w-4" />
-                  Login
+                  {t('loginAction')}
                 </Link>
               </Button>
               <Button asChild size="sm">
                 <Link href="/auth/signup">
                   <Users className="mr-2 h-4 w-4" />
-                  Sign Up
+                  {t('signupAction')}
                 </Link>
               </Button>
             </div>
@@ -156,7 +162,7 @@ export function AppHeader() {
                 <SheetClose asChild>
                   <Link href="/" className="flex items-center space-x-2 mb-4">
                     <AppLogoIcon className="h-8 w-8 text-accent" />
-                    <span className="font-bold text-lg">Eko</span>
+                    <span className="font-bold text-lg">{t('appName')}</span>
                   </Link>
                 </SheetClose>
                 
@@ -195,8 +201,8 @@ export function AppHeader() {
                         className="flex items-center space-x-2 rounded-md p-2 hover:bg-accent hover:text-accent-foreground text-muted-foreground w-full justify-start"
                       >
                         <Link href={`/profile/${userProfile?.username_lowercase || user.uid}`}>
-                          <Users className="h-5 w-5" /> {/* Changed icon to Users for profile */}
-                          <span>Profile</span>
+                          <Users className="h-5 w-5" />
+                          <span>{t('profileAction')}</span>
                         </Link>
                       </Button>
                     </SheetClose>
@@ -208,7 +214,7 @@ export function AppHeader() {
                       >
                          <Link href="/settings">
                           <Settings className="h-5 w-5" />
-                          <span>Settings</span>
+                          <span>{t('settingsTitle')}</span>
                         </Link>
                       </Button>
                     </SheetClose>
@@ -219,7 +225,7 @@ export function AppHeader() {
                         className="flex items-center space-x-2 rounded-md p-2 hover:bg-accent hover:text-accent-foreground text-muted-foreground w-full justify-start"
                       >
                         <LogOut className="h-5 w-5" />
-                        <span>Log out</span>
+                        <span>{t('logoutAction')}</span>
                       </Button>
                     </SheetClose>
                   </>
@@ -229,7 +235,7 @@ export function AppHeader() {
                       <Button asChild variant="ghost" className="flex items-center space-x-2 rounded-md p-2 hover:bg-accent hover:text-accent-foreground text-muted-foreground w-full justify-start">
                         <Link href="/auth/login">
                           <LogIn className="h-5 w-5" />
-                          <span>Login</span>
+                          <span>{t('loginAction')}</span>
                         </Link>
                       </Button>
                     </SheetClose>
@@ -237,7 +243,7 @@ export function AppHeader() {
                      <Button asChild variant="default" className="w-full justify-start">
                         <Link href="/auth/signup" className="flex items-center space-x-2">
                           <Users className="h-5 w-5" />
-                          <span>Sign Up</span>
+                          <span>{t('signupAction')}</span>
                         </Link>
                       </Button>
                     </SheetClose>

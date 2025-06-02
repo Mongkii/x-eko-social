@@ -1,3 +1,4 @@
+
 "use client";
 
 import i18nextInstance from '@/i18n/config'; // Ensure this path is correct
