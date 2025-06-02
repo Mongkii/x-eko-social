@@ -8,9 +8,10 @@ import type { EkoPost } from "@/lib/types";
 import { firestore } from "@/lib/firebase";
 import { collection, query, where, orderBy, limit, getDocs, Timestamp } from "firebase/firestore";
 import { useEffect, useState } from "react";
-import { Loader2 } from "lucide-react";
+import { Loader2, Mic } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { CreateEkoForm } from "@/components/eko/CreateEkoForm"; // Import the form
+import { CreateEkoForm } from "@/components/eko/CreateEkoForm";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"; // Added Card components
 
 export default function FeedPage() {
   const [posts, setPosts] = useState<EkoPost[]>([]);
@@ -29,7 +30,7 @@ export default function FeedPage() {
           limit(20) 
         );
         const querySnapshot = await getDocs(postsQuery);
-        const fetchedPosts = querySnapshot.docs.map((doc, index) => ({ // Added index
+        const fetchedPosts = querySnapshot.docs.map((doc, index) => ({
           id: doc.id,
           ...doc.data(),
           createdAt: doc.data().createdAt instanceof Timestamp ? doc.data().createdAt : Timestamp.fromDate(new Date()),
@@ -49,11 +50,20 @@ export default function FeedPage() {
   return (
     <div className="flex flex-col min-h-screen">
       <AppHeader />
-      <main className="flex-grow container mx-auto px-4 py-8 pb-24"> {/* Added pb-24 for player */}
-        
-        {/* Create Post Section */}
+      <main className="flex-grow container mx-auto px-4 py-8 pb-24">
+
         <section className="mb-12">
-          <CreateEkoForm />
+          <Card className="w-full max-w-md mx-auto shadow-md">
+            <CardHeader>
+              <CardTitle className="text-xl flex items-center font-semibold">
+                <Mic className="mr-3 h-5 w-5 text-accent" />
+                Share an EkoDrop
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="pt-2 pb-4"> {/* Adjusted padding for compactness */}
+              <CreateEkoForm />
+            </CardContent>
+          </Card>
         </section>
 
         <h1 className="text-3xl font-bold mb-8 text-center md:text-left">Eko Feed</h1>
