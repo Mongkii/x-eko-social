@@ -30,10 +30,9 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-  AlertDialogTrigger,
 } from "@/components/ui/alert-dialog"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { MessageCircle, Repeat, Heart, Share2, MoreHorizontal, AlertTriangle, Send, Loader2, Trash2, Play, Pause, Music2, Mic, StopCircle, Wand2 } from "lucide-react";
+import { MessageCircle, Repeat, Heart, Share2, MoreHorizontal, AlertTriangle, Send, Loader2, Trash2, Play, Pause, Music2, Mic, StopCircle, Wand2, Facebook, Twitter, Linkedin, Copy } from "lucide-react"; // Added Facebook, Twitter, Linkedin, Copy
 import Link from "next/link";
 import { formatTimestamp } from "@/lib/format-timestamp";
 import { useAuth } from "@/contexts/auth-context";
@@ -55,7 +54,7 @@ import {
   runTransaction,
   Timestamp,
 } from "firebase/firestore";
-import { ref as storageRef, deleteObject, uploadBytes, getDownloadURL } from "firebase/storage"; 
+import { ref as storageRefFS, deleteObject, uploadBytes, getDownloadURL } from "firebase/storage"; // Renamed storageRef to storageRefFS to avoid conflict with useRef
 import { useToast } from "@/hooks/use-toast";
 import { processHashtags } from "@/lib/utils";
 
@@ -429,8 +428,8 @@ export function EkoPostCard({ post: initialPost, onPostDeleted, queue, postIndex
     const timestamp = Date.now();
     const randomSuffix = Math.random().toString(36).substring(2, 8);
     const audioFileName = `comment_${userId}_${postId}_${timestamp}_${randomSuffix}.wav`; 
-    const storageRefPath = `commentAudio/${userId}/${postId}/${audioFileName}`;
-    const audioStorageRef = storageRef(storage, storageRefPath);
+    const storagePath = `commentAudio/${userId}/${postId}/${audioFileName}`;
+    const audioStorageRef = storageRefFS(storage, storagePath);
     
     // toast({ title: "Uploading Comment Audio...", description: "Please wait."}); // Can be noisy
     await uploadBytes(audioStorageRef, audioToUpload);
@@ -500,23 +499,8 @@ export function EkoPostCard({ post: initialPost, onPostDeleted, queue, postIndex
     }
   };
 
-  const handleShare = async () => {
-    const postUrl = `${window.location.origin}/post/${post.id}`; 
-    if (navigator.share) {
-      try {
-        await navigator.share({
-          title: `EkoDrop by ${authorProfile?.username || post.username}`,
-          text: post.textContent.substring(0, 100) + (post.textContent.length > 100 ? "..." : ""),
-          url: postUrl,
-        });
-      } catch (error) {
-        navigator.clipboard.writeText(postUrl);
-        toast({ title: "Link Copied!"});
-      }
-    } else {
-      navigator.clipboard.writeText(postUrl);
-      toast({ title: "Link Copied!"});
-    }
+  const openShareLink = (url: string) => {
+    window.open(url, '_blank', 'noopener,noreferrer');
   };
 
   const handleReport = () => {
@@ -533,7 +517,7 @@ export function EkoPostCard({ post: initialPost, onPostDeleted, queue, postIndex
     try {
       if (post.audioURL) {
         try {
-          const audioFileRef = storageRef(storage, post.audioURL);
+          const audioFileRef = storageRefFS(storage, post.audioURL);
           await deleteObject(audioFileRef);
         } catch (storageError: any) {
           if (storageError.code !== 'storage/object-not-found') {
@@ -638,6 +622,13 @@ export function EkoPostCard({ post: initialPost, onPostDeleted, queue, postIndex
   const isCurrentUserPostAuthor = user && user.uid === post.userId;
 
   if (!post) return null; 
+
+  const postUrl = typeof window !== 'undefined' ? `${window.location.origin}/eko/${post.id}` : '';
+  const shareText = `Check out this EkoDrop by @${authorUsername}: ${post.textContent.substring(0,100) + (post.textContent.length > 100 ? "..." : "")}`;
+  const encodedUrl = encodeURIComponent(postUrl);
+  const encodedText = encodeURIComponent(shareText);
+  const encodedTitle = encodeURIComponent(`EkoDrop by @${authorUsername}`);
+
 
   return (
     <Card className="w-full max-w-xl mx-auto shadow-lg hover:shadow-xl transition-shadow duration-300">
@@ -752,9 +743,57 @@ export function EkoPostCard({ post: initialPost, onPostDeleted, queue, postIndex
           {isLiking ? <Loader2 className="h-5 w-5 mr-1 animate-spin" /> : <Heart className={`h-5 w-5 mr-1 ${isLiked ? "fill-current" : ""}`} />}
           {post.likeCount}
         </Button>
-        <Button variant="ghost" size="sm" className="text-muted-foreground hover:text-primary" onClick={handleShare}>
-          <Share2 className="h-5 w-5" />
-        </Button>
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="ghost" size="sm" className="text-muted-foreground hover:text-primary">
+              <Share2 className="h-5 w-5" />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end">
+            <DropdownMenuItem onClick={() => openShareLink(`https://www.facebook.com/sharer/sharer.php?u=${encodedUrl}`)}>
+              <Facebook className="mr-2 h-4 w-4 text-[#1877F2]" /> Share on Facebook
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => openShareLink(`https://twitter.com/intent/tweet?url=${encodedUrl}&text=${encodedText}`)}>
+              <Twitter className="mr-2 h-4 w-4 text-[#1DA1F2]" /> Post on X
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => openShareLink(`https://vk.com/share.php?url=${encodedUrl}&title=${encodedTitle}`)}>
+              <MessageSquare className="mr-2 h-4 w-4 text-[#0077FF]" /> Share on VK
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => openShareLink(`https://api.whatsapp.com/send?text=${encodedText}%20${encodedUrl}`)}>
+              <MessageSquare className="mr-2 h-4 w-4 text-[#25D366]" /> Share via WhatsApp
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => openShareLink(`https://t.me/share/url?url=${encodedUrl}&text=${encodedText}`)}>
+              <Send className="mr-2 h-4 w-4 text-[#0088cc]" /> Share on Telegram
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => openShareLink(`https://www.linkedin.com/sharing/share-offsite/?url=${encodedUrl}`)}>
+              <Linkedin className="mr-2 h-4 w-4 text-[#0A66C2]" /> Share on LinkedIn
+            </DropdownMenuItem>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem onClick={() => {
+              navigator.clipboard.writeText(postUrl);
+              toast({ title: "Link Copied!", description: "EkoDrop link copied to clipboard." });
+            }}>
+              <Copy className="mr-2 h-4 w-4" /> Copy Link
+            </DropdownMenuItem>
+            {typeof navigator !== 'undefined' && navigator.share && (
+              <DropdownMenuItem onClick={async () => {
+                try {
+                  await navigator.share({
+                    title: `EkoDrop by @${authorUsername}`,
+                    text: shareText,
+                    url: postUrl,
+                  });
+                } catch (error) {
+                  console.error("Error using navigator.share:", error);
+                  toast({ title: "Could not share", description: "Browser share failed, link copied instead.", variant: "default" });
+                  navigator.clipboard.writeText(postUrl);
+                }
+              }}>
+                <MoreHorizontal className="mr-2 h-4 w-4" /> More Options...
+              </DropdownMenuItem>
+            )}
+          </DropdownMenuContent>
+        </DropdownMenu>
       </CardFooter>
 
       {showCommentInput && (
@@ -854,3 +893,4 @@ export function EkoPostCard({ post: initialPost, onPostDeleted, queue, postIndex
     </Card>
   );
 }
+
