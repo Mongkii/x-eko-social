@@ -22,6 +22,12 @@ function SetHtmlLangDir() {
   return null;
 }
 
+const GlobalLoader = () => (
+  <div className="flex min-h-screen items-center justify-center">
+    <Loader2 className="h-12 w-12 animate-spin text-accent" />
+  </div>
+);
+
 export function I18nInitializer({ children }: I18nInitializerProps) {
   // This state will be false on the server and initially on the client.
   // It will only be set to true on the client after i18next is confirmed to be initialized.
@@ -53,11 +59,7 @@ export function I18nInitializer({ children }: I18nInitializerProps) {
     // On the server, isI18nextReadyForClient is false.
     // On the client, during the first render (before useEffect), isI18nextReadyForClient is false.
     // Both will render this loader, ensuring the initial HTML matches, preventing hydration error.
-    return (
-      <div className="flex min-h-screen items-center justify-center">
-        <Loader2 className="h-12 w-12 animate-spin text-accent" />
-      </div>
-    );
+    return <GlobalLoader />;
   }
 
   // This part is rendered only after the client has confirmed i18next is initialized and ready.
@@ -66,11 +68,7 @@ export function I18nInitializer({ children }: I18nInitializerProps) {
       <SetHtmlLangDir />
       {/* The Suspense here is for children that might themselves suspend,
           e.g., for data fetching or if they use useTranslation before their specific namespaces are loaded by HttpBackend. */}
-      <Suspense fallback={
-        <div className="flex min-h-screen items-center justify-center">
-          <Loader2 className="h-12 w-12 animate-spin text-accent" />
-        </div>
-      }>
+      <Suspense fallback={<GlobalLoader />}>
         {children}
       </Suspense>
     </I18nextProvider>
