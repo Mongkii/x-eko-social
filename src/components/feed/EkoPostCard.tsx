@@ -30,6 +30,7 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
+  AlertDialogTrigger,
 } from "@/components/ui/alert-dialog"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { MessageCircle, Repeat, Heart, Share2, MoreHorizontal, AlertTriangle, Send, Loader2, Trash2, Play, Pause, Music2, Mic, StopCircle, Wand2, Facebook, Twitter, Linkedin, Copy } from "lucide-react"; // Added Facebook, Twitter, Linkedin, Copy
