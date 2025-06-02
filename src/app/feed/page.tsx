@@ -10,6 +10,7 @@ import { collection, query, where, orderBy, limit, getDocs, Timestamp } from "fi
 import { useEffect, useState } from "react";
 import { Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { CreateEkoForm } from "@/components/eko/CreateEkoForm"; // Import the form
 
 export default function FeedPage() {
   const [posts, setPosts] = useState<EkoPost[]>([]);
@@ -49,6 +50,12 @@ export default function FeedPage() {
     <div className="flex flex-col min-h-screen">
       <AppHeader />
       <main className="flex-grow container mx-auto px-4 py-8 pb-24"> {/* Added pb-24 for player */}
+        
+        {/* Create Post Section */}
+        <section className="mb-12">
+          <CreateEkoForm />
+        </section>
+
         <h1 className="text-3xl font-bold mb-8 text-center md:text-left">Eko Feed</h1>
         
         {isLoading && (
