@@ -12,6 +12,7 @@ import { FloatingCreateEkoButton } from '@/components/eko/FloatingCreateEkoButto
 import { AudioPlayerProvider } from '@/contexts/AudioPlayerContext';
 import { GlobalAudioPlayer } from '@/components/audio/GlobalAudioPlayer';
 import { I18nInitializer } from '@/components/I18nInitializer'; // New i18next provider
+import { DailyFullScreenAdManager } from '@/components/ads/DailyFullScreenAdManager'; // Ad manager
 
 export const metadata: Metadata = {
   title: 'Eko - Voice Social Network', // This could be translated later if needed server-side
@@ -44,6 +45,7 @@ export default function RootLayout({
             <FontSizeProvider>
               <AudioPlayerProvider>
                 <I18nInitializer> {/* Wrap with i18next initializer */}
+                  <DailyFullScreenAdManager /> {/* Ad manager added here */}
                   <div className="relative flex min-h-screen flex-col">
                     {children}
                     <GlobalAudioPlayer />

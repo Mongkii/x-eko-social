@@ -7,12 +7,13 @@ import { EkoPostCard } from "@/components/feed/EkoPostCard";
 import type { EkoPost } from "@/lib/types";
 import { firestore } from "@/lib/firebase";
 import { collection, query, where, orderBy, limit, getDocs, Timestamp } from "firebase/firestore";
-import { useEffect, useState } from "react";
+import { useEffect, useState, Fragment } from "react"; // Added Fragment
 import { Loader2, Mic } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { CreateEkoForm } from "@/components/eko/CreateEkoForm";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useTranslation } from 'react-i18next';
+import { BannerAdPlaceholder } from "@/components/ads/BannerAdPlaceholder"; // Ad placeholder
 
 export default function FeedPage() {
   const { t } = useTranslation();
@@ -110,7 +111,12 @@ export default function FeedPage() {
         {!isLoading && !error && posts.length > 0 && (
           <div className="space-y-6">
             {posts.map((post, index) => (
-              <EkoPostCard key={post.id} post={post} queue={posts} postIndex={index} />
+              <Fragment key={post.id}>
+                <EkoPostCard post={post} queue={posts} postIndex={index} />
+                {(index + 1) % 5 === 0 && (
+                  <BannerAdPlaceholder title={`Sponsored Content (Slot ${Math.floor((index + 1) / 5)})`} />
+                )}
+              </Fragment>
             ))}
           </div>
         )}
