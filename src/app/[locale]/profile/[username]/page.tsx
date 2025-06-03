@@ -2,7 +2,7 @@
 import type { Metadata, Viewport } from 'next';
 import { GeistSans } from 'geist/font/sans';
 import { GeistMono } from 'geist/font/mono';
-import '../../../../globals.css'; // Corrected path (../../[locale]/profile/[username]/ -> ../../../../app/globals.css)
+import '../../../globals.css'; // Corrected path
 import { Toaster } from "@/components/ui/toaster";
 import { ThemeProvider } from "@/components/theme-provider";
 import { FontSizeProvider } from '@/contexts/font-size-context';
