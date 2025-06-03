@@ -33,7 +33,7 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { MessageCircle, Repeat, Heart, Share2, MoreHorizontal, AlertTriangle, Send, Loader2, Trash2, Play, Pause, Music2, Mic, StopCircle, Wand2, Facebook, Twitter, Linkedin, Copy } from "lucide-react"; // Added Facebook, Twitter, Linkedin, Copy
+import { MessageCircle, Repeat, Heart, Share2, MoreHorizontal, AlertTriangle, Send, Loader2, Trash2, Play, Pause, Music2, Mic, StopCircle, Wand2, Facebook, Twitter, Linkedin, Copy, MessageSquare } from "lucide-react"; // Added Facebook, Twitter, Linkedin, Copy, MessageSquare
 import Link from "next/link";
 import { formatTimestamp } from "@/lib/format-timestamp";
 import { useAuth } from "@/contexts/auth-context";
@@ -760,7 +760,7 @@ export function EkoPostCard({ post: initialPost, onPostDeleted, queue, postIndex
             <DropdownMenuItem onClick={() => openShareLink(`https://vk.com/share.php?url=${encodedUrl}&title=${encodedTitle}`)}>
               <MessageSquare className="mr-2 h-4 w-4 text-[#0077FF]" /> Share on VK
             </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => openShareLink(`https://api.whatsapp.com/send?text=${encodedText}%20${encodedUrl}`)}>
+            <DropdownMenuItem onClick={()={() => openShareLink(`https://api.whatsapp.com/send?text=${encodedText}%20${encodedUrl}`)}>
               <MessageSquare className="mr-2 h-4 w-4 text-[#25D366]" /> Share via WhatsApp
             </DropdownMenuItem>
             <DropdownMenuItem onClick={() => openShareLink(`https://t.me/share/url?url=${encodedUrl}&text=${encodedText}`)}>
@@ -895,3 +895,4 @@ export function EkoPostCard({ post: initialPost, onPostDeleted, queue, postIndex
   );
 }
 
+    
