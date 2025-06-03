@@ -33,13 +33,13 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { MessageCircle, Repeat, Heart, Share2, MoreHorizontal, AlertTriangle, Send, Loader2, Trash2, Play, Pause, Music2, Mic, StopCircle, Wand2, Facebook, Twitter, Linkedin, Copy, MessageSquare } from "lucide-react"; // Added Facebook, Twitter, Linkedin, Copy, MessageSquare
+import { MessageCircle, Repeat, Heart, Share2, MoreHorizontal, AlertTriangle, Send, Loader2, Trash2, Play, Pause, Music2, Mic, StopCircle, Wand2, Facebook, Twitter, Linkedin, Copy, MessageSquare } from "lucide-react";
 import Link from "next/link";
 import { formatTimestamp } from "@/lib/format-timestamp";
 import { useAuth } from "@/contexts/auth-context";
 import { useAudioPlayer } from "@/contexts/AudioPlayerContext";
 import { useState, useEffect, useRef, useCallback } from "react";
-import { firestore, storage } from "@/lib/firebase"; 
+import { firestore, storage } from "@/lib/firebase";
 import {
   doc,
   getDoc,
@@ -105,14 +105,14 @@ function audioBufferToWav(buffer: AudioBuffer): Blob {
       result[index++] = Math.max(-32768, Math.min(32767, inputR[inputIndex] * 32767));
       inputIndex++;
     }
-  } else { 
+  } else {
     const monoChannel = channelData[0];
     result = new Int16Array(monoChannel.length);
     for (let i = 0; i < monoChannel.length; i++) {
       result[i] = Math.max(-32768, Math.min(32767, monoChannel[i] * 32767));
     }
   }
-  
+
   const dataLength = result.length * (bitDepth / 8);
   const bufferLength = 44 + dataLength;
   const wavBuffer = new ArrayBuffer(bufferLength);
@@ -129,12 +129,12 @@ function audioBufferToWav(buffer: AudioBuffer): Blob {
   view.setUint32(offset, bufferLength - 8, true); offset += 4;
   writeString(view, offset, 'WAVE'); offset += 4;
   writeString(view, offset, 'fmt '); offset += 4;
-  view.setUint32(offset, 16, true); offset += 4; 
+  view.setUint32(offset, 16, true); offset += 4;
   view.setUint16(offset, format, true); offset += 2;
   view.setUint16(offset, numChannels, true); offset += 2;
   view.setUint32(offset, sampleRate, true); offset += 4;
-  view.setUint32(offset, sampleRate * numChannels * (bitDepth / 8), true); offset += 4; 
-  view.setUint16(offset, numChannels * (bitDepth / 8), true); offset += 2; 
+  view.setUint32(offset, sampleRate * numChannels * (bitDepth / 8), true); offset += 4;
+  view.setUint16(offset, numChannels * (bitDepth / 8), true); offset += 2;
   view.setUint16(offset, bitDepth, true); offset += 2;
   writeString(view, offset, 'data'); offset += 4;
   view.setUint32(offset, dataLength, true); offset += 4;
@@ -150,13 +150,13 @@ function audioBufferToWav(buffer: AudioBuffer): Blob {
 export function EkoPostCard({ post: initialPost, onPostDeleted, queue, postIndex }: EkoPostCardProps) {
   const { user, userProfile, loading: authLoading } = useAuth();
   const { toast } = useToast();
-  const { 
-    playNewTrack, 
-    togglePlayPause, 
-    currentTrackDetails, 
-    isPlaying: isGlobalPlayerPlaying, 
-    isLoading: isGlobalPlayerLoading 
-  } = useAudioPlayer(); 
+  const {
+    playNewTrack,
+    togglePlayPause,
+    currentTrackDetails,
+    isPlaying: isGlobalPlayerPlaying,
+    isLoading: isGlobalPlayerLoading
+  } = useAudioPlayer();
 
   const [post, setPost] = useState<EkoPost>(initialPost);
   const [authorProfile, setAuthorProfile] = useState<UserProfile | null>(null);
@@ -173,7 +173,7 @@ export function EkoPostCard({ post: initialPost, onPostDeleted, queue, postIndex
 
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
-  
+
   const isCurrentTrackInGlobalPlayer = currentTrackDetails?.id === post.id;
 
   // State for comment audio
@@ -254,7 +254,7 @@ export function EkoPostCard({ post: initialPost, onPostDeleted, queue, postIndex
   }, [user, post.id]);
 
   const applyCommentVoiceEffect = useCallback(async (inputBlob: Blob | null, effect: VoiceEffect): Promise<Blob | null> => {
-    if (!inputBlob || !commentAudioContextRef.current) return inputBlob; 
+    if (!inputBlob || !commentAudioContextRef.current) return inputBlob;
 
     setIsProcessingCommentEffect(true);
     // toast({ title: "Applying Voice Effect to Comment...", description: `Processing audio with ${effect} effect.` });
@@ -262,13 +262,13 @@ export function EkoPostCard({ post: initialPost, onPostDeleted, queue, postIndex
     try {
       const arrayBuffer = await inputBlob.arrayBuffer();
       const decodedAudioBuffer = await commentAudioContextRef.current.decodeAudioData(arrayBuffer);
-      
+
       const offlineCtx = new OfflineAudioContext(
         decodedAudioBuffer.numberOfChannels,
         decodedAudioBuffer.length,
         decodedAudioBuffer.sampleRate
       );
-      
+
       const source = offlineCtx.createBufferSource();
       source.buffer = decodedAudioBuffer;
 
@@ -276,17 +276,17 @@ export function EkoPostCard({ post: initialPost, onPostDeleted, queue, postIndex
         case "chipmunk": source.playbackRate.value = 1.8; source.connect(offlineCtx.destination); break;
         case "deep": source.playbackRate.value = 0.6; source.connect(offlineCtx.destination); break;
         case "robot":
-          source.playbackRate.value = 0.9; 
+          source.playbackRate.value = 0.9;
           const robotFilter = offlineCtx.createBiquadFilter();
-          robotFilter.type = 'peaking'; robotFilter.frequency.value = 1200; robotFilter.Q.value = 6; robotFilter.gain.value = 15;   
+          robotFilter.type = 'peaking'; robotFilter.frequency.value = 1200; robotFilter.Q.value = 6; robotFilter.gain.value = 15;
           source.connect(robotFilter); robotFilter.connect(offlineCtx.destination); break;
         case "echo":
-          const delayNode = offlineCtx.createDelay(1.0); delayNode.delayTime.value = 0.25; 
-          const feedbackNode = offlineCtx.createGain(); feedbackNode.gain.value = 0.4; 
-          const dryGainNode = offlineCtx.createGain(); dryGainNode.gain.value = 1.0; 
-          const wetGainNode = offlineCtx.createGain(); wetGainNode.gain.value = 0.5; 
+          const delayNode = offlineCtx.createDelay(1.0); delayNode.delayTime.value = 0.25;
+          const feedbackNode = offlineCtx.createGain(); feedbackNode.gain.value = 0.4;
+          const dryGainNode = offlineCtx.createGain(); dryGainNode.gain.value = 1.0;
+          const wetGainNode = offlineCtx.createGain(); wetGainNode.gain.value = 0.5;
           source.connect(dryGainNode); dryGainNode.connect(offlineCtx.destination);
-          source.connect(delayNode); delayNode.connect(feedbackNode); feedbackNode.connect(delayNode); 
+          source.connect(delayNode); delayNode.connect(feedbackNode); feedbackNode.connect(delayNode);
           delayNode.connect(wetGainNode); wetGainNode.connect(offlineCtx.destination); break;
         case "alien":
           source.playbackRate.value = 1.4;
@@ -305,7 +305,7 @@ export function EkoPostCard({ post: initialPost, onPostDeleted, queue, postIndex
           source.connect(radioDistortion); radioDistortion.connect(bandpass); bandpass.connect(offlineCtx.destination); break;
         case "none": default: source.connect(offlineCtx.destination); break;
       }
-      
+
       source.start(0);
       const renderedBuffer = await offlineCtx.startRendering();
       const wavBlob = audioBufferToWav(renderedBuffer);
@@ -331,27 +331,27 @@ export function EkoPostCard({ post: initialPost, onPostDeleted, queue, postIndex
       return;
     }
     const PAblob = await applyCommentVoiceEffect(baseBlob, effect);
-    setProcessedCommentAudioBlob(PAblob); 
-    
-    if (commentAudioUrl) URL.revokeObjectURL(commentAudioUrl); 
+    setProcessedCommentAudioBlob(PAblob);
+
+    if (commentAudioUrl) URL.revokeObjectURL(commentAudioUrl);
     if (PAblob) {
         const newPreviewUrl = URL.createObjectURL(PAblob);
-        setCommentAudioUrl(newPreviewUrl); 
+        setCommentAudioUrl(newPreviewUrl);
     } else {
         setCommentAudioUrl(null);
     }
-  }, [applyCommentVoiceEffect, commentAudioUrl]); 
+  }, [applyCommentVoiceEffect, commentAudioUrl]);
 
   useEffect(() => {
     if (initialCommentAudioBlob) {
       processAndSetCommentAudio(initialCommentAudioBlob, selectedCommentVoiceEffect);
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [selectedCommentVoiceEffect, initialCommentAudioBlob]); 
-  
+  }, [selectedCommentVoiceEffect, initialCommentAudioBlob]);
+
 
   const getCommentMicrophonePermission = async () => {
-    if (hasCommentMicPermission === null) { 
+    if (hasCommentMicPermission === null) {
       try {
         const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
         setHasCommentMicPermission(true);
@@ -360,8 +360,8 @@ export function EkoPostCard({ post: initialPost, onPostDeleted, queue, postIndex
       } catch (error) {
         console.error('Error accessing microphone for comment:', error);
         setHasCommentMicPermission(false);
-        const errorMessage = error instanceof Error && error.name === 'NotAllowedError' 
-          ? 'Microphone access denied. Please enable it in your browser settings.' 
+        const errorMessage = error instanceof Error && error.name === 'NotAllowedError'
+          ? 'Microphone access denied. Please enable it in your browser settings.'
           : 'Could not access microphone. Please ensure it is connected and enabled.';
         setCommentMicError(errorMessage);
       }
@@ -369,10 +369,10 @@ export function EkoPostCard({ post: initialPost, onPostDeleted, queue, postIndex
   };
 
   const startCommentRecording = async () => {
-    clearCommentAudio(); 
-    if (hasCommentMicPermission === null) await getCommentMicrophonePermission(); 
-    
-    if (hasCommentMicPermission === false || !navigator.mediaDevices || !commentAudioContextRef.current) { 
+    clearCommentAudio();
+    if (hasCommentMicPermission === null) await getCommentMicrophonePermission();
+
+    if (hasCommentMicPermission === false || !navigator.mediaDevices || !commentAudioContextRef.current) {
        const errorMsg = !commentAudioContextRef.current ? "Web Audio API not ready." : commentMicError;
        toast({ variant: "destructive", title: "Mic/Audio Error", description: errorMsg || "Mic permission not granted."});
        return;
@@ -384,18 +384,18 @@ export function EkoPostCard({ post: initialPost, onPostDeleted, queue, postIndex
       try {
         commentMediaRecorderRef.current = new MediaRecorder(stream, options);
       } catch (e) {
-        commentMediaRecorderRef.current = new MediaRecorder(stream); 
+        commentMediaRecorderRef.current = new MediaRecorder(stream);
       }
-      
+
       commentAudioChunksRef.current = [];
       commentMediaRecorderRef.current.ondataavailable = (event) => {
         if (event.data.size > 0) commentAudioChunksRef.current.push(event.data);
       };
       commentMediaRecorderRef.current.onstop = async () => {
-        const completeAudioBlob = new Blob(commentAudioChunksRef.current, { type: commentMediaRecorderRef.current?.mimeType || 'audio/webm' }); 
-        setInitialCommentAudioBlob(completeAudioBlob); 
-        await processAndSetCommentAudio(completeAudioBlob, selectedCommentVoiceEffect); 
-        stream.getTracks().forEach(track => track.stop()); 
+        const completeAudioBlob = new Blob(commentAudioChunksRef.current, { type: commentMediaRecorderRef.current?.mimeType || 'audio/webm' });
+        setInitialCommentAudioBlob(completeAudioBlob);
+        await processAndSetCommentAudio(completeAudioBlob, selectedCommentVoiceEffect);
+        stream.getTracks().forEach(track => track.stop());
       };
       commentMediaRecorderRef.current.start();
       setIsRecordingComment(true);
@@ -419,19 +419,19 @@ export function EkoPostCard({ post: initialPost, onPostDeleted, queue, postIndex
     setProcessedCommentAudioBlob(null);
     if (!keepInitial) setInitialCommentAudioBlob(null);
     commentAudioChunksRef.current = [];
-    if (commentAudioPreviewRef.current) commentAudioPreviewRef.current.src = ''; 
+    if (commentAudioPreviewRef.current) commentAudioPreviewRef.current.src = '';
     if (!keepInitial) {
-        setSelectedCommentVoiceEffect("none"); 
+        setSelectedCommentVoiceEffect("none");
     }
   };
 
   const uploadCommentAudio = async (audioToUpload: Blob, userId: string, postId: string): Promise<string> => {
     const timestamp = Date.now();
     const randomSuffix = Math.random().toString(36).substring(2, 8);
-    const audioFileName = `comment_${userId}_${postId}_${timestamp}_${randomSuffix}.wav`; 
+    const audioFileName = `comment_${userId}_${postId}_${timestamp}_${randomSuffix}.wav`;
     const storagePath = `commentAudio/${userId}/${postId}/${audioFileName}`;
     const audioStorageRef = storageRefFS(storage, storagePath);
-    
+
     // toast({ title: "Uploading Comment Audio...", description: "Please wait."}); // Can be noisy
     await uploadBytes(audioStorageRef, audioToUpload);
     const downloadURL = await getDownloadURL(audioStorageRef);
@@ -456,7 +456,7 @@ export function EkoPostCard({ post: initialPost, onPostDeleted, queue, postIndex
           const likeRef = doc(firestore, "likes", likeDocId);
           transaction.delete(likeRef);
           transaction.update(postRef, { likeCount: increment(-1) });
-          setPost(p => ({ ...p, likeCount: Math.max(0, p.likeCount - 1) })); 
+          setPost(p => ({ ...p, likeCount: Math.max(0, p.likeCount - 1) }));
           setIsLiked(false); setLikeDocId(null);
         } else {
           const newLikeRef = doc(collection(firestore, "likes"));
@@ -557,7 +557,7 @@ export function EkoPostCard({ post: initialPost, onPostDeleted, queue, postIndex
       if (processedCommentAudioBlob) {
         commentAudioDownloadURL = await uploadCommentAudio(processedCommentAudioBlob, user.uid, post.id);
       }
-      
+
       const newCommentData: Partial<EkoComment> = {
         postId: post.id,
         userId: user.uid,
@@ -597,7 +597,7 @@ export function EkoPostCard({ post: initialPost, onPostDeleted, queue, postIndex
       setIsCommenting(false);
     }
   };
-  
+
   const handlePlayPauseAudio = () => {
     if (!post.audioURL) return;
     const trackToPlay: TrackDetails = {
@@ -617,12 +617,13 @@ export function EkoPostCard({ post: initialPost, onPostDeleted, queue, postIndex
     }
   };
 
+  if (!post) return null;
+
   const authorUsername = authorProfile?.username || post.username || "Unknown User";
   const authorAvatar = authorProfile?.avatarURL || post.userAvatarURL || `https://placehold.co/40x40.png?text=${authorUsername[0]?.toUpperCase() || 'U'}`;
   const processedContent = processHashtags(post.textContent);
   const isCurrentUserPostAuthor = user && user.uid === post.userId;
 
-  if (!post) return null; 
 
   const postUrl = typeof window !== 'undefined' ? `${window.location.origin}/eko/${post.id}` : '';
   const shareText = `Check out this EkoDrop by @${authorUsername}: ${post.textContent.substring(0,100) + (post.textContent.length > 100 ? "..." : "")}`;
@@ -635,8 +636,8 @@ export function EkoPostCard({ post: initialPost, onPostDeleted, queue, postIndex
     <Card className="w-full max-w-xl mx-auto shadow-lg hover:shadow-xl transition-shadow duration-300">
       <CardHeader className="flex flex-row items-start space-x-4 p-4">
         {post.audioURL && (
-          <Button 
-            variant="ghost" size="icon" onClick={handlePlayPauseAudio} 
+          <Button
+            variant="ghost" size="icon" onClick={handlePlayPauseAudio}
             className="flex-shrink-0 h-10 w-10 text-accent hover:bg-accent/10"
             disabled={isGlobalPlayerLoading && isCurrentTrackInGlobalPlayer}
             aria-label={isCurrentTrackInGlobalPlayer && isGlobalPlayerPlaying ? "Pause EkoDrop" : "Play EkoDrop"}
@@ -687,8 +688,8 @@ export function EkoPostCard({ post: initialPost, onPostDeleted, queue, postIndex
                     <DropdownMenuSeparator />
                     <AlertDialog open={showDeleteConfirm} onOpenChange={setShowDeleteConfirm}>
                       <AlertDialogTrigger asChild>
-                        <DropdownMenuItem 
-                          onSelect={(e) => e.preventDefault()} 
+                        <DropdownMenuItem
+                          onSelect={(e) => e.preventDefault()}
                           className="text-red-600 hover:!text-red-700 focus:!text-red-700 focus:!bg-red-100 dark:text-red-400 dark:hover:!text-red-500 dark:focus:!text-red-500 dark:focus:!bg-red-700/20"
                         >
                           <Trash2 className="mr-2 h-4 w-4" /> Delete EkoDrop
@@ -703,8 +704,8 @@ export function EkoPostCard({ post: initialPost, onPostDeleted, queue, postIndex
                         </AlertDialogHeader>
                         <AlertDialogFooter>
                           <AlertDialogCancel disabled={isDeleting}>Cancel</AlertDialogCancel>
-                          <AlertDialogAction 
-                            onClick={handleDeletePost} 
+                          <AlertDialogAction
+                            onClick={handleDeletePost}
                             disabled={isDeleting}
                             className={buttonVariants({ variant: "destructive" })}
                           >
@@ -719,7 +720,7 @@ export function EkoPostCard({ post: initialPost, onPostDeleted, queue, postIndex
             </DropdownMenuContent>
         </DropdownMenu>
       </CardHeader>
-      <CardContent className="p-4 pt-0 pl-20"> 
+      <CardContent className="p-4 pt-0 pl-20">
         <p className="text-sm whitespace-pre-wrap">
             {processedContent.map((part, index) =>
               part.type === 'hashtag' ? (
@@ -760,7 +761,7 @@ export function EkoPostCard({ post: initialPost, onPostDeleted, queue, postIndex
             <DropdownMenuItem onClick={() => openShareLink(`https://vk.com/share.php?url=${encodedUrl}&title=${encodedTitle}`)}>
               <MessageSquare className="mr-2 h-4 w-4 text-[#0077FF]" /> Share on VK
             </DropdownMenuItem>
-            <DropdownMenuItem onClick={()={() => openShareLink(`https://api.whatsapp.com/send?text=${encodedText}%20${encodedUrl}`)}>
+            <DropdownMenuItem onClick={() => openShareLink(`https://api.whatsapp.com/send?text=${encodedText}%20${encodedUrl}`)}>
               <MessageSquare className="mr-2 h-4 w-4 text-[#25D366]" /> Share via WhatsApp
             </DropdownMenuItem>
             <DropdownMenuItem onClick={() => openShareLink(`https://t.me/share/url?url=${encodedUrl}&text=${encodedText}`)}>
@@ -825,8 +826,8 @@ export function EkoPostCard({ post: initialPost, onPostDeleted, queue, postIndex
             {commentAudioUrl && processedCommentAudioBlob && (
               <div className="space-y-2 p-2 border rounded-md">
                 <p className="text-xs font-medium">
-                  Preview: {selectedCommentVoiceEffect !== "none" ? 
-                    `${selectedCommentVoiceEffect.charAt(0).toUpperCase() + selectedCommentVoiceEffect.slice(1)}` 
+                  Preview: {selectedCommentVoiceEffect !== "none" ?
+                    `${selectedCommentVoiceEffect.charAt(0).toUpperCase() + selectedCommentVoiceEffect.slice(1)}`
                     : "Normal"}
                   {isProcessingCommentEffect && <Loader2 className="h-3 w-3 inline animate-spin ml-1" />}
                 </p>
@@ -841,27 +842,27 @@ export function EkoPostCard({ post: initialPost, onPostDeleted, queue, postIndex
               <div className="flex items-center space-x-2">
                 {isRecordingComment ? (
                   <Button type="button" variant="destructive" onClick={stopCommentRecording} className="flex-1" size="sm">
-                    <StopCircle className="mr-2 h-4 w-4" /> Stop 
+                    <StopCircle className="mr-2 h-4 w-4" /> Stop
                   </Button>
                 ) : (
-                  <Button 
-                    type="button" variant="outline" 
-                    onClick={hasCommentMicPermission === null ? getCommentMicrophonePermission : startCommentRecording} 
+                  <Button
+                    type="button" variant="outline"
+                    onClick={hasCommentMicPermission === null ? getCommentMicrophonePermission : startCommentRecording}
                     className="flex-1" size="sm"
                     disabled={hasCommentMicPermission === false || authLoading || !commentAudioContextRef.current || isCommenting}
                   >
-                    <Mic className="mr-2 h-4 w-4" /> 
+                    <Mic className="mr-2 h-4 w-4" />
                     {hasCommentMicPermission === null ? "Enable Mic & Record" : "Record Voice Comment"}
                   </Button>
                 )}
               </div>
             )}
-             {initialCommentAudioBlob && !isRecordingComment && ( 
+             {initialCommentAudioBlob && !isRecordingComment && (
                 <div className="space-y-2">
                     <label htmlFor={`comment-voice-effect-${post.id}`} className="text-xs font-medium flex items-center"><Wand2 className="mr-1 h-3 w-3 text-accent" />Voice Changer</label>
-                    <Select 
-                    onValueChange={(value: VoiceEffect) => setSelectedCommentVoiceEffect(value)} 
-                    value={selectedCommentVoiceEffect} 
+                    <Select
+                    onValueChange={(value: VoiceEffect) => setSelectedCommentVoiceEffect(value)}
+                    value={selectedCommentVoiceEffect}
                     disabled={isProcessingCommentEffect || isCommenting}
                     >
                     <SelectTrigger id={`comment-voice-effect-${post.id}`} className="h-9 text-xs">
@@ -881,7 +882,7 @@ export function EkoPostCard({ post: initialPost, onPostDeleted, queue, postIndex
                 </div>
             )}
           </div>
-          
+
           <div className="flex justify-end pt-2">
             <Button onClick={handleAddComment} size="sm" disabled={!user || authLoading || isCommenting || isRecordingComment || isProcessingCommentEffect || (!commentText.trim() && !processedCommentAudioBlob)}>
               {isCommenting ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Send className="h-4 w-4 mr-2" />}
@@ -894,5 +895,3 @@ export function EkoPostCard({ post: initialPost, onPostDeleted, queue, postIndex
     </Card>
   );
 }
-
-    
