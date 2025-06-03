@@ -183,7 +183,7 @@ export function EkoPostCard({ post: initialPost, onPostDeleted, queue, postIndex
   const [commentAudioUrl, setCommentAudioUrl] = useState<string | null>(null);
   const commentMediaRecorderRef = useRef<MediaRecorder | null>(null);
   const commentAudioChunksRef = useRef<Blob[]>([]);
-  const commentAudioPreviewRef = useRef<HTMLAudioElement>(null);
+  const commentAudioPreviewRef = useRef<HTMLAudioElement | null>(null);
   const [hasCommentMicPermission, setHasCommentMicPermission] = useState<boolean | null>(null);
   const [commentMicError, setCommentMicError] = useState<string | null>(null);
   const [selectedCommentVoiceEffect, setSelectedCommentVoiceEffect] = useState<VoiceEffect>("none");
